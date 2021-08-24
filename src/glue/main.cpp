@@ -53,6 +53,7 @@
 #include <cmath>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::KernelAudio   g_kernelAudio;
 
 namespace giada::c::main
 {
@@ -61,7 +62,7 @@ Timer::Timer(const m::model::Clock& c)
 , beats(c.beats)
 , bars(c.bars)
 , quantize(c.quantize)
-, isUsingJack(m::kernelAudio::getAPI() == G_SYS_API_JACK)
+, isUsingJack(g_kernelAudio.getAPI() == G_SYS_API_JACK)
 , isRecordingInput(m::recManager::isRecordingInput())
 {
 }
@@ -97,7 +98,7 @@ Peak IO::getMasterInPeak()
 
 bool IO::isKernelReady()
 {
-	return m::kernelAudio::isReady();
+	return g_kernelAudio.isReady();
 }
 
 /* -------------------------------------------------------------------------- */

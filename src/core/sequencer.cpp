@@ -35,6 +35,8 @@
 #include "core/quantizer.h"
 #include "core/recManager.h"
 
+extern giada::m::KernelAudio g_kernelAudio;
+
 namespace giada::m::sequencer
 {
 namespace
@@ -196,8 +198,8 @@ void rawRewind()
 void start()
 {
 #ifdef WITH_AUDIO_JACK
-	if (kernelAudio::getAPI() == G_SYS_API_JACK)
-		kernelAudio::jackStart();
+	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
+		g_kernelAudio.jackStart();
 	else
 #endif
 		rawStart();
@@ -208,8 +210,8 @@ void start()
 void stop()
 {
 #ifdef WITH_AUDIO_JACK
-	if (kernelAudio::getAPI() == G_SYS_API_JACK)
-		kernelAudio::jackStop();
+	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
+		g_kernelAudio.jackStop();
 	else
 #endif
 		rawStop();
@@ -220,8 +222,8 @@ void stop()
 void rewind()
 {
 #ifdef WITH_AUDIO_JACK
-	if (kernelAudio::getAPI() == G_SYS_API_JACK)
-		kernelAudio::jackSetPosition(0);
+	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
+		g_kernelAudio.jackSetPosition(0);
 	else
 #endif
 		rawRewind();

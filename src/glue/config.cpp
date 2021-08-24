@@ -30,13 +30,15 @@
 #include "core/kernelAudio.h"
 #include "deps/rtaudio/RtAudio.h"
 
+extern giada::m::KernelAudio g_kernelAudio;
+
 namespace giada::c::config
 {
 namespace
 {
 AudioDeviceData getAudioDeviceData_(DeviceType type, size_t index, int channelsCount, int channelsStart)
 {
-	for (const m::kernelAudio::Device& device : m::kernelAudio::getDevices())
+	for (const m::KernelAudio::Device& device : g_kernelAudio.getDevices())
 		if (device.index == index)
 			return AudioDeviceData(type, device, channelsCount, channelsStart);
 	return AudioDeviceData();
@@ -47,7 +49,7 @@ AudioDeviceData getAudioDeviceData_(DeviceType type, size_t index, int channelsC
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-AudioDeviceData::AudioDeviceData(DeviceType type, const m::kernelAudio::Device& device,
+AudioDeviceData::AudioDeviceData(DeviceType type, const m::KernelAudio::Device& device,
     int channelsCount, int channelsStart)
 : type(type)
 , index(device.index)
@@ -100,39 +102,39 @@ AudioData getAudioData()
 
 #if defined(G_OS_LINUX)
 
-	if (m::kernelAudio::hasAPI(RtAudio::LINUX_ALSA))
+	if (g_kernelAudio.hasAPI(RtAudio::LINUX_ALSA))
 		audioData.apis[G_SYS_API_ALSA] = "ALSA";
-	if (m::kernelAudio::hasAPI(RtAudio::UNIX_JACK))
+	if (g_kernelAudio.hasAPI(RtAudio::UNIX_JACK))
 		audioData.apis[G_SYS_API_JACK] = "Jack";
-	if (m::kernelAudio::hasAPI(RtAudio::LINUX_PULSE))
+	if (g_kernelAudio.hasAPI(RtAudio::LINUX_PULSE))
 		audioData.apis[G_SYS_API_PULSE] = "PulseAudio";
 
 #elif defined(G_OS_FREEBSD)
 
-	if (m::kernelAudio::hasAPI(RtAudio::UNIX_JACK))
+	if (g_kernelAudio.hasAPI(RtAudio::UNIX_JACK))
 		audioData.apis[G_SYS_API_JACK] = "Jack";
-	if (m::kernelAudio::hasAPI(RtAudio::LINUX_PULSE))
+	if (g_kernelAudio.hasAPI(RtAudio::LINUX_PULSE))
 		audioData.apis[G_SYS_API_PULSE] = "PulseAudio";
 
 #elif defined(G_OS_WINDOWS)
 
-	if (m::kernelAudio::hasAPI(RtAudio::WINDOWS_DS))
+	if (g_kernelAudio.hasAPI(RtAudio::WINDOWS_DS))
 		audioData.apis[G_SYS_API_DS] = "DirectSound";
-	if (m::kernelAudio::hasAPI(RtAudio::WINDOWS_ASIO))
+	if (g_kernelAudio.hasAPI(RtAudio::WINDOWS_ASIO))
 		audioData.apis[G_SYS_API_ASIO] = "ASIO";
-	if (m::kernelAudio::hasAPI(RtAudio::WINDOWS_WASAPI))
+	if (g_kernelAudio.hasAPI(RtAudio::WINDOWS_WASAPI))
 		audioData.apis[G_SYS_API_WASAPI] = "WASAPI";
 
 #elif defined(G_OS_MAC)
 
-	if (m::kernelAudio::hasAPI(RtAudio::MACOSX_CORE))
+	if (g_kernelAudio.hasAPI(RtAudio::MACOSX_CORE))
 		audioData.apis[G_SYS_API_CORE] = "CoreAudio";
 
 #endif
 
-	std::vector<m::kernelAudio::Device> devices = m::kernelAudio::getDevices();
+	std::vector<m::KernelAudio::Device> devices = g_kernelAudio.getDevices();
 
-	for (const m::kernelAudio::Device& device : devices)
+	for (const m::KernelAudio::Device& device : devices)
 	{
 		if (device.maxOutputChannels > 0)
 			audioData.outputDevices.push_back(AudioDeviceData(DeviceType::OUTPUT, device, G_MAX_IO_CHANS, 0));

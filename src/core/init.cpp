@@ -69,6 +69,7 @@
 #include <FL/Fl.H>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::KernelAudio   g_kernelAudio;
 
 namespace giada::m::init
 {
@@ -104,7 +105,7 @@ void initSystem_()
 
 void initAudio_()
 {
-	kernelAudio::openDevice(conf::conf);
+	g_kernelAudio.openDevice(conf::conf);
 	clock::init();
 	sync::init(conf::conf.samplerate, conf::conf.midiTCfps);
 	mh::init();
@@ -114,16 +115,16 @@ void initAudio_()
 
 #ifdef WITH_VST
 
-	pluginManager::init(conf::conf.samplerate, kernelAudio::getRealBufSize());
-	pluginHost::init(kernelAudio::getRealBufSize());
+	pluginManager::init(conf::conf.samplerate, g_kernelAudio.getRealBufSize());
+	pluginHost::init(g_kernelAudio.getRealBufSize());
 
 #endif
 
-	if (!kernelAudio::isReady())
+	if (!g_kernelAudio.isReady())
 		return;
 
 	mixer::enable();
-	kernelAudio::startStream();
+	g_kernelAudio.startStream();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -153,7 +154,7 @@ void initGUI_(int argc, char** argv)
 
 	u::gui::updateMainWinLabel(patch::patch.name == "" ? G_DEFAULT_PATCH_NAME : patch::patch.name);
 
-	if (!kernelAudio::isReady())
+	if (!g_kernelAudio.isReady())
 		v::gdAlert("Your soundcard isn't configured correctly.\n"
 		           "Check the configuration and restart Giada.");
 
@@ -165,9 +166,9 @@ void initGUI_(int argc, char** argv)
 
 void shutdownAudio_()
 {
-	if (kernelAudio::isReady())
+	if (g_kernelAudio.isReady())
 	{
-		kernelAudio::closeDevice();
+		g_kernelAudio.closeDevice();
 		u::log::print("[init] KernelAudio closed\n");
 		mh::close();
 		u::log::print("[init] Mixer closed\n");
@@ -215,7 +216,7 @@ void printBuildInfo_()
 #ifdef WITH_VST
 	u::log::print("[init]   JUCE - %d.%d.%d\n", JUCE_MAJOR_VERSION, JUCE_MINOR_VERSION, JUCE_BUILDNUMBER);
 #endif
-	kernelAudio::logCompiledAPIs();
+	g_kernelAudio.logCompiledAPIs();
 }
 } // namespace
 
@@ -267,7 +268,7 @@ void reset()
 	sequencer::init();
 	recorder::init();
 #ifdef WITH_VST
-	pluginManager::init(conf::conf.samplerate, kernelAudio::getRealBufSize());
+	pluginManager::init(conf::conf.samplerate, g_kernelAudio.getRealBufSize());
 #endif
 
 	u::gui::updateMainWinLabel(G_DEFAULT_PATCH_NAME);

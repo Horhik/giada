@@ -25,6 +25,7 @@
  * -------------------------------------------------------------------------- */
 
 #include "core/init.h"
+#include "core/kernelAudio.h"
 #include "gui/dialogs/mainWindow.h"
 #include <FL/Fl.H>
 #ifdef WITH_TESTS
@@ -38,6 +39,8 @@
 #include <string>
 #include <vector>
 #endif
+
+giada::m::KernelAudio g_kernelAudio;
 
 class giada::v::gdMainWindow* G_MainWin = nullptr;
 

@@ -38,18 +38,20 @@
 #include "core/types.h"
 #include "gui/dispatcher.h"
 
+extern giada::m::KernelAudio g_kernelAudio;
+
 namespace giada::m::recManager
 {
 namespace
 {
 bool isKernelReady_()
 {
-	return kernelAudio::isReady();
+	return g_kernelAudio.isReady();
 }
 
 bool canRec_()
 {
-	return isKernelReady_() && kernelAudio::isInputEnabled();
+	return isKernelReady_() && g_kernelAudio.isInputEnabled();
 }
 
 /* -------------------------------------------------------------------------- */

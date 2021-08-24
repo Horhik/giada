@@ -31,7 +31,7 @@
 
 #include <jack/jack.h>
 
-namespace giada
+namespace giada::m
 {
 class JackTransport
 {
@@ -56,7 +56,7 @@ public:
 private:
 	jack_client_t& m_jackHandle;
 };
-} // namespace giada
+} // namespace giada::m
 
 #endif
 

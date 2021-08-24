@@ -44,6 +44,8 @@
 #include "utils/fs.h"
 #include <cassert>
 
+extern giada::m::KernelAudio g_kernelAudio;
+
 namespace giada::m::channelManager
 {
 namespace
@@ -67,7 +69,7 @@ channel::State& makeState_(ChannelType type)
 
 channel::Buffer& makeBuffer_()
 {
-	model::add(std::make_unique<channel::Buffer>(kernelAudio::getRealBufSize()));
+	model::add(std::make_unique<channel::Buffer>(g_kernelAudio.getRealBufSize()));
 	return model::back<channel::Buffer>();
 }
 } // namespace

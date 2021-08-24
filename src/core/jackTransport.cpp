@@ -30,7 +30,7 @@
 #include <jack/intclient.h>
 #include <jack/transport.h>
 
-namespace giada
+namespace giada::m
 {
 bool JackTransport::State::operator!=(const State& o) const
 {
@@ -96,6 +96,6 @@ JackTransport::State JackTransport::getState()
 	    position.beats_per_minute,
 	    position.frame};
 }
-} // namespace giada
+} // namespace giada::m
 
 #endif // WITH_AUDIO_JACK

@@ -39,6 +39,8 @@
 #include <atomic>
 #include <cassert>
 
+extern giada::m::KernelAudio g_kernelAudio;
+
 namespace giada::m::clock
 {
 namespace
@@ -97,7 +99,7 @@ void init()
 
 #ifdef WITH_AUDIO_JACK
 
-	if (kernelAudio::getAPI() == G_SYS_API_JACK)
+	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
 	{
 		sync::onJackRewind    = []() { sequencer::rawRewind(); };
 		sync::onJackChangeBpm = [](float bpm) { setBpm_(bpm); };
@@ -179,9 +181,9 @@ void setBpm(float b)
 	/* If JACK is being used, let it handle the bpm change. */
 
 #ifdef WITH_AUDIO_JACK
-	if (kernelAudio::getAPI() == G_SYS_API_JACK)
+	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
 	{
-		kernelAudio::jackSetBpm(b);
+		g_kernelAudio.jackSetBpm(b);
 		return;
 	}
 #endif

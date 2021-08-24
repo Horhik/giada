@@ -55,6 +55,8 @@
 #include <cassert>
 #include <vector>
 
+extern giada::m::KernelAudio g_kernelAudio;
+
 namespace giada::m::mh
 {
 namespace
@@ -171,7 +173,7 @@ void overdubChannel_(channel::Data& ch)
 
 void init()
 {
-	mixer::init(clock::getMaxFramesInLoop(), kernelAudio::getRealBufSize());
+	mixer::init(clock::getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 
 	model::get().channels.clear();
 
