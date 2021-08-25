@@ -44,6 +44,8 @@
 #include <limits>
 #include <string>
 
+extern giada::m::Clock g_clock;
+
 namespace giada::v
 {
 gdBaseActionEditor::gdBaseActionEditor(ID channelId, m::conf::Conf& conf)
@@ -107,8 +109,8 @@ void gdBaseActionEditor::cb_zoomOut(Fl_Widget* /*w*/, void* p) { ((gdBaseActionE
 
 void gdBaseActionEditor::computeWidth()
 {
-	fullWidth = frameToPixel(m::clock::getFramesInSeq());
-	loopWidth = frameToPixel(m::clock::getFramesInLoop());
+	fullWidth = frameToPixel(g_clock.getFramesInSeq());
+	loopWidth = frameToPixel(g_clock.getFramesInLoop());
 }
 
 /* -------------------------------------------------------------------------- */

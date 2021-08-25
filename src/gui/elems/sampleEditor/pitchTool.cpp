@@ -40,6 +40,8 @@
 #include "utils/string.h"
 #include <FL/Fl.H>
 
+extern giada::m::Clock g_clock;
+
 namespace giada
 {
 namespace v
@@ -141,7 +143,7 @@ void gePitchTool::cb_setPitchDouble()
 
 void gePitchTool::cb_setPitchToBar()
 {
-	c::events::setChannelPitch(m_data->channelId, m_data->end / (float)m::clock::getFramesInBar(),
+	c::events::setChannelPitch(m_data->channelId, m_data->end / (float)g_clock.getFramesInBar(),
 	    Thread::MAIN);
 }
 
@@ -149,7 +151,7 @@ void gePitchTool::cb_setPitchToBar()
 
 void gePitchTool::cb_setPitchToSong()
 {
-	c::events::setChannelPitch(m_data->channelId, m_data->end / (float)m::clock::getFramesInLoop(),
+	c::events::setChannelPitch(m_data->channelId, m_data->end / (float)g_clock.getFramesInLoop(),
 	    Thread::MAIN);
 }
 

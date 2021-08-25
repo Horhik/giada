@@ -32,6 +32,8 @@
 #include "utils/math.h"
 #include <cassert>
 
+extern giada::m::Clock g_clock;
+
 namespace giada::m::sampleReactor
 {
 namespace
@@ -147,7 +149,7 @@ ChannelStatus pressWhileOff_(channel::Data& ch, int velocity, bool isLoop)
 	if (ch.samplePlayer->velocityAsVol)
 		ch.volume_i = u::math::map(velocity, G_MAX_VELOCITY, G_MAX_VOLUME);
 
-	if (clock::canQuantize())
+	if (g_clock.canQuantize())
 	{
 		sequencer::quantizer.trigger(Q_ACTION_PLAY + ch.id);
 		return ChannelStatus::OFF;
@@ -162,7 +164,7 @@ ChannelStatus pressWhilePlay_(channel::Data& ch, SamplePlayerMode mode, bool isL
 {
 	if (mode == SamplePlayerMode::SINGLE_RETRIG)
 	{
-		if (clock::canQuantize())
+		if (g_clock.canQuantize())
 			sequencer::quantizer.trigger(Q_ACTION_REWIND + ch.id);
 		else
 			rewind_(ch);
@@ -185,7 +187,7 @@ ChannelStatus pressWhilePlay_(channel::Data& ch, SamplePlayerMode mode, bool isL
 
 void toggleReadActions_(channel::Data& ch)
 {
-	if (clock::isRunning() && ch.state->recStatus.load() == ChannelStatus::PLAY && !conf::conf.treatRecsAsLoops)
+	if (g_clock.isRunning() && ch.state->recStatus.load() == ChannelStatus::PLAY && !conf::conf.treatRecsAsLoops)
 		kill_(ch);
 }
 

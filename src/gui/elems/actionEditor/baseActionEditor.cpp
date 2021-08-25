@@ -33,6 +33,8 @@
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 
+extern giada::m::Clock g_clock;
+
 namespace giada
 {
 namespace v
@@ -83,10 +85,10 @@ void geBaseActionEditor::baseDraw(bool clear) const
 	}
 
 	fl_color(G_COLOR_GREY_4);
-	drawVerticals(m::clock::getFramesInBeat());
+	drawVerticals(g_clock.getFramesInBeat());
 
 	fl_color(G_COLOR_LIGHT_1);
-	drawVerticals(m::clock::getFramesInBar());
+	drawVerticals(g_clock.getFramesInBar());
 
 	/* Cover unused area. Avoid drawing cover if width == 0 (i.e. beats are 32). */
 
@@ -101,7 +103,7 @@ void geBaseActionEditor::drawVerticals(int steps) const
 {
 	/* Start drawing from steps, not from 0. The zero-th element is always 
 	graphically useless. */
-	for (Frame i = steps; i < m::clock::getFramesInLoop(); i += steps)
+	for (Frame i = steps; i < g_clock.getFramesInLoop(); i += steps)
 	{
 		Pixel p = m_base->frameToPixel(i) + x();
 		fl_line(p, y() + 1, p, y() + h() - 2);

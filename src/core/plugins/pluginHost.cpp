@@ -38,6 +38,8 @@
 #include "utils/vector.h"
 #include <cassert>
 
+extern giada::m::Clock g_clock;
+
 namespace giada::m::pluginHost
 {
 namespace
@@ -87,10 +89,10 @@ void processPlugins_(const std::vector<Plugin*>& plugins, juce::MidiBuffer& even
 
 bool Info::getCurrentPosition(CurrentPositionInfo& result)
 {
-	result.bpm           = clock::getBpm();
-	result.timeInSamples = clock::getCurrentFrame();
-	result.timeInSeconds = clock::getCurrentSecond();
-	result.isPlaying     = clock::isRunning();
+	result.bpm           = g_clock.getBpm();
+	result.timeInSamples = g_clock.getCurrentFrame();
+	result.timeInSeconds = g_clock.getCurrentSecond();
+	result.isPlaying     = g_clock.isRunning();
 
 	return true;
 }

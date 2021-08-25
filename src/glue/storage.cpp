@@ -56,6 +56,7 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::Clock         g_clock;
 
 namespace giada
 {
@@ -168,8 +169,8 @@ void loadProject(void* data)
 
 	m::mh::updateSoloCount();
 	m::recorderHandler::updateSamplerate(m::conf::conf.samplerate, m::patch::patch.samplerate);
-	m::clock::recomputeFrames();
-	m::mixer::allocRecBuffer(m::clock::getMaxFramesInLoop());
+	g_clock.recomputeFrames();
+	m::mixer::allocRecBuffer(g_clock.getMaxFramesInLoop());
 
 	/* Mixer is ready to go back online. */
 

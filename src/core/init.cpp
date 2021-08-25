@@ -106,7 +106,6 @@ void initSystem_()
 void initAudio_()
 {
 	g_kernelAudio.openDevice(conf::conf);
-	clock::init();
 	sync::init(conf::conf.samplerate, conf::conf.midiTCfps);
 	mh::init();
 	sequencer::init();
@@ -262,7 +261,6 @@ void reset()
 	model::init();
 	channelManager::init();
 	waveManager::init();
-	clock::init();
 	sync::init(conf::conf.samplerate, conf::conf.midiTCfps);
 	mh::init();
 	sequencer::init();

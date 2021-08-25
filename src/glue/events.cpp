@@ -56,6 +56,7 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::Clock         g_clock;
 
 namespace giada::c::events
 {
@@ -211,12 +212,12 @@ void setMasterOutVolume(float v, Thread t)
 
 void multiplyBeats()
 {
-	main::setBeats(m::clock::getBeats() * 2, m::clock::getBars());
+	main::setBeats(g_clock.getBeats() * 2, g_clock.getBars());
 }
 
 void divideBeats()
 {
-	main::setBeats(m::clock::getBeats() / 2, m::clock::getBars());
+	main::setBeats(g_clock.getBeats() / 2, g_clock.getBars());
 }
 
 /* -------------------------------------------------------------------------- */
@@ -234,7 +235,7 @@ void stopSequencer(Thread t)
 
 void toggleSequencer(Thread t)
 {
-	m::clock::isRunning() ? stopSequencer(t) : startSequencer(t);
+	g_clock.isRunning() ? stopSequencer(t) : startSequencer(t);
 }
 
 void rewindSequencer(Thread t)

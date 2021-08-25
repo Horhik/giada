@@ -36,6 +36,7 @@
 #include "core/recManager.h"
 
 extern giada::m::KernelAudio g_kernelAudio;
+extern giada::m::Clock       g_clock;
 
 namespace giada::m::sequencer
 {
@@ -55,7 +56,7 @@ Metronome metronome_;
 
 void rewindQ_(Frame delta)
 {
-	clock::rewind();
+	g_clock.rewind();
 	eventBuffer_.push_back({EventType::REWIND, 0, delta});
 }
 } // namespace
@@ -71,7 +72,7 @@ Quantizer quantizer;
 void init()
 {
 	quantizer.schedule(Q_ACTION_REWIND, rewindQ_);
-	clock::rewind();
+	g_clock.rewind();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -104,11 +105,11 @@ const EventBuffer& advance(Frame bufferSize)
 {
 	eventBuffer_.clear();
 
-	const Frame start        = clock::getCurrentFrame();
+	const Frame start        = g_clock.getCurrentFrame();
 	const Frame end          = start + bufferSize;
-	const Frame framesInLoop = clock::getFramesInLoop();
-	const Frame framesInBar  = clock::getFramesInBar();
-	const Frame framesInBeat = clock::getFramesInBeat();
+	const Frame framesInLoop = g_clock.getFramesInLoop();
+	const Frame framesInBar  = g_clock.getFramesInBar();
+	const Frame framesInBeat = g_clock.getFramesInBeat();
 
 	for (Frame i = start, local = 0; i < end; i++, local++)
 	{
@@ -136,8 +137,8 @@ const EventBuffer& advance(Frame bufferSize)
 	}
 
 	/* Advance clock and quantizer after the event parsing. */
-	clock::advance(bufferSize);
-	quantizer.advance(Range<Frame>(start, end), clock::getQuantizerStep());
+	g_clock.advance(bufferSize);
+	quantizer.advance(Range<Frame>(start, end), g_clock.getQuantizerStep());
 
 	return eventBuffer_;
 }
@@ -154,13 +155,13 @@ void render(mcl::AudioBuffer& outBuf)
 
 void rawStart()
 {
-	switch (clock::getStatus())
+	switch (g_clock.getStatus())
 	{
 	case ClockStatus::STOPPED:
-		clock::setStatus(ClockStatus::RUNNING);
+		g_clock.setStatus(ClockStatus::RUNNING);
 		break;
 	case ClockStatus::WAITING:
-		clock::setStatus(ClockStatus::RUNNING);
+		g_clock.setStatus(ClockStatus::RUNNING);
 		recManager::stopActionRec();
 		break;
 	default:
@@ -172,7 +173,7 @@ void rawStart()
 
 void rawStop()
 {
-	clock::setStatus(ClockStatus::STOPPED);
+	g_clock.setStatus(ClockStatus::STOPPED);
 
 	/* If recordings (both input and action) are active deactivate them, but 
 	store the takes. RecManager takes care of it. */
@@ -187,7 +188,7 @@ void rawStop()
 
 void rawRewind()
 {
-	if (clock::canQuantize())
+	if (g_clock.canQuantize())
 		quantizer.trigger(Q_ACTION_REWIND);
 	else
 		rewindQ_(/*delta=*/0);

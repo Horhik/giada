@@ -55,6 +55,7 @@
 #include "string.h"
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::Clock         g_clock;
 
 namespace giada::u::gui
 {
@@ -135,9 +136,9 @@ void updateStaticWidgets()
 
 #endif
 
-	G_MainWin->mainTimer->setMeter(clock::getBeats(), clock::getBars());
-	G_MainWin->mainTimer->setBpm(clock::getBpm());
-	G_MainWin->mainTimer->setQuantizer(clock::getQuantizerValue());
+	G_MainWin->mainTimer->setMeter(g_clock.getBeats(), g_clock.getBars());
+	G_MainWin->mainTimer->setBpm(g_clock.getBpm());
+	G_MainWin->mainTimer->setQuantizer(g_clock.getQuantizerValue());
 }
 
 /* -------------------------------------------------------------------------- */

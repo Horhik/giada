@@ -24,6 +24,7 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include "core/clock.h"
 #include "core/init.h"
 #include "core/kernelAudio.h"
 #include "gui/dialogs/mainWindow.h"
@@ -41,6 +42,7 @@
 #endif
 
 giada::m::KernelAudio g_kernelAudio;
+giada::m::Clock       g_clock(g_kernelAudio);
 
 class giada::v::gdMainWindow* G_MainWin = nullptr;
 

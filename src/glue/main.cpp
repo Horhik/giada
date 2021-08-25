@@ -54,6 +54,7 @@
 
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::KernelAudio   g_kernelAudio;
+extern giada::m::Clock         g_clock;
 
 namespace giada::c::main
 {
@@ -128,10 +129,10 @@ Sequencer getSequencer()
 	m::mixer::RecordInfo recInfo = m::mixer::getRecordInfo();
 
 	out.isFreeModeInputRec = m::recManager::isRecordingInput() && m::conf::conf.inputRecMode == InputRecMode::FREE;
-	out.shouldBlink        = u::gui::shouldBlink() && (m::clock::getStatus() == ClockStatus::WAITING || out.isFreeModeInputRec);
-	out.beats              = m::clock::getBeats();
-	out.bars               = m::clock::getBars();
-	out.currentBeat        = m::clock::getCurrentBeat();
+	out.shouldBlink        = u::gui::shouldBlink() && (g_clock.getStatus() == ClockStatus::WAITING || out.isFreeModeInputRec);
+	out.beats              = g_clock.getBeats();
+	out.bars               = g_clock.getBars();
+	out.currentBeat        = g_clock.getCurrentBeat();
 	out.recPosition        = recInfo.position;
 	out.recMaxLength       = recInfo.maxLength;
 
@@ -147,7 +148,7 @@ void setBpm(const char* i, const char* f)
 	if (m::recManager::isRecordingInput())
 		return;
 
-	m::clock::setBpm(std::atof(i) + (std::atof(f) / 10.0f));
+	g_clock.setBpm(std::atof(i) + (std::atof(f) / 10.0f));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -159,7 +160,7 @@ void setBpm(float f)
 	if (m::recManager::isRecordingInput())
 		return;
 
-	m::clock::setBpm(f);
+	g_clock.setBpm(f);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -171,15 +172,15 @@ void setBeats(int beats, int bars)
 	if (m::recManager::isRecordingInput())
 		return;
 
-	m::clock::setBeats(beats, bars);
-	m::mixer::allocRecBuffer(m::clock::getMaxFramesInLoop());
+	g_clock.setBeats(beats, bars);
+	m::mixer::allocRecBuffer(g_clock.getMaxFramesInLoop());
 }
 
 /* -------------------------------------------------------------------------- */
 
 void quantize(int val)
 {
-	m::clock::setQuantize(val);
+	g_clock.setQuantize(val);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -189,7 +190,7 @@ void clearAllSamples()
 	if (!v::gdConfirmWin("Warning", "Free all Sample channels: are you sure?"))
 		return;
 	G_MainWin->delSubWindow(WID_SAMPLE_EDITOR);
-	m::clock::setStatus(ClockStatus::STOPPED);
+	g_clock.setStatus(ClockStatus::STOPPED);
 	m::mh::freeAllChannels();
 	m::recorderHandler::clearAllActions();
 }

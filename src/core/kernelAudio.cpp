@@ -40,7 +40,9 @@
 #include "utils/log.h"
 #include "utils/vector.h"
 
+/* TODO */
 extern giada::m::KernelAudio g_kernelAudio;
+extern giada::m::Clock       g_clock;
 
 namespace giada::m
 {
@@ -71,12 +73,12 @@ int callback_(void* outBuf, void* inBuf, unsigned bufferSize, double /*streamTim
 	mixer::RenderInfo info;
 	info.isAudioReady    = model::get().kernel.audioReady;
 	info.hasInput        = g_kernelAudio.isInputEnabled();
-	info.isClockActive   = clock::isActive();
-	info.isClockRunning  = clock::isRunning();
+	info.isClockActive   = g_clock.isActive();
+	info.isClockRunning  = g_clock.isRunning();
 	info.canLineInRec    = recManager::isRecordingInput() && g_kernelAudio.isInputEnabled();
 	info.limitOutput     = conf::conf.limitOutput;
 	info.inToOut         = mh::getInToOut();
-	info.maxFramesToRec  = conf::conf.inputRecMode == InputRecMode::FREE ? clock::getMaxFramesInLoop() : clock::getFramesInLoop();
+	info.maxFramesToRec  = conf::conf.inputRecMode == InputRecMode::FREE ? g_clock.getMaxFramesInLoop() : g_clock.getFramesInLoop();
 	info.outVol          = mh::getOutVol();
 	info.inVol           = mh::getInVol();
 	info.recTriggerLevel = conf::conf.recTriggerLevel;

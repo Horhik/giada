@@ -35,6 +35,8 @@
 #include "core/recorderHandler.h"
 #include <cassert>
 
+extern giada::m::Clock g_clock;
+
 namespace giada::m::sampleActionRecorder
 {
 namespace
@@ -52,7 +54,7 @@ bool canRecord_(const channel::Data& ch);
 bool canRecord_(const channel::Data& ch)
 {
 	return recManager::isRecordingAction() &&
-	       clock::isRunning() &&
+	       g_clock.isRunning() &&
 	       !recManager::isRecordingInput() &&
 	       !ch.samplePlayer->isAnyLoopMode();
 }
@@ -77,7 +79,7 @@ void onKeyPress_(channel::Data& ch)
 void record_(channel::Data& ch, int note)
 {
 	recorderHandler::liveRec(ch.id, MidiEvent(note, 0, 0),
-	    clock::quantize(clock::getCurrentFrame()));
+	    g_clock.quantize(g_clock.getCurrentFrame()));
 
 	ch.hasActions = true;
 }
@@ -127,7 +129,7 @@ void stopReadActions_(channel::Data& ch, ChannelStatus curRecStatus)
 	just stop and disable everything. Otherwise make sure a channel with actions
 	behave like a dynamic one. */
 
-	if (!clock::isRunning() || !conf::conf.treatRecsAsLoops)
+	if (!g_clock.isRunning() || !conf::conf.treatRecsAsLoops)
 	{
 		ch.state->recStatus.store(ChannelStatus::OFF);
 		ch.state->readActions.store(false);

@@ -29,82 +29,108 @@
 
 #include "types.h"
 
-namespace giada::m::clock
+namespace giada::m::model
 {
-void init();
+struct Clock;
+}
 
-/* recomputeFrames
-Updates bpm, frames, beats and so on. */
+namespace giada::m
+{
+class KernelAudio;
+class Clock
+{
+public:
+	Clock(KernelAudio&);
 
-void recomputeFrames();
+	float       getBpm() const;
+	int         getBeats() const;
+	int         getBars() const;
+	int         getCurrentBeat() const;
+	int         getCurrentFrame() const;
+	float       getCurrentSecond() const;
+	int         getFramesInBar() const;
+	int         getFramesInBeat() const;
+	int         getFramesInLoop() const;
+	int         getFramesInSeq() const;
+	int         getQuantizerValue() const;
+	int         getQuantizerStep() const;
+	ClockStatus getStatus() const;
 
-float       getBpm();
-int         getBeats();
-int         getBars();
-int         getCurrentBeat();
-int         getCurrentFrame();
-float       getCurrentSecond();
-int         getFramesInBar();
-int         getFramesInBeat();
-int         getFramesInLoop();
-int         getFramesInSeq();
-int         getQuantizerValue();
-int         getQuantizerStep();
-ClockStatus getStatus();
+	/* isRunning
+    When clock is actually moving forward, i.e. ClockStatus == RUNNING. */
 
-/* getMaxFramesInLoop
-Returns how many frames the current loop length might contain at the slowest
-speed possible (G_MIN_BPM). Call this whenever you change the number or beats. */
+	bool isRunning() const;
 
-Frame getMaxFramesInLoop();
+	/* isActive
+    Clock is enabled, but might be in wait mode, i.e. ClockStatus == RUNNING or
+    ClockStatus == WAITING. */
 
-/* advance
-Increases current frame by a specific amount. */
+	bool isActive() const;
 
-void advance(Frame amount);
+	bool isOnBeat() const;
+	bool isOnBar() const;
+	bool isOnFirstBeat() const;
 
-/* quantoHasPassed
-Tells whether a quantizer unit has passed yet. */
+	/* getMaxFramesInLoop
+    Returns how many frames the current loop length might contain at the slowest
+    speed possible (G_MIN_BPM). Call this whenever you change the number or 
+    beats. */
 
-bool quantoHasPassed();
+	Frame getMaxFramesInLoop() const;
 
-/* canQuantize
-Tells whether the quantizer value is > 0 and the clock is running. */
+	/* quantoHasPassed
+    Tells whether a quantizer unit has passed yet. */
 
-bool canQuantize();
+	bool quantoHasPassed() const;
 
-/* quantize
-Quantizes the global frame 'f'.  */
+	/* canQuantize
+    Tells whether the quantizer value is > 0 and the clock is running. */
 
-Frame quantize(Frame f);
+	bool canQuantize() const;
 
-void setBpm(float b);
-void setBeats(int beats, int bars);
-void setQuantize(int q);
+	/* calcBpmFromRec
+    Given the amount of recorded frames, returns the speed of the current 
+    performance. Used while input recording in FREE mode. */
 
-/* isRunning
-When clock is actually moving forward, i.e. ClockStatus == RUNNING. */
+	float calcBpmFromRec(Frame recordedFrames) const;
 
-bool isRunning();
+	/* advance
+    Increases current frame by a specific amount. */
 
-/* isActive
-Clock is enabled, but might be in wait mode, i.e. ClockStatus == RUNNING or
-ClockStatus == WAITING. */
+	void advance(Frame amount);
 
-bool isActive();
+	/* quantize
+    Quantizes the global frame 'f'.  */
 
-bool isOnBeat();
-bool isOnBar();
-bool isOnFirstBeat();
+	Frame quantize(Frame f);
 
-void rewind();
-void setStatus(ClockStatus s);
+	void setBpm(float b);
+	void setBeats(int beats, int bars);
+	void setQuantize(int q);
 
-/* calcBpmFromRec
-Given the amount of recorded frames, returns the speed of the current 
-performance. Used while input recording in FREE mode. */
+	/* recomputeFrames
+    Updates bpm, frames, beats and so on. */
 
-float calcBpmFromRec(Frame recordedFrames);
-} // namespace giada::m::clock
+	void recomputeFrames();
+
+	void rewind();
+	void setStatus(ClockStatus s);
+
+private:
+	/* recomputeFrames
+    Updates bpm, frames, beats and so on. Private version. */
+
+	void recomputeFrames(model::Clock& c);
+
+	void setBpmInternal(float current);
+
+	KernelAudio& m_kernelAudio;
+
+	/* m_quantizerStep
+    Tells how many frames to wait to perform a quantized action. */
+
+	int m_quantizerStep;
+};
+} // namespace giada::m
 
 #endif

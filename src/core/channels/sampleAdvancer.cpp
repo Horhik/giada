@@ -29,6 +29,8 @@
 #include "core/clock.h"
 #include <cassert>
 
+extern giada::m::Clock g_clock;
+
 namespace giada::m::sampleAdvancer
 {
 namespace
@@ -202,7 +204,7 @@ void onLastFrame(const channel::Data& ch)
 	ChannelStatus    playStatus = ch.state->playStatus.load();
 	SamplePlayerMode mode       = ch.samplePlayer->mode;
 	bool             isLoop     = ch.samplePlayer->isAnyLoopMode();
-	bool             running    = clock::isRunning();
+	bool             running    = g_clock.isRunning();
 
 	if (playStatus == ChannelStatus::PLAY)
 	{

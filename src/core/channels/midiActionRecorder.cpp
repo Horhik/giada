@@ -35,6 +35,8 @@
 #include "core/recorderHandler.h"
 #include <cassert>
 
+extern giada::m::Clock g_clock;
+
 namespace giada::m::midiActionRecorder
 {
 namespace
@@ -43,7 +45,7 @@ void record_(channel::Data& ch, const MidiEvent& e)
 {
 	MidiEvent flat(e);
 	flat.setChannel(0);
-	recorderHandler::liveRec(ch.id, flat, clock::quantize(clock::getCurrentFrame()));
+	recorderHandler::liveRec(ch.id, flat, g_clock.quantize(g_clock.getCurrentFrame()));
 	ch.hasActions = true;
 }
 
@@ -52,7 +54,7 @@ void record_(channel::Data& ch, const MidiEvent& e)
 bool canRecord_()
 {
 	return recManager::isRecordingAction() &&
-	       clock::isRunning() &&
+	       g_clock.isRunning() &&
 	       !recManager::isRecordingInput();
 }
 } // namespace

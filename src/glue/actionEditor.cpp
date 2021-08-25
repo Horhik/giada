@@ -35,6 +35,8 @@
 #include "glue/recorder.h"
 #include <cassert>
 
+extern giada::m::Clock g_clock;
+
 namespace giada::c::actionEditor
 {
 namespace
@@ -64,7 +66,7 @@ void recordFirstEnvelopeAction_(ID channelId, Frame frame, int value)
 	m::MidiEvent    e2 = m::MidiEvent(m::MidiEvent::ENVELOPE, 0, value);
 	const m::Action a1 = mr::rec(channelId, 0, e1);
 	const m::Action a2 = mr::rec(channelId, frame, e2);
-	const m::Action a3 = mr::rec(channelId, m::clock::getFramesInLoop() - 1, e1);
+	const m::Action a3 = mr::rec(channelId, g_clock.getFramesInLoop() - 1, e1);
 
 	mr::updateSiblings(a1.id, /*prev=*/a3.id, /*next=*/a2.id); // Circular loop (begin)
 	mr::updateSiblings(a2.id, /*prev=*/a1.id, /*next=*/a3.id);
@@ -163,7 +165,7 @@ void recordMidiAction(ID channelId, int note, int velocity, Frame f1, Frame f2)
 
 	/* Avoid frame overflow. */
 
-	Frame overflow = f2 - (m::clock::getFramesInLoop());
+	Frame overflow = f2 - (g_clock.getFramesInLoop());
 	if (overflow > 0)
 	{
 		f2 -= overflow;

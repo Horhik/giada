@@ -32,6 +32,8 @@
 #include "utils/math.h"
 #include <FL/Fl_Double_Window.H>
 
+extern giada::m::Clock g_clock;
+
 namespace giada::v
 {
 geGridTool::geGridTool(Pixel x, Pixel y)
@@ -125,6 +127,6 @@ Frame geGridTool::getSnapFrame(Frame v) const
 
 Frame geGridTool::getCellSize() const
 {
-	return m::clock::getFramesInBeat() / getValue();
+	return g_clock.getFramesInBeat() / getValue();
 }
 } // namespace giada::v

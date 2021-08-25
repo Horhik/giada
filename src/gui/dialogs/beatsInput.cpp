@@ -39,6 +39,7 @@
 #include <cstring>
 
 extern giada::v::gdMainWindow* mainWin;
+extern giada::m::Clock         g_clock;
 
 namespace giada
 {
@@ -55,11 +56,11 @@ gdBeatsInput::gdBeatsInput()
 	end();
 
 	beats->maximum_size(2);
-	beats->value(std::to_string(m::clock::getBeats()).c_str());
+	beats->value(std::to_string(g_clock.getBeats()).c_str());
 	beats->type(FL_INT_INPUT);
 
 	bars->maximum_size(2);
-	bars->value(std::to_string(m::clock::getBars()).c_str());
+	bars->value(std::to_string(g_clock.getBars()).c_str());
 	bars->type(FL_INT_INPUT);
 
 	ok->shortcut(FL_Enter);

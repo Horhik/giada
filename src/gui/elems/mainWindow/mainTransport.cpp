@@ -39,6 +39,8 @@
 #include "gui/elems/basics/button.h"
 #include "gui/elems/basics/statusButton.h"
 
+extern giada::m::Clock g_clock;
+
 namespace giada::v
 {
 geMainTransport::geMainTransport(int x, int y)
@@ -110,7 +112,7 @@ geMainTransport::geMainTransport(int x, int y)
 
 void geMainTransport::refresh()
 {
-	m_play.setStatus(m::clock::isRunning());
+	m_play.setStatus(g_clock.isRunning());
 	m_recAction.setStatus(m::recManager::isRecordingAction());
 	m_recInput.setStatus(m::recManager::isRecordingInput());
 	m_metronome.setStatus(m::sequencer::isMetronomeOn());

@@ -56,6 +56,7 @@
 #include <vector>
 
 extern giada::m::KernelAudio g_kernelAudio;
+extern giada::m::Clock       g_clock;
 
 namespace giada::m::mh
 {
@@ -112,7 +113,7 @@ void setupChannelPostRecording_(channel::Data& ch)
 {
 	/* Start sample channels in loop mode right away. */
 	if (ch.samplePlayer->isAnyLoopMode())
-		samplePlayer::kickIn(ch, clock::getCurrentFrame());
+		samplePlayer::kickIn(ch, g_clock.getCurrentFrame());
 	/* Disable 'arm' button if overdub protection is on. */
 	if (ch.audioReceiver->overdubProtection == true)
 		ch.armed = false;
@@ -173,7 +174,7 @@ void overdubChannel_(channel::Data& ch)
 
 void init()
 {
-	mixer::init(clock::getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
+	mixer::init(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 
 	model::get().channels.clear();
 
