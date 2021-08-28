@@ -53,7 +53,14 @@ Sequencer::Sequencer(KernelAudio& k, Clock& c)
 : m_kernelAudio(k)
 , m_clock(c)
 {
+	reset();
 	quantizer.schedule(Q_ACTION_REWIND, [this](Frame delta) { rewindQ(delta); });
+}
+
+/* -------------------------------------------------------------------------- */
+
+void Sequencer::reset()
+{
 	m_clock.rewind();
 }
 

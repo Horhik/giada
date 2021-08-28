@@ -64,7 +64,11 @@ public:
 	using EventBuffer = RingBuffer<Event, G_MAX_SEQUENCER_EVENTS>;
 
 	Sequencer(KernelAudio&, Clock&);
-	Sequencer& operator=(Sequencer&&) = default;
+
+	/* reset
+	Brings everything back to the initial state. */
+
+	void reset();
 
 	/* react
 	Reacts to live events coming from the EventDispatcher (human events). */

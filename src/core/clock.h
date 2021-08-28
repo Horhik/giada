@@ -41,8 +41,6 @@ class Clock
 {
 public:
 	Clock(KernelAudio&);
-	Clock& operator=(const Clock&) { return *this; }
-	Clock& operator=(Clock&&) { return *this; }
 
 	float       getBpm() const;
 	int         getBeats() const;
@@ -95,6 +93,11 @@ public:
     performance. Used while input recording in FREE mode. */
 
 	float calcBpmFromRec(Frame recordedFrames) const;
+
+	/* reset
+	Brings everything back to the initial state. */
+
+	void reset();
 
 	/* advance
     Increases current frame by a specific amount. */

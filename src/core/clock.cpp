@@ -47,13 +47,7 @@ Clock::Clock(KernelAudio& k)
 : m_kernelAudio(k)
 , m_quantizerStep(1)
 {
-	model::get().clock.bars     = G_DEFAULT_BARS;
-	model::get().clock.beats    = G_DEFAULT_BEATS;
-	model::get().clock.bpm      = G_DEFAULT_BPM;
-	model::get().clock.quantize = G_DEFAULT_QUANTIZE;
-	recomputeFrames(model::get().clock);
-
-	model::swap(model::SwapType::NONE);
+	reset();
 
 #ifdef WITH_AUDIO_JACK
 
@@ -223,6 +217,19 @@ void Clock::setStatus(ClockStatus s)
 		sync::sendMIDIstart();
 	else if (s == ClockStatus::STOPPED)
 		sync::sendMIDIstop();
+}
+
+/* -------------------------------------------------------------------------- */
+
+void Clock::reset()
+{
+	model::get().clock.bars     = G_DEFAULT_BARS;
+	model::get().clock.beats    = G_DEFAULT_BEATS;
+	model::get().clock.bpm      = G_DEFAULT_BPM;
+	model::get().clock.quantize = G_DEFAULT_QUANTIZE;
+	recomputeFrames(model::get().clock);
+
+	model::swap(model::SwapType::NONE);
 }
 
 /* -------------------------------------------------------------------------- */

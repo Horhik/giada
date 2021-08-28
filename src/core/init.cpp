@@ -264,7 +264,8 @@ void reset()
 	waveManager::init();
 	sync::init(conf::conf.samplerate, conf::conf.midiTCfps);
 	mh::init();
-	//g_sequencer = Sequencer(g_kernelAudio, g_clock);
+	g_clock.reset();
+	g_sequencer.reset();
 	recorder::init();
 #ifdef WITH_VST
 	pluginManager::init(conf::conf.samplerate, g_kernelAudio.getRealBufSize());
