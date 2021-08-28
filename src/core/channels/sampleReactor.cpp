@@ -32,7 +32,8 @@
 #include "utils/math.h"
 #include <cassert>
 
-extern giada::m::Clock g_clock;
+extern giada::m::Clock     g_clock;
+extern giada::m::Sequencer g_sequencer;
 
 namespace giada::m::sampleReactor
 {
@@ -98,8 +99,8 @@ void release_(channel::Data& ch)
 
 	if (ch.state->playStatus.load() == ChannelStatus::PLAY)
 		kill_(ch);
-	else if (sequencer::quantizer.hasBeenTriggered())
-		sequencer::quantizer.clear();
+	else if (g_sequencer.quantizer.hasBeenTriggered())
+		g_sequencer.quantizer.clear();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -151,7 +152,7 @@ ChannelStatus pressWhileOff_(channel::Data& ch, int velocity, bool isLoop)
 
 	if (g_clock.canQuantize())
 	{
-		sequencer::quantizer.trigger(Q_ACTION_PLAY + ch.id);
+		g_sequencer.quantizer.trigger(Q_ACTION_PLAY + ch.id);
 		return ChannelStatus::OFF;
 	}
 	else
@@ -165,7 +166,7 @@ ChannelStatus pressWhilePlay_(channel::Data& ch, SamplePlayerMode mode, bool isL
 	if (mode == SamplePlayerMode::SINGLE_RETRIG)
 	{
 		if (g_clock.canQuantize())
-			sequencer::quantizer.trigger(Q_ACTION_REWIND + ch.id);
+			g_sequencer.quantizer.trigger(Q_ACTION_REWIND + ch.id);
 		else
 			rewind_(ch);
 		return ChannelStatus::PLAY;
@@ -211,13 +212,13 @@ void rewind_(channel::Data& ch, Frame localFrame)
 
 Data::Data(ID channelId)
 {
-	sequencer::quantizer.schedule(Q_ACTION_PLAY + channelId, [channelId](Frame delta) {
+	g_sequencer.quantizer.schedule(Q_ACTION_PLAY + channelId, [channelId](Frame delta) {
 		channel::Data& ch = model::get().getChannel(channelId);
 		ch.state->offset  = delta;
 		ch.state->playStatus.store(ChannelStatus::PLAY);
 	});
 
-	sequencer::quantizer.schedule(Q_ACTION_REWIND + channelId, [channelId](Frame delta) {
+	g_sequencer.quantizer.schedule(Q_ACTION_REWIND + channelId, [channelId](Frame delta) {
 		channel::Data& ch = model::get().getChannel(channelId);
 		rewind_(ch, delta);
 	});

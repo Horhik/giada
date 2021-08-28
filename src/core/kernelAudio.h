@@ -59,6 +59,9 @@ public:
 		std::vector<int> sampleRates       = {};
 	};
 
+	KernelAudio& operator=(KernelAudio&&) { return *this; };
+	KernelAudio& operator=(const KernelAudio&) { return *this; };
+
 	int  openDevice(const m::conf::Conf& conf);
 	void closeDevice();
 	int  startStream();

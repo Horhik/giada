@@ -102,9 +102,9 @@ void react(channel::Data& ch, const eventDispatcher::Event& e)
 
 /* -------------------------------------------------------------------------- */
 
-void advance(const channel::Data& ch, const sequencer::Event& e)
+void advance(const channel::Data& ch, const Sequencer::Event& e)
 {
-	if (e.type == sequencer::EventType::FIRST_BEAT)
+	if (e.type == Sequencer::EventType::FIRST_BEAT)
 		ch.state->playStatus.store(onFirstBeat_(ch));
 }
 } // namespace giada::m::midiController

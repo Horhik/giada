@@ -32,6 +32,8 @@
 #include "utils/log.h"
 #include "utils/math.h"
 
+extern giada::m::Sequencer g_sequencer;
+
 namespace giada::m::mixer
 {
 namespace
@@ -182,8 +184,8 @@ void processSequencer_(const model::Layout& layout, mcl::AudioBuffer& out, const
 	generating metronome audio). This way the metronome is aligned with 
 	everything else. */
 
-	const sequencer::EventBuffer& events = sequencer::advance(in.countFrames());
-	sequencer::render(out);
+	const Sequencer::EventBuffer& events = g_sequencer.advance(in.countFrames());
+	g_sequencer.render(out);
 
 	/* No channel processing if layout is locked: another thread is changing
     data (e.g. Plugins or Waves). */

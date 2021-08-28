@@ -36,6 +36,8 @@
 #include "core/waveManager.h"
 #include <cassert>
 
+extern giada::m::Sequencer g_sequencer;
+
 namespace giada::m::model
 {
 namespace
@@ -68,7 +70,7 @@ void store(patch::Patch& patch)
 	patch.beats      = layout.clock.beats;
 	patch.bpm        = layout.clock.bpm;
 	patch.quantize   = layout.clock.quantize;
-	patch.metronome  = sequencer::isMetronomeOn(); // TODO - add bool metronome to Layout
+	patch.metronome  = g_sequencer.isMetronomeOn(); // TODO - add bool metronome to Layout
 	patch.samplerate = conf::conf.samplerate;
 
 #ifdef WITH_VST

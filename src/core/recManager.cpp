@@ -40,6 +40,7 @@
 
 extern giada::m::KernelAudio g_kernelAudio;
 extern giada::m::Clock       g_clock;
+extern giada::m::Sequencer   g_sequencer;
 
 namespace giada::m::recManager
 {
@@ -74,7 +75,7 @@ void setRecordingInput_(bool v)
 bool startActionRec_()
 {
 	g_clock.setStatus(ClockStatus::RUNNING);
-	sequencer::start();
+	g_sequencer.start();
 	conf::conf.recTriggerMode = RecTriggerMode::NORMAL;
 	return true;
 }
@@ -85,7 +86,7 @@ void startInputRec_()
 {
 	/* Start recording from the current frame, not the beginning. */
 	mixer::startInputRec(g_clock.getCurrentFrame());
-	sequencer::start();
+	g_sequencer.start();
 	conf::conf.recTriggerMode = RecTriggerMode::NORMAL;
 }
 } // namespace

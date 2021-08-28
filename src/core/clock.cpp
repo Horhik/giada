@@ -39,6 +39,8 @@
 #include <atomic>
 #include <cassert>
 
+extern giada::m::Sequencer g_sequencer;
+
 namespace giada::m
 {
 Clock::Clock(KernelAudio& k)
@@ -57,10 +59,10 @@ Clock::Clock(KernelAudio& k)
 
 	if (m_kernelAudio.getAPI() == G_SYS_API_JACK)
 	{
-		sync::onJackRewind    = []() { sequencer::rawRewind(); };
+		sync::onJackRewind    = []() { g_sequencer.rawRewind(); };
 		sync::onJackChangeBpm = [this](float bpm) { setBpmInternal(bpm); };
-		sync::onJackStart     = []() { sequencer::rawStart(); };
-		sync::onJackStop      = []() { sequencer::rawStop(); };
+		sync::onJackStart     = []() { g_sequencer.rawStart(); };
+		sync::onJackStop      = []() { g_sequencer.rawStop(); };
 	}
 
 #endif

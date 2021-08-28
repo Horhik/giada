@@ -57,6 +57,7 @@
 
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::Clock         g_clock;
+extern giada::m::Sequencer     g_sequencer;
 
 namespace giada::c::events
 {
@@ -179,7 +180,7 @@ void sendMidiToChannel(ID channelId, m::MidiEvent e, Thread t)
 
 void toggleMetronome()
 {
-	m::sequencer::toggleMetronome();
+	g_sequencer.toggleMetronome();
 }
 
 /* -------------------------------------------------------------------------- */

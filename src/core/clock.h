@@ -41,6 +41,8 @@ class Clock
 {
 public:
 	Clock(KernelAudio&);
+	Clock& operator=(const Clock&) { return *this; }
+	Clock& operator=(Clock&&) { return *this; }
 
 	float       getBpm() const;
 	int         getBeats() const;

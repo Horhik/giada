@@ -70,6 +70,8 @@
 
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::KernelAudio   g_kernelAudio;
+extern giada::m::Clock         g_clock;
+extern giada::m::Sequencer     g_sequencer;
 
 namespace giada::m::init
 {
@@ -108,7 +110,6 @@ void initAudio_()
 	g_kernelAudio.openDevice(conf::conf);
 	sync::init(conf::conf.samplerate, conf::conf.midiTCfps);
 	mh::init();
-	sequencer::init();
 	recorder::init();
 	recorderHandler::init();
 
@@ -263,7 +264,7 @@ void reset()
 	waveManager::init();
 	sync::init(conf::conf.samplerate, conf::conf.midiTCfps);
 	mh::init();
-	sequencer::init();
+	//g_sequencer = Sequencer(g_kernelAudio, g_clock);
 	recorder::init();
 #ifdef WITH_VST
 	pluginManager::init(conf::conf.samplerate, g_kernelAudio.getRealBufSize());

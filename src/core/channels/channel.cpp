@@ -292,9 +292,9 @@ bool Data::isReadingActions() const
 
 /* -------------------------------------------------------------------------- */
 
-void advance(const Data& d, const sequencer::EventBuffer& events)
+void advance(const Data& d, const Sequencer::EventBuffer& events)
 {
-	for (const sequencer::Event& e : events)
+	for (const Sequencer::Event& e : events)
 	{
 		if (d.midiController)
 			midiController::advance(d, e);

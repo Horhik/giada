@@ -227,23 +227,23 @@ void onLastFrame(const channel::Data& ch)
 
 /* -------------------------------------------------------------------------- */
 
-void advance(const channel::Data& ch, const sequencer::Event& e)
+void advance(const channel::Data& ch, const Sequencer::Event& e)
 {
 	switch (e.type)
 	{
-	case sequencer::EventType::FIRST_BEAT:
+	case Sequencer::EventType::FIRST_BEAT:
 		onFirstBeat_(ch, e.delta);
 		break;
 
-	case sequencer::EventType::BAR:
+	case Sequencer::EventType::BAR:
 		onBar_(ch, e.delta);
 		break;
 
-	case sequencer::EventType::REWIND:
+	case Sequencer::EventType::REWIND:
 		rewind_(ch, e.delta);
 		break;
 
-	case sequencer::EventType::ACTIONS:
+	case Sequencer::EventType::ACTIONS:
 		if (ch.state->readActions.load() == true)
 			parseActions_(ch, *e.actions, e.delta);
 		break;

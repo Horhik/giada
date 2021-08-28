@@ -161,7 +161,7 @@ void react(channel::Data& ch, const eventDispatcher::Event& e)
 
 /* -------------------------------------------------------------------------- */
 
-void advance(const channel::Data& ch, const sequencer::Event& e)
+void advance(const channel::Data& ch, const Sequencer::Event& e)
 {
 	sampleAdvancer::advance(ch, e);
 }

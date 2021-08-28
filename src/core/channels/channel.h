@@ -142,7 +142,7 @@ struct Data
 Advances internal state by processing static events (e.g. pre-recorded 
 actions or sequencer events) in the current block. */
 
-void advance(const Data& d, const sequencer::EventBuffer& e);
+void advance(const Data& d, const Sequencer::EventBuffer& e);
 
 /* react
 Reacts to live events coming from the EventDispatcher (human events) and

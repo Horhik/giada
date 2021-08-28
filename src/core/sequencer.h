@@ -28,6 +28,7 @@
 #define G_SEQUENCER_H
 
 #include "core/eventDispatcher.h"
+#include "core/metronome.h"
 #include "core/quantizer.h"
 #include <vector>
 
@@ -35,67 +36,89 @@ namespace mcl
 {
 class AudioBuffer;
 }
-namespace giada::m::sequencer
+
+namespace giada::m
 {
-enum class EventType
+class KernelAudio;
+class Clock;
+class Sequencer
 {
-	NONE,
-	FIRST_BEAT,
-	BAR,
-	REWIND,
-	ACTIONS
+public:
+	enum class EventType
+	{
+		NONE,
+		FIRST_BEAT,
+		BAR,
+		REWIND,
+		ACTIONS
+	};
+
+	struct Event
+	{
+		EventType                  type    = EventType::NONE;
+		Frame                      global  = 0;
+		Frame                      delta   = 0;
+		const std::vector<Action>* actions = nullptr;
+	};
+
+	using EventBuffer = RingBuffer<Event, G_MAX_SEQUENCER_EVENTS>;
+
+	Sequencer(KernelAudio&, Clock&);
+	Sequencer& operator=(Sequencer&&) = default;
+
+	/* react
+	Reacts to live events coming from the EventDispatcher (human events). */
+
+	void react(const eventDispatcher::EventBuffer& e);
+
+	/* advance
+	Parses sequencer events that might occur in a block and advances the internal 
+	quantizer. Returns a reference to the internal EventBuffer filled with events
+	(if any). Call this on each new audio block. */
+
+	const EventBuffer& advance(Frame bufferSize);
+
+	/* render
+	Renders audio coming out from the sequencer: that is, the metronome! */
+
+	void render(mcl::AudioBuffer& outBuf);
+
+	/* raw[*]
+	Raw functions to start, stop and rewind the sequencer. These functions must 
+	be called only by clock:: when the JACK signal is received. Other modules 
+	should use the non-raw versions below. */
+
+	void rawStart();
+	void rawStop();
+	void rawRewind();
+
+	void start();
+	void stop();
+	void rewind();
+
+	bool isMetronomeOn();
+	void toggleMetronome();
+	void setMetronome(bool v);
+
+	/* quantizer
+	Used by the sequencer itself and each sample channel. */
+
+	Quantizer quantizer;
+
+private:
+	void rewindQ(Frame delta);
+
+	KernelAudio& m_kernelAudio;
+	Clock&       m_clock;
+
+	/* m_eventBuffer
+	Buffer of events found in each block sent to channels for event parsing. 
+	This is filled during react(). */
+
+	EventBuffer m_eventBuffer;
+
+	Metronome m_metronome;
 };
-
-struct Event
-{
-	EventType                  type    = EventType::NONE;
-	Frame                      global  = 0;
-	Frame                      delta   = 0;
-	const std::vector<Action>* actions = nullptr;
-};
-
-using EventBuffer = RingBuffer<Event, G_MAX_SEQUENCER_EVENTS>;
-
-/* quantizer
-Used by the sequencer itself and each sample channel. */
-
-extern Quantizer quantizer;
-
-void init();
-
-/* react
-Reacts to live events coming from the EventDispatcher (human events). */
-
-void react(const eventDispatcher::EventBuffer& e);
-
-/* advance
-Parses sequencer events that might occur in a block and advances the internal 
-quantizer. Returns a reference to the internal EventBuffer filled with events
-(if any). Call this on each new audio block. */
-
-const EventBuffer& advance(Frame bufferSize);
-
-/* render
-Renders audio coming out from the sequencer: that is, the metronome! */
-
-void render(mcl::AudioBuffer& outBuf);
-
-/* raw[*]
-Raw functions to start, stop and rewind the sequencer. These functions must be
-called only by clock:: when the JACK signal is received. Other modules should
-use the non-raw versions below. */
-
-void rawStart();
-void rawStop();
-void rawRewind();
-
-void start();
-void stop();
-void rewind();
-
-bool isMetronomeOn();
-void toggleMetronome();
-void setMetronome(bool v);
-} // namespace giada::m::sequencer
+} // namespace giada::m
 
 #endif

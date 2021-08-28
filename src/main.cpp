@@ -27,6 +27,7 @@
 #include "core/clock.h"
 #include "core/init.h"
 #include "core/kernelAudio.h"
+#include "core/sequencer.h"
 #include "gui/dialogs/mainWindow.h"
 #include <FL/Fl.H>
 #ifdef WITH_TESTS
@@ -43,6 +44,7 @@
 
 giada::m::KernelAudio g_kernelAudio;
 giada::m::Clock       g_clock(g_kernelAudio);
+giada::m::Sequencer   g_sequencer(g_kernelAudio, g_clock);
 
 class giada::v::gdMainWindow* G_MainWin = nullptr;
 

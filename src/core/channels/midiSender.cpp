@@ -73,11 +73,11 @@ void react(const channel::Data& ch, const eventDispatcher::Event& e)
 
 /* -------------------------------------------------------------------------- */
 
-void advance(const channel::Data& ch, const sequencer::Event& e)
+void advance(const channel::Data& ch, const Sequencer::Event& e)
 {
 	if (!ch.isPlaying() || !ch.midiSender->enabled || ch.isMuted())
 		return;
-	if (e.type == sequencer::EventType::ACTIONS)
+	if (e.type == Sequencer::EventType::ACTIONS)
 		parseActions_(ch, *e.actions);
 }
 } // namespace giada::m::midiSender

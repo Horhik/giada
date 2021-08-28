@@ -29,6 +29,8 @@
 
 #ifdef WITH_VST
 
+#include "core/sequencer.h"
+
 namespace giada::m::channel
 {
 struct Data;
@@ -48,7 +50,7 @@ struct Data
 };
 
 void react(const channel::Data& ch, const eventDispatcher::Event& e);
-void advance(const channel::Data& ch, const sequencer::Event& e);
+void advance(const channel::Data& ch, const Sequencer::Event& e);
 void render(const channel::Data& ch);
 } // namespace giada::m::midiReceiver
 

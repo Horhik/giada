@@ -34,6 +34,8 @@
 #include "utils/log.h"
 #include <functional>
 
+extern giada::m::Sequencer g_sequencer;
+
 namespace giada::m::eventDispatcher
 {
 namespace
@@ -89,7 +91,7 @@ void processChannels_()
 
 void processSequencer_()
 {
-	sequencer::react(eventBuffer_);
+	g_sequencer.react(eventBuffer_);
 }
 
 /* -------------------------------------------------------------------------- */

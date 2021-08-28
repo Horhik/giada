@@ -46,6 +46,7 @@ public:
 	};
 
 	JackTransport(jack_client_t&);
+	JackTransport& operator=(JackTransport&&) { return *this; };
 
 	void  start();
 	void  stop();
