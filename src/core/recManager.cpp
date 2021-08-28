@@ -41,6 +41,7 @@
 extern giada::m::KernelAudio g_kernelAudio;
 extern giada::m::Clock       g_clock;
 extern giada::m::Sequencer   g_sequencer;
+extern giada::m::Mixer       g_mixer;
 
 namespace giada::m::recManager
 {
@@ -85,7 +86,7 @@ bool startActionRec_()
 void startInputRec_()
 {
 	/* Start recording from the current frame, not the beginning. */
-	mixer::startInputRec(g_clock.getCurrentFrame());
+	g_mixer.startInputRec(g_clock.getCurrentFrame());
 	g_sequencer.start();
 	conf::conf.recTriggerMode = RecTriggerMode::NORMAL;
 }
@@ -183,7 +184,7 @@ bool startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
 		g_clock.rewind();
 
 	if (inputMode == InputRecMode::FREE)
-		mixer::setEndOfRecCallback([inputMode] { stopInputRec(inputMode); });
+		g_mixer.setEndOfRecCallback([inputMode] { stopInputRec(inputMode); });
 
 	if (triggerMode == RecTriggerMode::NORMAL)
 	{
@@ -194,7 +195,7 @@ bool startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
 	else
 	{
 		g_clock.setStatus(ClockStatus::WAITING);
-		mixer::setSignalCallback([] {
+		g_mixer.setSignalCallback([] {
 			startInputRec_();
 			setRecordingInput_(true);
 		});
@@ -210,7 +211,7 @@ void stopInputRec(InputRecMode recMode)
 {
 	setRecordingInput_(false);
 
-	Frame recordedFrames = mixer::stopInputRec();
+	Frame recordedFrames = g_mixer.stopInputRec();
 
 	/* When recording in RIGID mode, the amount of recorded frames is always 
 	equal to the current loop length. */
@@ -226,7 +227,7 @@ void stopInputRec(InputRecMode recMode)
 	if (g_clock.getStatus() == ClockStatus::WAITING)
 	{
 		g_clock.setStatus(ClockStatus::STOPPED);
-		mixer::setSignalCallback(nullptr);
+		g_mixer.setSignalCallback(nullptr);
 		return;
 	}
 
@@ -238,7 +239,7 @@ void stopInputRec(InputRecMode recMode)
 	{
 		g_clock.rewind();
 		g_clock.setBpm(g_clock.calcBpmFromRec(recordedFrames));
-		mixer::setEndOfRecCallback(nullptr);
+		g_mixer.setEndOfRecCallback(nullptr);
 		refreshInputRecMode(); // Back to RIGID mode if necessary
 	}
 }

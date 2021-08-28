@@ -55,6 +55,7 @@
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::KernelAudio   g_kernelAudio;
 extern giada::m::Clock         g_clock;
+extern giada::m::Mixer         g_mixer;
 
 namespace giada::c::main
 {
@@ -87,12 +88,12 @@ IO::IO(const m::channel::Data& out, const m::channel::Data& in, const m::model::
 
 Peak IO::getMasterOutPeak()
 {
-	return m::mixer::getPeakOut();
+	return g_mixer.getPeakOut();
 }
 
 Peak IO::getMasterInPeak()
 {
-	return m::mixer::getPeakIn();
+	return g_mixer.getPeakIn();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -115,8 +116,8 @@ Timer getTimer()
 
 IO getIO()
 {
-	return IO(m::model::get().getChannel(m::mixer::MASTER_OUT_CHANNEL_ID),
-	    m::model::get().getChannel(m::mixer::MASTER_IN_CHANNEL_ID),
+	return IO(m::model::get().getChannel(m::Mixer::MASTER_OUT_CHANNEL_ID),
+	    m::model::get().getChannel(m::Mixer::MASTER_IN_CHANNEL_ID),
 	    m::model::get().mixer);
 }
 
@@ -126,7 +127,7 @@ Sequencer getSequencer()
 {
 	Sequencer out;
 
-	m::mixer::RecordInfo recInfo = m::mixer::getRecordInfo();
+	m::Mixer::RecordInfo recInfo = g_mixer.getRecordInfo();
 
 	out.isFreeModeInputRec = m::recManager::isRecordingInput() && m::conf::conf.inputRecMode == InputRecMode::FREE;
 	out.shouldBlink        = u::gui::shouldBlink() && (g_clock.getStatus() == ClockStatus::WAITING || out.isFreeModeInputRec);
@@ -173,7 +174,7 @@ void setBeats(int beats, int bars)
 		return;
 
 	g_clock.setBeats(beats, bars);
-	m::mixer::allocRecBuffer(g_clock.getMaxFramesInLoop());
+	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop());
 }
 
 /* -------------------------------------------------------------------------- */
@@ -243,6 +244,6 @@ void closeProject()
 	if (!v::gdConfirmWin("Warning", "Close project: are you sure?"))
 		return;
 	m::init::reset();
-	m::mixer::enable();
+	g_mixer.enable();
 }
 } // namespace giada::c::main

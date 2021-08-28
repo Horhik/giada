@@ -57,6 +57,7 @@
 
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::Clock         g_clock;
+extern giada::m::Mixer         g_mixer;
 
 namespace giada
 {
@@ -170,11 +171,11 @@ void loadProject(void* data)
 	m::mh::updateSoloCount();
 	m::recorderHandler::updateSamplerate(m::conf::conf.samplerate, m::patch::patch.samplerate);
 	g_clock.recomputeFrames();
-	m::mixer::allocRecBuffer(g_clock.getMaxFramesInLoop());
+	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop());
 
 	/* Mixer is ready to go back online. */
 
-	m::mixer::enable();
+	g_mixer.enable();
 
 	/* Utilities and cosmetics. Save patchPath by taking the last dir of the 
 	broswer, in order to reuse it the next time. Also update UI. */

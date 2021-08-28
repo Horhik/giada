@@ -35,6 +35,7 @@
 #include <functional>
 
 extern giada::m::Sequencer g_sequencer;
+extern giada::m::Mixer     g_mixer;
 
 namespace giada::m::eventDispatcher
 {
@@ -65,11 +66,11 @@ void processFuntions_()
 			break;
 
 		case EventType::MIXER_SIGNAL_CALLBACK:
-			mixer::execSignalCb();
+			g_mixer.execSignalCb();
 			break;
 
 		case EventType::MIXER_END_OF_REC_CALLBACK:
-			mixer::execEndOfRecCb();
+			g_mixer.execEndOfRecCb();
 			break;
 
 		default:
@@ -83,7 +84,7 @@ void processFuntions_()
 void processChannels_()
 {
 	for (channel::Data& ch : model::get().channels)
-		channel::react(ch, eventBuffer_, mixer::isChannelAudible(ch));
+		channel::react(ch, eventBuffer_, g_mixer.isChannelAudible(ch));
 	model::swap(model::SwapType::SOFT);
 }
 

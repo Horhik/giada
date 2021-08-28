@@ -84,9 +84,9 @@ void gdPluginList::rebuild()
 {
 	m_plugins = c::plugin::getPlugins(m_channelId);
 
-	if (m_plugins.channelId == m::mixer::MASTER_OUT_CHANNEL_ID)
+	if (m_plugins.channelId == m::Mixer::MASTER_OUT_CHANNEL_ID)
 		label("Master Out Plug-ins");
-	else if (m_plugins.channelId == m::mixer::MASTER_IN_CHANNEL_ID)
+	else if (m_plugins.channelId == m::Mixer::MASTER_IN_CHANNEL_ID)
 		label("Master In Plug-ins");
 	else
 	{

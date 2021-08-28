@@ -33,11 +33,7 @@
 #include <string>
 #include <vector>
 
-namespace giada
-{
-namespace m
-{
-namespace patch
+namespace giada::m::patch
 {
 struct Version
 {
@@ -172,8 +168,6 @@ int read(const std::string& file, const std::string& basePath);
 Writes patch to file. */
 
 bool write(const std::string& file);
-} // namespace patch
-} // namespace m
-} // namespace giada
+} // namespace giada::m::patch
 
 #endif

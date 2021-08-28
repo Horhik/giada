@@ -344,9 +344,9 @@ void react(Data& d, const eventDispatcher::EventBuffer& events, bool audible)
 
 void render(const Data& d, mcl::AudioBuffer* out, mcl::AudioBuffer* in, bool audible)
 {
-	if (d.id == mixer::MASTER_OUT_CHANNEL_ID)
+	if (d.id == Mixer::MASTER_OUT_CHANNEL_ID)
 		renderMasterOut_(d, *out);
-	else if (d.id == mixer::MASTER_IN_CHANNEL_ID)
+	else if (d.id == Mixer::MASTER_IN_CHANNEL_ID)
 		renderMasterIn_(d, *in);
 	else
 		renderChannel_(d, *out, *in, audible);

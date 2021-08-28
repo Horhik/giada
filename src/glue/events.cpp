@@ -187,7 +187,7 @@ void toggleMetronome()
 
 void setMasterInVolume(float v, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_VOLUME, 0, m::mixer::MASTER_IN_CHANNEL_ID, v}, t);
+	pushEvent_({m::eventDispatcher::EventType::CHANNEL_VOLUME, 0, m::Mixer::MASTER_IN_CHANNEL_ID, v}, t);
 
 	if (t != Thread::MAIN)
 	{
@@ -199,7 +199,7 @@ void setMasterInVolume(float v, Thread t)
 
 void setMasterOutVolume(float v, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_VOLUME, 0, m::mixer::MASTER_OUT_CHANNEL_ID, v}, t);
+	pushEvent_({m::eventDispatcher::EventType::CHANNEL_VOLUME, 0, m::Mixer::MASTER_OUT_CHANNEL_ID, v}, t);
 
 	if (t != Thread::MAIN)
 	{

@@ -43,6 +43,7 @@
 /* TODO */
 extern giada::m::KernelAudio g_kernelAudio;
 extern giada::m::Clock       g_clock;
+extern giada::m::Mixer       g_mixer;
 
 namespace giada::m
 {
@@ -70,7 +71,7 @@ int callback_(void* outBuf, void* inBuf, unsigned bufferSize, double /*streamTim
 		sync::recvJackSync(g_kernelAudio.jackTransportQuery());
 #endif
 
-	mixer::RenderInfo info;
+	Mixer::RenderInfo info;
 	info.isAudioReady    = model::get().kernel.audioReady;
 	info.hasInput        = g_kernelAudio.isInputEnabled();
 	info.isClockActive   = g_clock.isActive();
@@ -83,7 +84,7 @@ int callback_(void* outBuf, void* inBuf, unsigned bufferSize, double /*streamTim
 	info.inVol           = mh::getInVol();
 	info.recTriggerLevel = conf::conf.recTriggerLevel;
 
-	return mixer::render(out, in, info);
+	return g_mixer.render(out, in, info);
 }
 } // namespace
 

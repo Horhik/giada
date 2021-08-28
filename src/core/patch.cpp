@@ -33,11 +33,7 @@
 
 namespace nl = nlohmann;
 
-namespace giada
-{
-namespace m
-{
-namespace patch
+namespace giada::m::patch
 {
 namespace
 {
@@ -144,7 +140,7 @@ void readChannels_(const nl::json& j)
 	if (!j.contains(PATCH_KEY_CHANNELS))
 		return;
 
-	ID defaultId = mixer::PREVIEW_CHANNEL_ID;
+	ID defaultId = Mixer::PREVIEW_CHANNEL_ID;
 
 	for (const auto& jchannel : j[PATCH_KEY_CHANNELS])
 	{
@@ -365,9 +361,9 @@ void modernize_()
 		/* 0.16.3
 		Make sure that ChannelType is correct: ID 1, 2 are MASTER channels, ID 3 
 		is PREVIEW channel. */
-		if (c.id == mixer::MASTER_OUT_CHANNEL_ID || c.id == mixer::MASTER_IN_CHANNEL_ID)
+		if (c.id == Mixer::MASTER_OUT_CHANNEL_ID || c.id == Mixer::MASTER_IN_CHANNEL_ID)
 			c.type = ChannelType::MASTER;
-		else if (c.id == mixer::PREVIEW_CHANNEL_ID)
+		else if (c.id == Mixer::PREVIEW_CHANNEL_ID)
 			c.type = ChannelType::PREVIEW;
 
 		/* 0.16.4
@@ -480,6 +476,4 @@ int read(const std::string& file, const std::string& basePath)
 
 	return G_PATCH_OK;
 }
-} // namespace patch
-} // namespace m
-} // namespace giada
+} // namespace giada::m::patch

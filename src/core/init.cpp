@@ -72,6 +72,7 @@ extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::KernelAudio   g_kernelAudio;
 extern giada::m::Clock         g_clock;
 extern giada::m::Sequencer     g_sequencer;
+extern giada::m::Mixer         g_mixer;
 
 namespace giada::m::init
 {
@@ -123,7 +124,7 @@ void initAudio_()
 	if (!g_kernelAudio.isReady())
 		return;
 
-	mixer::enable();
+	g_mixer.enable();
 	g_kernelAudio.startStream();
 }
 

@@ -119,12 +119,12 @@ Data::Data(const m::channel::Data& c)
 
 ChannelStatus Data::a_getPreviewStatus() const
 {
-	return getChannel_(m::mixer::PREVIEW_CHANNEL_ID).state->playStatus.load();
+	return getChannel_(m::Mixer::PREVIEW_CHANNEL_ID).state->playStatus.load();
 }
 
 Frame Data::a_getPreviewTracker() const
 {
-	return getChannel_(m::mixer::PREVIEW_CHANNEL_ID).state->tracker.load();
+	return getChannel_(m::Mixer::PREVIEW_CHANNEL_ID).state->tracker.load();
 }
 
 const m::Wave& Data::getWaveRef() const
@@ -139,7 +139,7 @@ const m::Wave& Data::getWaveRef() const
 Data getData(ID channelId)
 {
 	/* Prepare the preview channel first, then return Data object. */
-	m::samplePlayer::loadWave(getChannel_(m::mixer::PREVIEW_CHANNEL_ID), &getWave_(channelId));
+	m::samplePlayer::loadWave(getChannel_(m::Mixer::PREVIEW_CHANNEL_ID), &getWave_(channelId));
 	m::model::swap(m::model::SwapType::SOFT);
 
 	return Data(getChannel_(channelId));
@@ -306,8 +306,8 @@ the One-shot pause mode is implemented:
 void playPreview(bool loop)
 {
 	setPreviewTracker(previewTracker_);
-	channel::setSamplePlayerMode(m::mixer::PREVIEW_CHANNEL_ID, loop ? SamplePlayerMode::SINGLE_ENDLESS : SamplePlayerMode::SINGLE_BASIC);
-	events::pressChannel(m::mixer::PREVIEW_CHANNEL_ID, G_MAX_VELOCITY, Thread::MAIN);
+	channel::setSamplePlayerMode(m::Mixer::PREVIEW_CHANNEL_ID, loop ? SamplePlayerMode::SINGLE_ENDLESS : SamplePlayerMode::SINGLE_BASIC);
+	events::pressChannel(m::Mixer::PREVIEW_CHANNEL_ID, G_MAX_VELOCITY, Thread::MAIN);
 }
 
 void stopPreview()
@@ -316,14 +316,14 @@ void stopPreview()
 	channel. */
 	setPreviewTracker(previewTracker_);
 	getSampleEditorWindow()->refresh();
-	events::killChannel(m::mixer::PREVIEW_CHANNEL_ID, Thread::MAIN);
+	events::killChannel(m::Mixer::PREVIEW_CHANNEL_ID, Thread::MAIN);
 }
 
 void setPreviewTracker(Frame f)
 {
 	namespace mm = m::model;
 
-	mm::get().getChannel(m::mixer::PREVIEW_CHANNEL_ID).state->tracker.store(f);
+	mm::get().getChannel(m::Mixer::PREVIEW_CHANNEL_ID).state->tracker.store(f);
 	mm::swap(mm::SwapType::SOFT);
 
 	previewTracker_ = f;
@@ -335,7 +335,7 @@ void cleanupPreview()
 {
 	namespace mm = m::model;
 
-	m::samplePlayer::loadWave(mm::get().getChannel(m::mixer::PREVIEW_CHANNEL_ID), nullptr);
+	m::samplePlayer::loadWave(mm::get().getChannel(m::Mixer::PREVIEW_CHANNEL_ID), nullptr);
 	mm::swap(mm::SwapType::SOFT);
 }
 

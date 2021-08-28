@@ -27,6 +27,7 @@
 #include "core/clock.h"
 #include "core/init.h"
 #include "core/kernelAudio.h"
+#include "core/mixer.h"
 #include "core/sequencer.h"
 #include "gui/dialogs/mainWindow.h"
 #include <FL/Fl.H>
@@ -45,6 +46,7 @@
 giada::m::KernelAudio g_kernelAudio;
 giada::m::Clock       g_clock(g_kernelAudio);
 giada::m::Sequencer   g_sequencer(g_kernelAudio, g_clock);
+giada::m::Mixer       g_mixer(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 
 class giada::v::gdMainWindow* G_MainWin = nullptr;
 

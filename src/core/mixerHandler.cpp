@@ -57,6 +57,7 @@
 
 extern giada::m::KernelAudio g_kernelAudio;
 extern giada::m::Clock       g_clock;
+extern giada::m::Mixer       g_mixer;
 
 namespace giada::m::mh
 {
@@ -136,7 +137,7 @@ void recordChannel_(channel::Data& ch, Frame recordedFrames)
 
 	/* Copy up to wave.getSize() from the mixer's input buffer into wave's. */
 
-	wave->getBuffer().set(mixer::getRecBuffer(), wave->getBuffer().countFrames());
+	wave->getBuffer().set(g_mixer.getRecBuffer(), wave->getBuffer().countFrames());
 
 	/* Update channel with the new Wave. */
 
@@ -161,7 +162,7 @@ void overdubChannel_(channel::Data& ch)
 	thread at the same time. */
 
 	model::DataLock lock;
-	wave->getBuffer().sum(mixer::getRecBuffer(), /*gain=*/1.0f);
+	wave->getBuffer().sum(g_mixer.getRecBuffer(), /*gain=*/1.0f);
 	wave->setLogical(true);
 
 	setupChannelPostRecording_(ch);
@@ -174,16 +175,16 @@ void overdubChannel_(channel::Data& ch)
 
 void init()
 {
-	mixer::init(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
+	g_mixer.reset(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 
 	model::get().channels.clear();
 
 	model::get().channels.push_back(channelManager::create(
-	    mixer::MASTER_OUT_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0));
+	    Mixer::MASTER_OUT_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0));
 	model::get().channels.push_back(channelManager::create(
-	    mixer::MASTER_IN_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0));
+	    Mixer::MASTER_IN_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0));
 	model::get().channels.push_back(channelManager::create(
-	    mixer::PREVIEW_CHANNEL_ID, ChannelType::PREVIEW, /*columnId=*/0));
+	    Mixer::PREVIEW_CHANNEL_ID, ChannelType::PREVIEW, /*columnId=*/0));
 
 	model::swap(model::SwapType::NONE);
 }
@@ -192,7 +193,7 @@ void init()
 
 void close()
 {
-	mixer::disable();
+	g_mixer.disable();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -369,12 +370,12 @@ void setInToOut(bool v)
 
 float getInVol()
 {
-	return model::get().getChannel(mixer::MASTER_IN_CHANNEL_ID).volume;
+	return model::get().getChannel(Mixer::MASTER_IN_CHANNEL_ID).volume;
 }
 
 float getOutVol()
 {
-	return model::get().getChannel(mixer::MASTER_OUT_CHANNEL_ID).volume;
+	return model::get().getChannel(Mixer::MASTER_OUT_CHANNEL_ID).volume;
 }
 
 bool getInToOut()
@@ -391,7 +392,7 @@ void finalizeInputRec(Frame recordedFrames)
 	for (channel::Data* ch : getOverdubbableChannels_())
 		overdubChannel_(*ch);
 
-	mixer::clearRecBuffer();
+	g_mixer.clearRecBuffer();
 }
 
 /* -------------------------------------------------------------------------- */
