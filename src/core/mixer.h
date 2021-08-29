@@ -27,9 +27,9 @@
 #ifndef G_MIXER_H
 #define G_MIXER_H
 
+#include "core/actionRecorder.h"
 #include "core/midiEvent.h"
 #include "core/queue.h"
-#include "core/recorder.h"
 #include "core/ringBuffer.h"
 #include "core/types.h"
 #include "deps/mcl-audio-buffer/src/audioBuffer.hpp"

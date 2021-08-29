@@ -24,13 +24,13 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "recorderHandler.h"
-#include "action.h"
-#include "clock.h"
-#include "const.h"
-#include "model/model.h"
-#include "patch.h"
-#include "recorder.h"
+#include "core/recorderHandler.h"
+#include "core/action.h"
+#include "core/actionRecorder.h"
+#include "core/clock.h"
+#include "core/const.h"
+#include "core/model/model.h"
+#include "core/patch.h"
 #include "utils/log.h"
 #include "utils/ver.h"
 #include <algorithm>

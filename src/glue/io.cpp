@@ -26,6 +26,7 @@
 
 #include "io.h"
 #include "channel.h"
+#include "core/actionRecorder.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/kernelAudio.h"
@@ -34,7 +35,6 @@
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
 #include "core/recManager.h"
-#include "core/recorder.h"
 #include "core/recorderHandler.h"
 #include "core/wave.h"
 #include "gui/dialogs/mainWindow.h"

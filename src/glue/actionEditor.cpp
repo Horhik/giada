@@ -26,10 +26,10 @@
 
 #include "actionEditor.h"
 #include "core/action.h"
+#include "core/actionRecorder.h"
 #include "core/clock.h"
 #include "core/const.h"
 #include "core/model/model.h"
-#include "core/recorder.h"
 #include "core/recorderHandler.h"
 #include "glue/events.h"
 #include "glue/recorder.h"

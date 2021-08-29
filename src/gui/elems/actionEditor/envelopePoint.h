@@ -28,7 +28,7 @@
 #define GE_ENVELOPE_POINT_H
 
 #include "baseAction.h"
-#include "core/recorder.h"
+#include "core/actionRecorder.h"
 
 namespace giada::v
 {

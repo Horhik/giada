@@ -27,6 +27,7 @@
 #ifndef G_RENDER_MODEL_H
 #define G_RENDER_MODEL_H
 
+#include "core/actionRecorder.h"
 #include "core/channels/channel.h"
 #include "core/const.h"
 #include "core/plugins/plugin.h"

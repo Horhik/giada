@@ -26,8 +26,8 @@
 
 #include "sampleActionEditor.h"
 #include "core/action.h"
+#include "core/actionRecorder.h"
 #include "core/const.h"
-#include "core/recorder.h"
 #include "glue/actionEditor.h"
 #include "glue/channel.h"
 #include "gui/dialogs/actionEditor/baseActionEditor.h"

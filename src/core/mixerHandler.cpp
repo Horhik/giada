@@ -25,6 +25,7 @@
  * -------------------------------------------------------------------------- */
 
 #include "core/mixerHandler.h"
+#include "core/actionRecorder.h"
 #include "core/channels/channelManager.h"
 #include "core/clock.h"
 #include "core/conf.h"
@@ -40,7 +41,6 @@
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
 #include "core/recManager.h"
-#include "core/recorder.h"
 #include "core/recorderHandler.h"
 #include "core/wave.h"
 #include "core/waveFx.h"

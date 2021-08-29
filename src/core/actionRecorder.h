@@ -24,8 +24,8 @@
  *
  * -------------------------------------------------------------------------- */
 
-#ifndef G_RECORDER_H
-#define G_RECORDER_H
+#ifndef G_ACTION_RECORDER_H
+#define G_ACTION_RECORDER_H
 
 #include "core/action.h"
 #include "core/idManager.h"

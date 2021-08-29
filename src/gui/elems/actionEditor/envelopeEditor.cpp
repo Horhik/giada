@@ -26,9 +26,9 @@
 
 #include "envelopeEditor.h"
 #include "core/action.h"
+#include "core/actionRecorder.h"
 #include "core/conf.h"
 #include "core/const.h"
-#include "core/recorder.h"
 #include "envelopePoint.h"
 #include "glue/actionEditor.h"
 #include "glue/channel.h"

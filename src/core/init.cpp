@@ -33,6 +33,7 @@
 #if (defined(__linux__) || defined(__FreeBSD__)) && defined(WITH_VST)
 #include <X11/Xlib.h> // For XInitThreads
 #endif
+#include "core/actionRecorder.h"
 #include "core/channels/channelManager.h"
 #include "core/clock.h"
 #include "core/conf.h"
@@ -49,7 +50,6 @@
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
 #include "core/recManager.h"
-#include "core/recorder.h"
 #include "core/recorderHandler.h"
 #include "core/sequencer.h"
 #include "core/sync.h"

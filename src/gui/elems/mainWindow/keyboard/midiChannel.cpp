@@ -26,11 +26,11 @@
 
 #include "midiChannel.h"
 #include "column.h"
+#include "core/actionRecorder.h"
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/graphics.h"
 #include "core/model/model.h"
-#include "core/recorder.h"
 #include "glue/channel.h"
 #include "glue/io.h"
 #include "glue/recorder.h"

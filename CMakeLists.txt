@@ -52,7 +52,7 @@ list(APPEND SOURCES
 	src/core/graphics.cpp
 	src/core/patch.cpp
 	src/core/recorderHandler.cpp
-	src/core/recorder.cpp
+	src/core/actionRecorder.cpp
 	src/core/mixer.cpp
 	src/core/clock.cpp
 	src/core/sync.cpp

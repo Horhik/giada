@@ -25,6 +25,7 @@
  * -------------------------------------------------------------------------- */
 
 #include "main.h"
+#include "core/actionRecorder.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
@@ -37,7 +38,6 @@
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
 #include "core/recManager.h"
-#include "core/recorder.h"
 #include "core/recorderHandler.h"
 #include "gui/dialogs/mainWindow.h"
 #include "gui/dialogs/warnings.h"

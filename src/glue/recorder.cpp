@@ -24,8 +24,9 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "core/recorder.h"
+#include "recorder.h"
 #include "core/action.h"
+#include "core/actionRecorder.h"
 #include "core/channels/channel.h"
 #include "core/clock.h"
 #include "core/const.h"
@@ -36,7 +37,6 @@
 #include "gui/dialogs/warnings.h"
 #include "gui/elems/mainWindow/keyboard/channel.h"
 #include "gui/elems/mainWindow/keyboard/sampleChannel.h"
-#include "recorder.h"
 #include "utils/gui.h"
 #include "utils/log.h"
 #include <cassert>

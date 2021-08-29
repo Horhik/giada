@@ -24,7 +24,7 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "core/recorder.h"
+#include "actionRecorder.h"
 #include "core/action.h"
 #include "core/idManager.h"
 #include "core/model/model.h"

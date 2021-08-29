@@ -24,6 +24,7 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include "core/actionRecorder.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/eventDispatcher.h"
@@ -34,7 +35,6 @@
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/plugins/pluginHost.h"
-#include "core/recorder.h"
 #include "core/sequencer.h"
 #include "core/sync.h"
 #include "gui/dialogs/mainWindow.h"
