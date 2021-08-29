@@ -29,6 +29,8 @@
 #include "core/kernelMidi.h"
 #include "core/mixer.h"
 
+extern giada::m::KernelMidi g_kernelMidi;
+
 namespace giada::m::midiSender
 {
 namespace
@@ -36,7 +38,7 @@ namespace
 void send_(const channel::Data& ch, MidiEvent e)
 {
 	e.setChannel(ch.midiSender->filter);
-	kernelMidi::send(e.getRaw());
+	g_kernelMidi.send(e.getRaw());
 }
 
 /* -------------------------------------------------------------------------- */

@@ -36,9 +36,9 @@
 #include <RtMidi.h>
 #include <string>
 
-namespace giada
-{
-namespace v
+extern giada::m::KernelMidi g_kernelMidi;
+
+namespace giada::v
 {
 geTabMidi::geTabMidi(int X, int Y, int W, int H)
 : Fl_Group(X, Y, W, H, "MIDI")
@@ -79,7 +79,7 @@ geTabMidi::geTabMidi(int X, int Y, int W, int H)
 
 void geTabMidi::fetchOutPorts()
 {
-	if (m::kernelMidi::countOutPorts() == 0)
+	if (g_kernelMidi.countOutPorts() == 0)
 	{
 		portOut->add("-- no ports found --");
 		portOut->value(0);
@@ -90,8 +90,8 @@ void geTabMidi::fetchOutPorts()
 
 		portOut->add("(disabled)");
 
-		for (unsigned i = 0; i < m::kernelMidi::countOutPorts(); i++)
-			portOut->add(u::gui::removeFltkChars(m::kernelMidi::getOutPortName(i)).c_str());
+		for (unsigned i = 0; i < g_kernelMidi.countOutPorts(); i++)
+			portOut->add(u::gui::removeFltkChars(g_kernelMidi.getOutPortName(i)).c_str());
 
 		portOut->value(m::conf::conf.midiPortOut + 1); // +1 because midiPortOut=-1 is '(disabled)'
 	}
@@ -101,7 +101,7 @@ void geTabMidi::fetchOutPorts()
 
 void geTabMidi::fetchInPorts()
 {
-	if (m::kernelMidi::countInPorts() == 0)
+	if (g_kernelMidi.countInPorts() == 0)
 	{
 		portIn->add("-- no ports found --");
 		portIn->value(0);
@@ -112,8 +112,8 @@ void geTabMidi::fetchInPorts()
 
 		portIn->add("(disabled)");
 
-		for (unsigned i = 0; i < m::kernelMidi::countInPorts(); i++)
-			portIn->add(u::gui::removeFltkChars(m::kernelMidi::getInPortName(i)).c_str());
+		for (unsigned i = 0; i < g_kernelMidi.countInPorts(); i++)
+			portIn->add(u::gui::removeFltkChars(g_kernelMidi.getInPortName(i)).c_str());
 
 		portIn->value(m::conf::conf.midiPortIn + 1); // +1 because midiPortIn=-1 is '(disabled)'
 	}
@@ -178,19 +178,19 @@ void geTabMidi::fetchSystems()
 {
 #if defined(__linux__)
 
-	if (m::kernelMidi::hasAPI(RtMidi::LINUX_ALSA))
+	if (g_kernelMidi.hasAPI(RtMidi::LINUX_ALSA))
 		system->add("ALSA");
-	if (m::kernelMidi::hasAPI(RtMidi::UNIX_JACK))
+	if (g_kernelMidi.hasAPI(RtMidi::UNIX_JACK))
 		system->add("Jack");
 
 #elif defined(__FreeBSD__)
 
-	if (m::kernelMidi::hasAPI(RtMidi::UNIX_JACK))
+	if (g_kernelMidi.hasAPI(RtMidi::UNIX_JACK))
 		system->add("Jack");
 
 #elif defined(_WIN32)
 
-	if (m::kernelMidi::hasAPI(RtMidi::WINDOWS_MM))
+	if (g_kernelMidi.hasAPI(RtMidi::WINDOWS_MM))
 		system->add("Multimedia MIDI");
 
 #elif defined(__APPLE__)
@@ -254,5 +254,4 @@ void geTabMidi::cb_changeSystem()
 		sync->deactivate();
 	}
 }
-} // namespace v
-} // namespace giada
+} // namespace giada::v

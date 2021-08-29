@@ -76,6 +76,7 @@ extern giada::m::Mixer         g_mixer;
 extern giada::m::MixerHandler  g_mixerHandler;
 extern giada::m::Synchronizer  g_synchronizer;
 extern giada::m::PluginHost    g_pluginHost;
+extern giada::m::KernelMidi    g_kernelMidi;
 
 namespace giada::m::init
 {
@@ -130,9 +131,9 @@ void initAudio_()
 
 void initMIDI_()
 {
-	kernelMidi::setApi(conf::conf.midiSystem);
-	kernelMidi::openOutDevice(conf::conf.midiPortOut);
-	kernelMidi::openInDevice(conf::conf.midiPortIn);
+	g_kernelMidi.setApi(conf::conf.midiSystem);
+	g_kernelMidi.openOutDevice(conf::conf.midiPortOut);
+	g_kernelMidi.openInDevice(conf::conf.midiPortIn);
 }
 
 /* -------------------------------------------------------------------------- */

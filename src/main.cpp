@@ -28,6 +28,7 @@
 #include "core/conf.h"
 #include "core/init.h"
 #include "core/kernelAudio.h"
+#include "core/kernelMidi.h"
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/plugins/pluginHost.h"
@@ -50,6 +51,7 @@
 // TODO - conf
 // TODO - patch
 giada::m::KernelAudio  g_kernelAudio;
+giada::m::KernelMidi   g_kernelMidi;
 giada::m::Synchronizer g_synchronizer(giada::m::conf::conf.samplerate, giada::m::conf::conf.midiTCfps);
 giada::m::Clock        g_clock(g_kernelAudio, g_synchronizer);
 giada::m::Sequencer    g_sequencer(g_kernelAudio, g_clock);

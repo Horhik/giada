@@ -31,8 +31,9 @@
 #include "core/kernelMidi.h"
 #include "core/model/model.h"
 
-extern giada::m::Sequencer g_sequencer;
-extern giada::m::Clock     g_clock;
+extern giada::m::Sequencer  g_sequencer;
+extern giada::m::Clock      g_clock;
+extern giada::m::KernelMidi g_kernelMidi;
 
 namespace giada::m
 {
@@ -77,7 +78,7 @@ void Synchronizer::sendMIDIsync()
 	if (conf::conf.midiSync == MIDI_SYNC_CLOCK_M)
 	{
 		if (currentFrame % (c.framesInBeat / 24) == 0)
-			kernelMidi::send(MIDI_CLOCK, -1, -1);
+			g_kernelMidi.send(MIDI_CLOCK, -1, -1);
 		return;
 	}
 
@@ -99,10 +100,10 @@ void Synchronizer::sendMIDIsync()
 
 		if (m_midiTCframes % 2 == 0)
 		{
-			kernelMidi::send(MIDI_MTC_QUARTER, (m_midiTCframes & 0x0F) | 0x00, -1);
-			kernelMidi::send(MIDI_MTC_QUARTER, (m_midiTCframes >> 4) | 0x10, -1);
-			kernelMidi::send(MIDI_MTC_QUARTER, (m_midiTCseconds & 0x0F) | 0x20, -1);
-			kernelMidi::send(MIDI_MTC_QUARTER, (m_midiTCseconds >> 4) | 0x30, -1);
+			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCframes & 0x0F) | 0x00, -1);
+			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCframes >> 4) | 0x10, -1);
+			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCseconds & 0x0F) | 0x20, -1);
+			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCseconds >> 4) | 0x30, -1);
 		}
 
 		/* minutes low nibble
@@ -112,10 +113,10 @@ void Synchronizer::sendMIDIsync()
 
 		else
 		{
-			kernelMidi::send(MIDI_MTC_QUARTER, (m_midiTCminutes & 0x0F) | 0x40, -1);
-			kernelMidi::send(MIDI_MTC_QUARTER, (m_midiTCminutes >> 4) | 0x50, -1);
-			kernelMidi::send(MIDI_MTC_QUARTER, (m_midiTChours & 0x0F) | 0x60, -1);
-			kernelMidi::send(MIDI_MTC_QUARTER, (m_midiTChours >> 4) | 0x70, -1);
+			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCminutes & 0x0F) | 0x40, -1);
+			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCminutes >> 4) | 0x50, -1);
+			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTChours & 0x0F) | 0x60, -1);
+			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTChours >> 4) | 0x70, -1);
 		}
 
 		m_midiTCframes++;
@@ -157,13 +158,13 @@ void Synchronizer::sendMIDIrewind()
 
 	if (conf::conf.midiSync == MIDI_SYNC_MTC_M)
 	{
-		kernelMidi::send(MIDI_SYSEX, 0x7F, 0x00); // send msg on channel 0
-		kernelMidi::send(0x01, 0x01, 0x00);       // hours 0
-		kernelMidi::send(0x00, 0x00, 0x00);       // mins, secs, frames 0
-		kernelMidi::send(MIDI_EOX, -1, -1);       // end of sysex
+		g_kernelMidi.send(MIDI_SYSEX, 0x7F, 0x00); // send msg on channel 0
+		g_kernelMidi.send(0x01, 0x01, 0x00);       // hours 0
+		g_kernelMidi.send(0x00, 0x00, 0x00);       // mins, secs, frames 0
+		g_kernelMidi.send(MIDI_EOX, -1, -1);       // end of sysex
 	}
 	else if (conf::conf.midiSync == MIDI_SYNC_CLOCK_M)
-		kernelMidi::send(MIDI_POSITION_PTR, 0, 0);
+		g_kernelMidi.send(MIDI_POSITION_PTR, 0, 0);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -172,8 +173,8 @@ void Synchronizer::sendMIDIstart()
 {
 	if (conf::conf.midiSync == MIDI_SYNC_CLOCK_M)
 	{
-		kernelMidi::send(MIDI_START, -1, -1);
-		kernelMidi::send(MIDI_POSITION_PTR, 0, 0);
+		g_kernelMidi.send(MIDI_START, -1, -1);
+		g_kernelMidi.send(MIDI_POSITION_PTR, 0, 0);
 	}
 }
 
@@ -182,7 +183,7 @@ void Synchronizer::sendMIDIstart()
 void Synchronizer::sendMIDIstop()
 {
 	if (conf::conf.midiSync == MIDI_SYNC_CLOCK_M)
-		kernelMidi::send(MIDI_STOP, -1, -1);
+		g_kernelMidi.send(MIDI_STOP, -1, -1);
 }
 
 /* -------------------------------------------------------------------------- */

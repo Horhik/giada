@@ -28,62 +28,67 @@
 #define G_KERNELMIDI_H
 
 #include "midiMapConf.h"
+#include <RtMidi.h>
 #include <cstdint>
+#include <memory>
 #include <string>
 
-namespace giada
+namespace giada::m
 {
-namespace m
+class KernelMidi
 {
-namespace kernelMidi
-{
-int getB1(uint32_t iValue);
-int getB2(uint32_t iValue);
-int getB3(uint32_t iValue);
+public:
+	KernelMidi();
 
-uint32_t getIValue(int b1, int b2, int b3);
+	/* getStatus
+    Returns current engine status. */
 
-/* send
-Sends a MIDI message 's' as uint32_t or as separate bytes. */
+	bool getStatus() const;
 
-void send(uint32_t s);
-void send(int b1, int b2 = -1, int b3 = -1);
+	unsigned countInPorts() const;
+	unsigned countOutPorts() const;
 
-/* sendMidiLightning
-Sends a MIDI lightning message defined by 'msg'. */
+	/* getIn/OutPortName
+    Returns the name of the port 'p'. */
 
-void sendMidiLightning(uint32_t learnt, const midimap::Message& msg);
+	std::string getInPortName(unsigned p) const;
+	std::string getOutPortName(unsigned p) const;
 
-/* setApi
-Sets the Api in use for both in & out messages. */
+	bool hasAPI(int API) const;
 
-void setApi(int api);
+	/* send
+    Sends a MIDI message 's' as uint32_t or as separate bytes. */
 
-/* getStatus
-Returns current engine status. */
+	void send(uint32_t s);
+	void send(int b1, int b2 = -1, int b3 = -1);
 
-bool getStatus();
+	/* sendMidiLightning
+    Sends a MIDI lightning message defined by 'msg'. */
 
-/* open/close/in/outDevice */
+	void sendMidiLightning(uint32_t learnt, const midimap::Message& msg);
 
-int openOutDevice(int port);
-int openInDevice(int port);
-int closeInDevice();
-int closeOutDevice();
+	/* setApi
+    Sets the Api in use for both in & out messages. */
 
-/* getIn/OutPortName
-Returns the name of the port 'p'. */
+	void setApi(int api);
 
-std::string getInPortName(unsigned p);
-std::string getOutPortName(unsigned p);
+	/* open/close/in/outDevice */
 
-unsigned countInPorts();
-unsigned countOutPorts();
+	int openOutDevice(int port);
+	int openInDevice(int port);
+	int closeInDevice();
+	int closeOutDevice();
 
-bool hasAPI(int API);
+private:
+	void sendMidiLightningInitMsgs();
 
-} // namespace kernelMidi
-} // namespace m
-} // namespace giada
+	std::unique_ptr<RtMidiOut> m_midiOut;
+	std::unique_ptr<RtMidiIn>  m_midiIn;
+	bool                       m_status;
+	int                        m_api;
+	unsigned                   m_numOutPorts;
+	unsigned                   m_numInPorts;
+};
+} // namespace giada::m
 
 #endif

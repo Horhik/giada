@@ -30,6 +30,8 @@
 #include "core/midiMapConf.h"
 #include "core/mixer.h"
 
+extern giada::m::KernelMidi g_kernelMidi;
+
 namespace giada::m::midiLighter
 {
 namespace
@@ -37,9 +39,9 @@ namespace
 void sendMute_(channel::Data& ch, uint32_t l_mute)
 {
 	if (ch.mute)
-		kernelMidi::sendMidiLightning(l_mute, midimap::midimap.muteOn);
+		g_kernelMidi.sendMidiLightning(l_mute, midimap::midimap.muteOn);
 	else
-		kernelMidi::sendMidiLightning(l_mute, midimap::midimap.muteOff);
+		g_kernelMidi.sendMidiLightning(l_mute, midimap::midimap.muteOff);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -47,9 +49,9 @@ void sendMute_(channel::Data& ch, uint32_t l_mute)
 void sendSolo_(channel::Data& ch, uint32_t l_solo)
 {
 	if (ch.solo)
-		kernelMidi::sendMidiLightning(l_solo, midimap::midimap.soloOn);
+		g_kernelMidi.sendMidiLightning(l_solo, midimap::midimap.soloOn);
 	else
-		kernelMidi::sendMidiLightning(l_solo, midimap::midimap.soloOff);
+		g_kernelMidi.sendMidiLightning(l_solo, midimap::midimap.soloOff);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -60,19 +62,19 @@ void sendStatus_(channel::Data& ch, uint32_t l_playing, bool audible)
 	{
 
 	case ChannelStatus::OFF:
-		kernelMidi::sendMidiLightning(l_playing, midimap::midimap.stopped);
+		g_kernelMidi.sendMidiLightning(l_playing, midimap::midimap.stopped);
 		break;
 
 	case ChannelStatus::WAIT:
-		kernelMidi::sendMidiLightning(l_playing, midimap::midimap.waiting);
+		g_kernelMidi.sendMidiLightning(l_playing, midimap::midimap.waiting);
 		break;
 
 	case ChannelStatus::ENDING:
-		kernelMidi::sendMidiLightning(l_playing, midimap::midimap.stopping);
+		g_kernelMidi.sendMidiLightning(l_playing, midimap::midimap.stopping);
 		break;
 
 	case ChannelStatus::PLAY:
-		kernelMidi::sendMidiLightning(l_playing, audible ? midimap::midimap.playing : midimap::midimap.playingInaudible);
+		g_kernelMidi.sendMidiLightning(l_playing, audible ? midimap::midimap.playing : midimap::midimap.playingInaudible);
 		break;
 
 	default:
