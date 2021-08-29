@@ -39,7 +39,7 @@
 #include "core/plugins/plugin.h"
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
-#include "core/recManager.h"
+#include "core/recorder.h"
 #include "core/wave.h"
 #include "core/waveFx.h"
 #include "glue/channel.h"
@@ -54,11 +54,12 @@
 #include <cassert>
 #include <vector>
 
-extern giada::m::KernelAudio           g_kernelAudio;
-extern giada::m::Clock                 g_clock;
-extern giada::m::Mixer                 g_mixer;
-extern giada::m::PluginHost            g_pluginHost;
-extern giada::m::ActionRecorder        g_actionRecorder;
+extern giada::m::KernelAudio    g_kernelAudio;
+extern giada::m::Clock          g_clock;
+extern giada::m::Mixer          g_mixer;
+extern giada::m::PluginHost     g_pluginHost;
+extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::Recorder       g_recorder;
 
 namespace giada::m
 {
@@ -120,7 +121,7 @@ int MixerHandler::loadChannel(ID channelId, const std::string& fname)
 	if (old != nullptr)
 		model::remove<Wave>(*old);
 
-	recManager::refreshInputRecMode();
+	g_recorder.refreshInputRecMode();
 
 	return res.status;
 }
@@ -145,7 +146,7 @@ void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
 	samplePlayer::loadWave(channel, &wave);
 	model::swap(model::SwapType::HARD);
 
-	recManager::refreshInputRecMode();
+	g_recorder.refreshInputRecMode();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -190,7 +191,7 @@ void MixerHandler::freeChannel(ID channelId)
 	if (wave != nullptr)
 		model::remove<Wave>(*wave);
 
-	recManager::refreshInputRecMode();
+	g_recorder.refreshInputRecMode();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -204,7 +205,7 @@ void MixerHandler::freeAllChannels()
 	model::swap(model::SwapType::HARD);
 	model::clear<model::WavePtrs>();
 
-	recManager::refreshInputRecMode();
+	g_recorder.refreshInputRecMode();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -229,7 +230,7 @@ void MixerHandler::deleteChannel(ID channelId)
 	g_pluginHost.freePlugins(plugins);
 #endif
 
-	recManager::refreshInputRecMode();
+	g_recorder.refreshInputRecMode();
 }
 
 /* -------------------------------------------------------------------------- */

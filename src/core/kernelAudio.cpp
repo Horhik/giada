@@ -32,7 +32,7 @@
 #include "core/clock.h"
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
-#include "core/recManager.h"
+#include "core/recorder.h"
 #include "core/sync.h"
 #include "deps/mcl-audio-buffer/src/audioBuffer.hpp"
 #include "glue/main.h"
@@ -46,6 +46,7 @@ extern giada::m::Clock        g_clock;
 extern giada::m::Mixer        g_mixer;
 extern giada::m::MixerHandler g_mixerHandler;
 extern giada::m::Synchronizer g_synchronizer;
+extern giada::m::Recorder     g_recorder;
 
 namespace giada::m
 {
@@ -78,7 +79,7 @@ int callback_(void* outBuf, void* inBuf, unsigned bufferSize, double /*streamTim
 	info.hasInput        = g_kernelAudio.isInputEnabled();
 	info.isClockActive   = g_clock.isActive();
 	info.isClockRunning  = g_clock.isRunning();
-	info.canLineInRec    = recManager::isRecordingInput() && g_kernelAudio.isInputEnabled();
+	info.canLineInRec    = g_recorder.isRecordingInput() && g_kernelAudio.isInputEnabled();
 	info.limitOutput     = conf::conf.limitOutput;
 	info.inToOut         = g_mixerHandler.getInToOut();
 	info.maxFramesToRec  = conf::conf.inputRecMode == InputRecMode::FREE ? g_clock.getMaxFramesInLoop() : g_clock.getFramesInLoop();

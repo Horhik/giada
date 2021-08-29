@@ -36,7 +36,7 @@
 #include "core/model/model.h"
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
-#include "core/recManager.h"
+#include "core/recorder.h"
 #include "gui/dialogs/mainWindow.h"
 #include "gui/dialogs/warnings.h"
 #include "gui/elems/mainWindow/keyboard/keyboard.h"
@@ -52,12 +52,13 @@
 #include <cassert>
 #include <cmath>
 
-extern giada::v::gdMainWindow*         G_MainWin;
-extern giada::m::KernelAudio           g_kernelAudio;
-extern giada::m::Clock                 g_clock;
-extern giada::m::Mixer                 g_mixer;
-extern giada::m::MixerHandler          g_mixerHandler;
-extern giada::m::ActionRecorder        g_actionRecorder;
+extern giada::v::gdMainWindow*  G_MainWin;
+extern giada::m::KernelAudio    g_kernelAudio;
+extern giada::m::Clock          g_clock;
+extern giada::m::Mixer          g_mixer;
+extern giada::m::MixerHandler   g_mixerHandler;
+extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::Recorder       g_recorder;
 
 namespace giada::c::main
 {
@@ -67,7 +68,7 @@ Timer::Timer(const m::model::Clock& c)
 , bars(c.bars)
 , quantize(c.quantize)
 , isUsingJack(g_kernelAudio.getAPI() == G_SYS_API_JACK)
-, isRecordingInput(m::recManager::isRecordingInput())
+, isRecordingInput(g_recorder.isRecordingInput())
 {
 }
 
@@ -131,7 +132,7 @@ Sequencer getSequencer()
 
 	m::Mixer::RecordInfo recInfo = g_mixer.getRecordInfo();
 
-	out.isFreeModeInputRec = m::recManager::isRecordingInput() && m::conf::conf.inputRecMode == InputRecMode::FREE;
+	out.isFreeModeInputRec = g_recorder.isRecordingInput() && m::conf::conf.inputRecMode == InputRecMode::FREE;
 	out.shouldBlink        = u::gui::shouldBlink() && (g_clock.getStatus() == ClockStatus::WAITING || out.isFreeModeInputRec);
 	out.beats              = g_clock.getBeats();
 	out.bars               = g_clock.getBars();
@@ -148,7 +149,7 @@ void setBpm(const char* i, const char* f)
 {
 	/* Never change this stuff while recording audio. */
 
-	if (m::recManager::isRecordingInput())
+	if (g_recorder.isRecordingInput())
 		return;
 
 	g_clock.setBpm(std::atof(i) + (std::atof(f) / 10.0f));
@@ -160,7 +161,7 @@ void setBpm(float f)
 {
 	/* Never change this stuff while recording audio. */
 
-	if (m::recManager::isRecordingInput())
+	if (g_recorder.isRecordingInput())
 		return;
 
 	g_clock.setBpm(f);
@@ -172,7 +173,7 @@ void setBeats(int beats, int bars)
 {
 	/* Never change this stuff while recording audio. */
 
-	if (m::recManager::isRecordingInput())
+	if (g_recorder.isRecordingInput())
 		return;
 
 	g_clock.setBeats(beats, bars);
@@ -219,7 +220,7 @@ void setInToOut(bool v)
 
 void toggleRecOnSignal()
 {
-	if (!m::recManager::canEnableRecOnSignal())
+	if (!g_recorder.canEnableRecOnSignal())
 	{
 		m::conf::conf.recTriggerMode = RecTriggerMode::NORMAL;
 		return;
@@ -231,7 +232,7 @@ void toggleRecOnSignal()
 
 void toggleFreeInputRec()
 {
-	if (!m::recManager::canEnableFreeInputRec())
+	if (!g_recorder.canEnableFreeInputRec())
 	{
 		m::conf::conf.inputRecMode = InputRecMode::RIGID;
 		return;

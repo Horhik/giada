@@ -48,7 +48,7 @@
 #include "core/patch.h"
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
-#include "core/recManager.h"
+#include "core/recorder.h"
 #include "core/sequencer.h"
 #include "core/sync.h"
 #include "core/wave.h"

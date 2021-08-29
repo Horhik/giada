@@ -33,11 +33,12 @@
 #include "core/mixer.h"
 #include "core/model/model.h"
 #include "core/quantizer.h"
-#include "core/recManager.h"
+#include "core/recorder.h"
 
-extern giada::m::KernelAudio    g_kernelAudio;
-extern giada::m::Clock          g_clock;
-extern giada::m::Actions        g_actions;
+extern giada::m::KernelAudio g_kernelAudio;
+extern giada::m::Clock       g_clock;
+extern giada::m::Actions     g_actions;
+extern giada::m::Recorder    g_recorder;
 
 namespace giada::m
 {
@@ -152,7 +153,7 @@ void Sequencer::rawStart()
 		break;
 	case ClockStatus::WAITING:
 		g_clock.setStatus(ClockStatus::RUNNING);
-		recManager::stopActionRec();
+		g_recorder.stopActionRec();
 		break;
 	default:
 		break;
@@ -168,10 +169,10 @@ void Sequencer::rawStop()
 	/* If recordings (both input and action) are active deactivate them, but 
 	store the takes. RecManager takes care of it. */
 
-	if (recManager::isRecordingAction())
-		recManager::stopActionRec();
-	else if (recManager::isRecordingInput())
-		recManager::stopInputRec(conf::conf.inputRecMode);
+	if (g_recorder.isRecordingAction())
+		g_recorder.stopActionRec();
+	else if (g_recorder.isRecordingInput())
+		g_recorder.stopInputRec(conf::conf.inputRecMode);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -34,7 +34,7 @@
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
 #include "core/plugins/pluginHost.h"
-#include "core/recManager.h"
+#include "core/recorder.h"
 #include "core/sequencer.h"
 #include "core/types.h"
 #include "glue/main.h"
@@ -60,6 +60,7 @@ extern giada::m::Clock           g_clock;
 extern giada::m::Sequencer       g_sequencer;
 extern giada::m::PluginHost      g_pluginHost;
 extern giada::m::EventDispatcher g_eventDispatcher;
+extern giada::m::Recorder        g_recorder;
 
 namespace giada::c::events
 {
@@ -250,12 +251,12 @@ void rewindSequencer(Thread t)
 
 void toggleActionRecording()
 {
-	m::recManager::toggleActionRec(m::conf::conf.recTriggerMode);
+	g_recorder.toggleActionRec(m::conf::conf.recTriggerMode);
 }
 
 void toggleInputRecording()
 {
-	m::recManager::toggleInputRec(m::conf::conf.recTriggerMode, m::conf::conf.inputRecMode);
+	g_recorder.toggleInputRec(m::conf::conf.recTriggerMode, m::conf::conf.inputRecMode);
 }
 
 /* -------------------------------------------------------------------------- */

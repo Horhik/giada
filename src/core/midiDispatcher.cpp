@@ -31,7 +31,7 @@
 #include "core/model/model.h"
 #include "core/plugins/plugin.h"
 #include "core/plugins/pluginHost.h"
-#include "core/recManager.h"
+#include "core/recorder.h"
 #include "core/types.h"
 #include "glue/events.h"
 #include "glue/plugin.h"

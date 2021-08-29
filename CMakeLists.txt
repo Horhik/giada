@@ -57,7 +57,7 @@ list(APPEND SOURCES
 	src/core/clock.cpp
 	src/core/sync.cpp
 	src/core/waveManager.cpp
-	src/core/recManager.cpp
+        src/core/recorder.cpp
 	src/core/midiLearnParam.cpp
 	src/core/resampler.cpp
 	src/core/plugins/pluginHost.cpp

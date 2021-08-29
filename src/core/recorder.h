@@ -29,37 +29,51 @@
 
 #include "core/types.h"
 
-namespace giada::m::recManager
+namespace giada::m
 {
-bool isRecording();
-bool isRecordingAction();
-bool isRecordingInput();
+class Recorder
+{
+public:
+	bool isRecording() const;
+	bool isRecordingAction() const;
+	bool isRecordingInput() const;
 
-void startActionRec(RecTriggerMode);
-void stopActionRec();
-void toggleActionRec(RecTriggerMode);
+	/* canEnableRecOnSignal
+    True if rec-on-signal can be enabled: can't set it while sequencer is 
+    running, in order to prevent mistakes while live recording. */
 
-bool startInputRec(RecTriggerMode, InputRecMode);
-void stopInputRec(InputRecMode);
-bool toggleInputRec(RecTriggerMode, InputRecMode);
+	bool canEnableRecOnSignal() const;
 
-/* canEnableRecOnSignal
-True if rec-on-signal can be enabled: can't set it while sequencer is running,
-in order to prevent mistakes while live recording. */
+	/* canEnableFreeInputRec
+    True if free loop-length can be enabled: Can't set it if there's already a 
+    filled Sample Channel in the current project. */
 
-bool canEnableRecOnSignal();
+	bool canEnableFreeInputRec() const;
 
-/* canEnableFreeInputRec
-True if free loop-length can be enabled: Can't set it if there's already a 
-filled Sample Channel in the current project. */
+	void startActionRec(RecTriggerMode);
+	void stopActionRec();
+	void toggleActionRec(RecTriggerMode);
 
-bool canEnableFreeInputRec();
+	bool startInputRec(RecTriggerMode, InputRecMode);
+	void stopInputRec(InputRecMode);
+	bool toggleInputRec(RecTriggerMode, InputRecMode);
 
-/* refreshInputRecMode
-Makes sure the input rec mode stays the right one when a new Sample Channel is
-filled with data. See canEnableFreeInputRec() rationale. */
+	/* refreshInputRecMode
+    Makes sure the input rec mode stays the right one when a new Sample Channel 
+    is filled with data. See canEnableFreeInputRec() rationale. */
 
-void refreshInputRecMode();
-} // namespace giada::m::recManager
+	void refreshInputRecMode();
+
+private:
+	bool isKernelReady() const;
+	bool canRec() const;
+
+	void setRecordingAction(bool v);
+	void setRecordingInput(bool v);
+
+	bool startActionRec();
+	void startInputRec();
+};
+} // namespace giada::m
 
 #endif

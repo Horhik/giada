@@ -33,7 +33,7 @@
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
-#include "core/recManager.h"
+#include "core/recorder.h"
 #include "core/wave.h"
 #include "gui/dialogs/mainWindow.h"
 #include "gui/dialogs/midiIO/midiInputBase.h"

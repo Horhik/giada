@@ -30,13 +30,14 @@
 #include "core/conf.h"
 #include "core/eventDispatcher.h"
 #include "core/mixer.h"
-#include "core/recManager.h"
+#include "core/recorder.h"
 #include "src/core/actions/action.h"
 #include "src/core/actions/actionRecorder.h"
 #include <cassert>
 
-extern giada::m::Clock                 g_clock;
-extern giada::m::ActionRecorder        g_actionRecorder;
+extern giada::m::Clock          g_clock;
+extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::Recorder       g_recorder;
 
 namespace giada::m::sampleActionRecorder
 {
@@ -54,9 +55,9 @@ bool canRecord_(const channel::Data& ch);
 
 bool canRecord_(const channel::Data& ch)
 {
-	return recManager::isRecordingAction() &&
+	return g_recorder.isRecordingAction() &&
 	       g_clock.isRunning() &&
-	       !recManager::isRecordingInput() &&
+	       !g_recorder.isRecordingInput() &&
 	       !ch.samplePlayer->isAnyLoopMode();
 }
 

@@ -31,7 +31,7 @@
 #include "core/graphics.h"
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
-#include "core/recManager.h"
+#include "core/recorder.h"
 #include "core/sequencer.h"
 #include "glue/events.h"
 #include "glue/main.h"
@@ -41,6 +41,7 @@
 
 extern giada::m::Clock     g_clock;
 extern giada::m::Sequencer g_sequencer;
+extern giada::m::Recorder  g_recorder;
 
 namespace giada::v
 {
@@ -114,8 +115,8 @@ geMainTransport::geMainTransport(int x, int y)
 void geMainTransport::refresh()
 {
 	m_play.setStatus(g_clock.isRunning());
-	m_recAction.setStatus(m::recManager::isRecordingAction());
-	m_recInput.setStatus(m::recManager::isRecordingInput());
+	m_recAction.setStatus(g_recorder.isRecordingAction());
+	m_recInput.setStatus(g_recorder.isRecordingInput());
 	m_metronome.setStatus(g_sequencer.isMetronomeOn());
 	m_recTriggerMode.setStatus(m::conf::conf.recTriggerMode == RecTriggerMode::SIGNAL);
 	m_inputRecMode.setStatus(m::conf::conf.inputRecMode == InputRecMode::FREE);

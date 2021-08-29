@@ -35,7 +35,7 @@
 #include "core/graphics.h"
 #include "core/mixer.h"
 #include "core/model/model.h"
-#include "core/recManager.h"
+#include "core/recorder.h"
 #include "core/wave.h"
 #include "glue/channel.h"
 #include "glue/events.h"
@@ -64,10 +64,9 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::Recorder      g_recorder;
 
-namespace giada
-{
-namespace v
+namespace giada::v
 {
 namespace
 {
@@ -295,7 +294,7 @@ void geSampleChannel::cb_openMenu()
 	/* If you're recording (input or actions) no menu is allowed; you can't do
 	anything, especially deallocate the channel. */
 
-	if (m::recManager::isRecording())
+	if (g_recorder.isRecording())
 		return;
 
 	Fl_Menu_Item rclick_menu[] = {
@@ -423,5 +422,4 @@ void geSampleChannel::resize(int X, int Y, int W, int H)
 
 	packWidgets();
 }
-} // namespace v
-} // namespace giada
+} // namespace giada::v
