@@ -33,18 +33,12 @@ namespace giada::m::channel
 {
 struct Data;
 }
+
 namespace giada::m::patch
 {
 struct Channel;
 }
-namespace giada::m::eventDispatcher
-{
-struct Event;
-}
-namespace giada::m::sequencer
-{
-struct Event;
-}
+
 namespace giada::m::midiSender
 {
 struct Data
@@ -64,7 +58,7 @@ struct Data
 	int filter;
 };
 
-void react(const channel::Data& ch, const eventDispatcher::Event& e);
+void react(const channel::Data& ch, const EventDispatcher::Event& e);
 void advance(const channel::Data& ch, const Sequencer::Event& e);
 } // namespace giada::m::midiSender
 

@@ -55,6 +55,7 @@ namespace giada::m
 {
 class Plugin;
 }
+
 namespace giada::m::channel
 {
 struct State
@@ -148,7 +149,7 @@ void advance(const Data& d, const Sequencer::EventBuffer& e);
 Reacts to live events coming from the EventDispatcher (human events) and
 updates itself accordingly. */
 
-void react(Data& d, const eventDispatcher::EventBuffer& e, bool audible);
+void react(Data& d, const EventDispatcher::EventBuffer& e, bool audible);
 
 /* render
 Renders audio data to I/O buffers. */

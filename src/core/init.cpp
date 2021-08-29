@@ -105,7 +105,6 @@ void initConf_()
 void initSystem_()
 {
 	model::init();
-	eventDispatcher::init();
 }
 
 /* -------------------------------------------------------------------------- */

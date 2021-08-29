@@ -30,7 +30,6 @@
 #include "core/midiDispatcher.h"
 #include "core/model/model.h"
 #include "core/sequencer.h"
-#include "core/worker.h"
 #include "utils/log.h"
 #include <functional>
 
@@ -38,23 +37,23 @@ extern giada::m::Sequencer      g_sequencer;
 extern giada::m::Mixer          g_mixer;
 extern giada::m::MidiDispatcher g_midiDispatcher;
 
-namespace giada::m::eventDispatcher
+namespace giada::m
 {
-namespace
+EventDispatcher::EventDispatcher()
 {
-Worker worker_;
-
-/* eventBuffer_
-Buffer of events sent to channels for event parsing. This is filled with Events
-coming from the two event queues.*/
-
-EventBuffer eventBuffer_;
+	m_worker.start([this]() { process(); }, /*sleep=*/G_EVENT_DISPATCHER_RATE_MS);
+}
 
 /* -------------------------------------------------------------------------- */
 
-void processFuntions_()
+void EventDispatcher::pumpUIevent(Event e) { UIevents.push(e); }
+void EventDispatcher::pumpMidiEvent(Event e) { MidiEvents.push(e); }
+
+/* -------------------------------------------------------------------------- */
+
+void EventDispatcher::processFuntions()
 {
-	for (const Event& e : eventBuffer_)
+	for (const Event& e : m_eventBuffer)
 	{
 		switch (e.type)
 		{
@@ -82,57 +81,37 @@ void processFuntions_()
 
 /* -------------------------------------------------------------------------- */
 
-void processChannels_()
+void EventDispatcher::processChannels()
 {
 	for (channel::Data& ch : model::get().channels)
-		channel::react(ch, eventBuffer_, g_mixer.isChannelAudible(ch));
+		channel::react(ch, m_eventBuffer, g_mixer.isChannelAudible(ch));
 	model::swap(model::SwapType::SOFT);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void processSequencer_()
+void EventDispatcher::processSequencer()
 {
-	g_sequencer.react(eventBuffer_);
+	g_sequencer.react(m_eventBuffer);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void process_()
+void EventDispatcher::process()
 {
-	eventBuffer_.clear();
+	m_eventBuffer.clear();
 
 	Event e;
 	while (UIevents.pop(e))
-		eventBuffer_.push_back(e);
+		m_eventBuffer.push_back(e);
 	while (MidiEvents.pop(e))
-		eventBuffer_.push_back(e);
+		m_eventBuffer.push_back(e);
 
-	if (eventBuffer_.size() == 0)
+	if (m_eventBuffer.size() == 0)
 		return;
 
-	processFuntions_();
-	processChannels_();
-	processSequencer_();
+	processFuntions();
+	processChannels();
+	processSequencer();
 }
-} // namespace
-
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-Queue<Event, G_MAX_DISPATCHER_EVENTS> UIevents;
-Queue<Event, G_MAX_DISPATCHER_EVENTS> MidiEvents;
-
-/* -------------------------------------------------------------------------- */
-
-void init()
-{
-	worker_.start(process_, /*sleep=*/G_EVENT_DISPATCHER_RATE_MS);
-}
-
-/* -------------------------------------------------------------------------- */
-
-void pumpUIevent(Event e) { UIevents.push(e); }
-void pumpMidiEvent(Event e) { MidiEvents.push(e); }
-} // namespace giada::m::eventDispatcher
+} // namespace giada::m

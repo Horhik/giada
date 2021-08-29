@@ -97,7 +97,7 @@ Data::Data(const patch::Channel& p)
 
 /* -------------------------------------------------------------------------- */
 
-void react(channel::Data& ch, const eventDispatcher::Event& e, bool audible)
+void react(channel::Data& ch, const EventDispatcher::Event& e, bool audible)
 {
 	if (!ch.midiLighter.enabled)
 		return;
@@ -109,20 +109,20 @@ void react(channel::Data& ch, const eventDispatcher::Event& e, bool audible)
 	switch (e.type)
 	{
 
-	case eventDispatcher::EventType::KEY_PRESS:
-	case eventDispatcher::EventType::KEY_RELEASE:
-	case eventDispatcher::EventType::KEY_KILL:
-	case eventDispatcher::EventType::SEQUENCER_STOP:
+	case EventDispatcher::EventType::KEY_PRESS:
+	case EventDispatcher::EventType::KEY_RELEASE:
+	case EventDispatcher::EventType::KEY_KILL:
+	case EventDispatcher::EventType::SEQUENCER_STOP:
 		if (l_playing != 0x0)
 			sendStatus_(ch, l_playing, audible);
 		break;
 
-	case eventDispatcher::EventType::CHANNEL_MUTE:
+	case EventDispatcher::EventType::CHANNEL_MUTE:
 		if (l_mute != 0x0)
 			sendMute_(ch, l_mute);
 		break;
 
-	case eventDispatcher::EventType::CHANNEL_SOLO:
+	case EventDispatcher::EventType::CHANNEL_SOLO:
 		if (l_solo != 0x0)
 			sendSolo_(ch, l_solo);
 		break;

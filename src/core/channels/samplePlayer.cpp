@@ -153,9 +153,9 @@ Frame Data::getWaveSize() const
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void react(channel::Data& ch, const eventDispatcher::Event& e)
+void react(channel::Data& ch, const EventDispatcher::Event& e)
 {
-	if (e.type == eventDispatcher::EventType::CHANNEL_PITCH)
+	if (e.type == EventDispatcher::EventType::CHANNEL_PITCH)
 		ch.samplePlayer->pitch = std::get<float>(e.data);
 }
 

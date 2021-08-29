@@ -160,7 +160,7 @@ void killReadActions_(channel::Data& ch)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void react(channel::Data& ch, const eventDispatcher::Event& e)
+void react(channel::Data& ch, const EventDispatcher::Event& e)
 {
 	if (!ch.hasWave())
 		return;
@@ -168,28 +168,28 @@ void react(channel::Data& ch, const eventDispatcher::Event& e)
 	switch (e.type)
 	{
 
-	case eventDispatcher::EventType::KEY_PRESS:
+	case EventDispatcher::EventType::KEY_PRESS:
 		onKeyPress_(ch);
 		break;
 
 		/* Record a stop event only if channel is SINGLE_PRESS. For any other 
 		mode the key release event is meaningless. */
 
-	case eventDispatcher::EventType::KEY_RELEASE:
+	case EventDispatcher::EventType::KEY_RELEASE:
 		if (canRecord_(ch) && ch.samplePlayer->mode == SamplePlayerMode::SINGLE_PRESS)
 			record_(ch, MidiEvent::NOTE_OFF);
 		break;
 
-	case eventDispatcher::EventType::KEY_KILL:
+	case EventDispatcher::EventType::KEY_KILL:
 		if (canRecord_(ch))
 			record_(ch, MidiEvent::NOTE_KILL);
 		break;
 
-	case eventDispatcher::EventType::CHANNEL_TOGGLE_READ_ACTIONS:
+	case EventDispatcher::EventType::CHANNEL_TOGGLE_READ_ACTIONS:
 		toggleReadActions_(ch);
 		break;
 
-	case eventDispatcher::EventType::CHANNEL_KILL_READ_ACTIONS:
+	case EventDispatcher::EventType::CHANNEL_KILL_READ_ACTIONS:
 		killReadActions_(ch);
 		break;
 

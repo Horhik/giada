@@ -61,17 +61,17 @@ void parseMidi_(const channel::Data& ch, const MidiEvent& e)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void react(const channel::Data& ch, const eventDispatcher::Event& e)
+void react(const channel::Data& ch, const EventDispatcher::Event& e)
 {
 	switch (e.type)
 	{
-	case eventDispatcher::EventType::MIDI:
+	case EventDispatcher::EventType::MIDI:
 		parseMidi_(ch, std::get<Action>(e.data).event);
 		break;
 
-	case eventDispatcher::EventType::KEY_KILL:
-	case eventDispatcher::EventType::SEQUENCER_STOP:
-	case eventDispatcher::EventType::SEQUENCER_REWIND:
+	case EventDispatcher::EventType::KEY_KILL:
+	case EventDispatcher::EventType::SEQUENCER_STOP:
+	case EventDispatcher::EventType::SEQUENCER_REWIND:
 		sendToPlugins_(ch, MidiEvent(G_MIDI_ALL_NOTES_OFF), 0);
 		break;
 

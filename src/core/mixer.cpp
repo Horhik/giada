@@ -31,7 +31,8 @@
 #include "utils/log.h"
 #include "utils/math.h"
 
-extern giada::m::Sequencer g_sequencer;
+extern giada::m::Sequencer       g_sequencer;
+extern giada::m::EventDispatcher g_eventDispatcher;
 
 namespace giada::m
 {
@@ -231,14 +232,14 @@ void Mixer::execEndOfRecCb()
 
 void Mixer::fireSignalCb()
 {
-	eventDispatcher::pumpUIevent({eventDispatcher::EventType::MIXER_SIGNAL_CALLBACK});
+	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::MIXER_SIGNAL_CALLBACK});
 }
 
 /* -------------------------------------------------------------------------- */
 
 void Mixer::fireEndOfRecCb()
 {
-	eventDispatcher::pumpUIevent({eventDispatcher::EventType::MIXER_END_OF_REC_CALLBACK});
+	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::MIXER_END_OF_REC_CALLBACK});
 }
 
 /* -------------------------------------------------------------------------- */

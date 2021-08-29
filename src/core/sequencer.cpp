@@ -66,21 +66,21 @@ void Sequencer::reset()
 
 /* -------------------------------------------------------------------------- */
 
-void Sequencer::react(const eventDispatcher::EventBuffer& events)
+void Sequencer::react(const EventDispatcher::EventBuffer& events)
 {
-	for (const eventDispatcher::Event& e : events)
+	for (const EventDispatcher::Event& e : events)
 	{
-		if (e.type == eventDispatcher::EventType::SEQUENCER_START)
+		if (e.type == EventDispatcher::EventType::SEQUENCER_START)
 		{
 			start();
 			break;
 		}
-		if (e.type == eventDispatcher::EventType::SEQUENCER_STOP)
+		if (e.type == EventDispatcher::EventType::SEQUENCER_STOP)
 		{
 			stop();
 			break;
 		}
-		if (e.type == eventDispatcher::EventType::SEQUENCER_REWIND)
+		if (e.type == EventDispatcher::EventType::SEQUENCER_REWIND)
 		{
 			rewind();
 			break;

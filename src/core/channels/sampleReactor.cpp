@@ -228,7 +228,7 @@ Data::Data(ID channelId)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void react(channel::Data& ch, const eventDispatcher::Event& e)
+void react(channel::Data& ch, const EventDispatcher::Event& e)
 {
 	if (!ch.hasWave())
 		return;
@@ -236,23 +236,23 @@ void react(channel::Data& ch, const eventDispatcher::Event& e)
 	switch (e.type)
 	{
 
-	case eventDispatcher::EventType::KEY_PRESS:
+	case EventDispatcher::EventType::KEY_PRESS:
 		press_(ch, std::get<int>(e.data));
 		break;
 
-	case eventDispatcher::EventType::KEY_RELEASE:
+	case EventDispatcher::EventType::KEY_RELEASE:
 		release_(ch);
 		break;
 
-	case eventDispatcher::EventType::KEY_KILL:
+	case EventDispatcher::EventType::KEY_KILL:
 		kill_(ch);
 		break;
 
-	case eventDispatcher::EventType::SEQUENCER_STOP:
+	case EventDispatcher::EventType::SEQUENCER_STOP:
 		onStopBySeq_(ch);
 		break;
 
-	case eventDispatcher::EventType::CHANNEL_TOGGLE_READ_ACTIONS:
+	case EventDispatcher::EventType::CHANNEL_TOGGLE_READ_ACTIONS:
 		toggleReadActions_(ch);
 		break;
 

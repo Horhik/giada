@@ -63,9 +63,9 @@ bool canRecord_()
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void react(channel::Data& ch, const eventDispatcher::Event& e)
+void react(channel::Data& ch, const EventDispatcher::Event& e)
 {
-	if (e.type == eventDispatcher::EventType::MIDI && canRecord_())
+	if (e.type == EventDispatcher::EventType::MIDI && canRecord_())
 		record_(ch, std::get<Action>(e.data).event);
 }
 } // namespace giada::m::midiActionRecorder

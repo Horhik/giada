@@ -40,6 +40,8 @@
 #include <cassert>
 #include <vector>
 
+extern giada::m::EventDispatcher g_eventDispatcher;
+
 namespace giada::m
 {
 MidiDispatcher::MidiDispatcher()
@@ -115,9 +117,9 @@ void MidiDispatcher::dispatch(int byte1, int byte2, int byte3)
 	to be perfomed by the Event Dispatcher. */
 
 	Action action = {0, 0, 0, midiEvent};
-	auto   event  = m_learnCb != nullptr ? eventDispatcher::EventType::MIDI_DISPATCHER_LEARN : eventDispatcher::EventType::MIDI_DISPATCHER_PROCESS;
+	auto   event  = m_learnCb != nullptr ? EventDispatcher::EventType::MIDI_DISPATCHER_LEARN : EventDispatcher::EventType::MIDI_DISPATCHER_PROCESS;
 
-	eventDispatcher::pumpMidiEvent({event, 0, 0, action});
+	g_eventDispatcher.pumpMidiEvent({event, 0, 0, action});
 }
 
 /* -------------------------------------------------------------------------- */

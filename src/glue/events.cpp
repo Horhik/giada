@@ -55,22 +55,23 @@
 #include <FL/Fl.H>
 #include <cassert>
 
-extern giada::v::gdMainWindow* G_MainWin;
-extern giada::m::Clock         g_clock;
-extern giada::m::Sequencer     g_sequencer;
-extern giada::m::PluginHost    g_pluginHost;
+extern giada::v::gdMainWindow*   G_MainWin;
+extern giada::m::Clock           g_clock;
+extern giada::m::Sequencer       g_sequencer;
+extern giada::m::PluginHost      g_pluginHost;
+extern giada::m::EventDispatcher g_eventDispatcher;
 
 namespace giada::c::events
 {
 namespace
 {
-void pushEvent_(m::eventDispatcher::Event e, Thread t)
+void pushEvent_(m::EventDispatcher::Event e, Thread t)
 {
 	bool res = true;
 	if (t == Thread::MAIN)
-		res = m::eventDispatcher::UIevents.push(e);
+		res = g_eventDispatcher.UIevents.push(e);
 	else if (t == Thread::MIDI)
-		res = m::eventDispatcher::MidiEvents.push(e);
+		res = g_eventDispatcher.MidiEvents.push(e);
 	else
 		assert(false);
 
@@ -87,17 +88,17 @@ void pressChannel(ID channelId, int velocity, Thread t)
 {
 	m::MidiEvent e;
 	e.setVelocity(velocity);
-	pushEvent_({m::eventDispatcher::EventType::KEY_PRESS, 0, channelId, velocity}, t);
+	pushEvent_({m::EventDispatcher::EventType::KEY_PRESS, 0, channelId, velocity}, t);
 }
 
 void releaseChannel(ID channelId, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::KEY_RELEASE, 0, channelId, {}}, t);
+	pushEvent_({m::EventDispatcher::EventType::KEY_RELEASE, 0, channelId, {}}, t);
 }
 
 void killChannel(ID channelId, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::KEY_KILL, 0, channelId, {}}, t);
+	pushEvent_({m::EventDispatcher::EventType::KEY_KILL, 0, channelId, {}}, t);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -106,7 +107,7 @@ void setChannelVolume(ID channelId, float v, Thread t)
 {
 	v = std::clamp(v, 0.0f, G_MAX_VOLUME);
 
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_VOLUME, 0, channelId, v}, t);
+	pushEvent_({m::EventDispatcher::EventType::CHANNEL_VOLUME, 0, channelId, v}, t);
 
 	sampleEditor::onRefresh(t == Thread::MAIN, [v](v::gdSampleEditor& e) { e.volumeTool->update(v); });
 
@@ -124,7 +125,7 @@ void setChannelPitch(ID channelId, float v, Thread t)
 {
 	v = std::clamp(v, G_MIN_PITCH, G_MAX_PITCH);
 
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_PITCH, 0, channelId, v}, t);
+	pushEvent_({m::EventDispatcher::EventType::CHANNEL_PITCH, 0, channelId, v}, t);
 
 	sampleEditor::onRefresh(t == Thread::MAIN, [v](v::gdSampleEditor& e) { e.pitchTool->update(v); });
 }
@@ -136,7 +137,7 @@ void sendChannelPan(ID channelId, float v)
 	v = std::clamp(v, 0.0f, G_MAX_PAN);
 
 	/* Pan event is currently triggered only by the main thread. */
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_PAN, 0, channelId, v}, Thread::MAIN);
+	pushEvent_({m::EventDispatcher::EventType::CHANNEL_PAN, 0, channelId, v}, Thread::MAIN);
 
 	sampleEditor::onRefresh(/*gui=*/true, [v](v::gdSampleEditor& e) { e.panTool->update(v); });
 }
@@ -145,36 +146,36 @@ void sendChannelPan(ID channelId, float v)
 
 void toggleMuteChannel(ID channelId, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_MUTE, 0, channelId, {}}, t);
+	pushEvent_({m::EventDispatcher::EventType::CHANNEL_MUTE, 0, channelId, {}}, t);
 }
 
 void toggleSoloChannel(ID channelId, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_SOLO, 0, channelId, {}}, t);
+	pushEvent_({m::EventDispatcher::EventType::CHANNEL_SOLO, 0, channelId, {}}, t);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void toggleArmChannel(ID channelId, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_TOGGLE_ARM, 0, channelId, {}}, t);
+	pushEvent_({m::EventDispatcher::EventType::CHANNEL_TOGGLE_ARM, 0, channelId, {}}, t);
 }
 
 void toggleReadActionsChannel(ID channelId, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_TOGGLE_READ_ACTIONS, 0, channelId, {}}, t);
+	pushEvent_({m::EventDispatcher::EventType::CHANNEL_TOGGLE_READ_ACTIONS, 0, channelId, {}}, t);
 }
 
 void killReadActionsChannel(ID channelId, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_KILL_READ_ACTIONS, 0, channelId, {}}, t);
+	pushEvent_({m::EventDispatcher::EventType::CHANNEL_KILL_READ_ACTIONS, 0, channelId, {}}, t);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void sendMidiToChannel(ID channelId, m::MidiEvent e, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::MIDI, 0, channelId, m::Action{0, channelId, 0, e}}, t);
+	pushEvent_({m::EventDispatcher::EventType::MIDI, 0, channelId, m::Action{0, channelId, 0, e}}, t);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -188,7 +189,7 @@ void toggleMetronome()
 
 void setMasterInVolume(float v, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_VOLUME, 0, m::Mixer::MASTER_IN_CHANNEL_ID, v}, t);
+	pushEvent_({m::EventDispatcher::EventType::CHANNEL_VOLUME, 0, m::Mixer::MASTER_IN_CHANNEL_ID, v}, t);
 
 	if (t != Thread::MAIN)
 	{
@@ -200,7 +201,7 @@ void setMasterInVolume(float v, Thread t)
 
 void setMasterOutVolume(float v, Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::CHANNEL_VOLUME, 0, m::Mixer::MASTER_OUT_CHANNEL_ID, v}, t);
+	pushEvent_({m::EventDispatcher::EventType::CHANNEL_VOLUME, 0, m::Mixer::MASTER_OUT_CHANNEL_ID, v}, t);
 
 	if (t != Thread::MAIN)
 	{
@@ -226,13 +227,13 @@ void divideBeats()
 
 void startSequencer(Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::SEQUENCER_START, 0, 0, {}}, t);
+	pushEvent_({m::EventDispatcher::EventType::SEQUENCER_START, 0, 0, {}}, t);
 	m::conf::conf.recTriggerMode = RecTriggerMode::NORMAL;
 }
 
 void stopSequencer(Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::SEQUENCER_STOP, 0, 0, {}}, t);
+	pushEvent_({m::EventDispatcher::EventType::SEQUENCER_STOP, 0, 0, {}}, t);
 }
 
 void toggleSequencer(Thread t)
@@ -242,7 +243,7 @@ void toggleSequencer(Thread t)
 
 void rewindSequencer(Thread t)
 {
-	pushEvent_({m::eventDispatcher::EventType::SEQUENCER_REWIND, 0, 0, {}}, t);
+	pushEvent_({m::EventDispatcher::EventType::SEQUENCER_REWIND, 0, 0, {}}, t);
 }
 
 /* -------------------------------------------------------------------------- */

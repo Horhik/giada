@@ -51,27 +51,27 @@ mcl::AudioBuffer::Pan calcPanning_(float pan)
 
 /* -------------------------------------------------------------------------- */
 
-void react_(Data& d, const eventDispatcher::Event& e)
+void react_(Data& d, const EventDispatcher::Event& e)
 {
 	switch (e.type)
 	{
-	case eventDispatcher::EventType::CHANNEL_VOLUME:
+	case EventDispatcher::EventType::CHANNEL_VOLUME:
 		d.volume = std::get<float>(e.data);
 		break;
 
-	case eventDispatcher::EventType::CHANNEL_PAN:
+	case EventDispatcher::EventType::CHANNEL_PAN:
 		d.pan = std::get<float>(e.data);
 		break;
 
-	case eventDispatcher::EventType::CHANNEL_MUTE:
+	case EventDispatcher::EventType::CHANNEL_MUTE:
 		d.mute = !d.mute;
 		break;
 
-	case eventDispatcher::EventType::CHANNEL_TOGGLE_ARM:
+	case EventDispatcher::EventType::CHANNEL_TOGGLE_ARM:
 		d.armed = !d.armed;
 		break;
 
-	case eventDispatcher::EventType::CHANNEL_SOLO:
+	case EventDispatcher::EventType::CHANNEL_SOLO:
 		d.solo = !d.solo;
 		g_mixerHandler.updateSoloCount();
 		break;
@@ -314,9 +314,9 @@ void advance(const Data& d, const Sequencer::EventBuffer& events)
 
 /* -------------------------------------------------------------------------- */
 
-void react(Data& d, const eventDispatcher::EventBuffer& events, bool audible)
+void react(Data& d, const EventDispatcher::EventBuffer& events, bool audible)
 {
-	for (const eventDispatcher::Event& e : events)
+	for (const EventDispatcher::Event& e : events)
 	{
 		if (e.channelId > 0 && e.channelId != d.id)
 			continue;

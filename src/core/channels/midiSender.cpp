@@ -63,13 +63,13 @@ Data::Data(const patch::Channel& p)
 
 /* -------------------------------------------------------------------------- */
 
-void react(const channel::Data& ch, const eventDispatcher::Event& e)
+void react(const channel::Data& ch, const EventDispatcher::Event& e)
 {
 	if (!ch.isPlaying() || !ch.midiSender->enabled || ch.isMuted())
 		return;
 
-	if (e.type == eventDispatcher::EventType::KEY_KILL ||
-	    e.type == eventDispatcher::EventType::SEQUENCER_STOP)
+	if (e.type == EventDispatcher::EventType::KEY_KILL ||
+	    e.type == EventDispatcher::EventType::SEQUENCER_STOP)
 		send_(ch, MidiEvent(G_MIDI_ALL_NOTES_OFF));
 }
 

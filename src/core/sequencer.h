@@ -73,7 +73,7 @@ public:
 	/* react
 	Reacts to live events coming from the EventDispatcher (human events). */
 
-	void react(const eventDispatcher::EventBuffer& e);
+	void react(const EventDispatcher::EventBuffer& e);
 
 	/* advance
 	Parses sequencer events that might occur in a block and advances the internal 
