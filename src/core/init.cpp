@@ -74,6 +74,7 @@ extern giada::m::Clock         g_clock;
 extern giada::m::Sequencer     g_sequencer;
 extern giada::m::Mixer         g_mixer;
 extern giada::m::MixerHandler  g_mixerHandler;
+extern giada::m::Synchronizer  g_synchronizer;
 
 namespace giada::m::init
 {
@@ -110,7 +111,6 @@ void initSystem_()
 void initAudio_()
 {
 	g_kernelAudio.openDevice(conf::conf);
-	sync::init(conf::conf.samplerate, conf::conf.midiTCfps);
 	recorder::init();
 	recorderHandler::init();
 
@@ -263,7 +263,7 @@ void reset()
 	model::init();
 	channelManager::init();
 	waveManager::init();
-	sync::init(conf::conf.samplerate, conf::conf.midiTCfps);
+	g_synchronizer.reset(conf::conf.samplerate, conf::conf.midiTCfps);
 	g_clock.reset();
 	g_mixerHandler.reset(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 	g_sequencer.reset();

@@ -37,39 +37,63 @@ namespace giada::m::kernelAudio
 {
 struct JackState;
 }
-namespace giada::m::sync
+
+namespace giada::m
 {
-void init(int sampleRate, float midiTCfps);
+class Synchronizer
+{
+public:
+	Synchronizer(int sampleRate, float midiTCfps);
 
-/* sendMIDIsync
-Generates MIDI sync output data. */
+	/* reset
+	Brings everything back to the initial state. */
 
-void sendMIDIsync();
+	void reset(int sampleRate, float midiTCfps);
 
-/* sendMIDIrewind
-Rewinds timecode to beat 0 and also send a MTC full frame to cue the slave. */
+	/* sendMIDIsync
+    Generates MIDI sync output data. */
 
-void sendMIDIrewind();
+	void sendMIDIsync();
 
-void sendMIDIstart();
-void sendMIDIstop();
+	/* sendMIDIrewind
+    Rewinds timecode to beat 0 and also send a MTC full frame to cue the slave. */
+
+	void sendMIDIrewind();
+
+	void sendMIDIstart();
+	void sendMIDIstop();
 
 #ifdef WITH_AUDIO_JACK
 
-/* recvJackSync
-Receives a new JACK state. Called by Kernel Audio on each audio block. */
+	/* recvJackSync
+    Receives a new JACK state. Called by Kernel Audio on each audio block. */
 
-void recvJackSync(const JackTransport::State& state);
+	void recvJackSync(const JackTransport::State& state);
 
-/* onJack[...]
-Callbacks called when something happens in the JACK state. */
+	/* onJack[...]
+    Callbacks called when something happens in the JACK state. */
 
-extern std::function<void()>      onJackRewind;
-extern std::function<void(float)> onJackChangeBpm;
-extern std::function<void()>      onJackStart;
-extern std::function<void()>      onJackStop;
+	std::function<void()>      onJackRewind;
+	std::function<void(float)> onJackChangeBpm;
+	std::function<void()>      onJackStart;
+	std::function<void()>      onJackStop;
 
 #endif
-} // namespace giada::m::sync
+
+private:
+	/* midiTC*
+    MIDI timecode variables. */
+
+	int m_midiTCrate    = 0; // Send MTC data every m_midiTCrate frames
+	int m_midiTCframes  = 0;
+	int m_midiTCseconds = 0;
+	int m_midiTCminutes = 0;
+	int m_midiTChours   = 0;
+
+#ifdef WITH_AUDIO_JACK
+	JackTransport::State m_jackStatePrev;
+#endif
+};
+} // namespace giada::m
 
 #endif

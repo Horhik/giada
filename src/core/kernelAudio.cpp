@@ -45,6 +45,7 @@ extern giada::m::KernelAudio  g_kernelAudio;
 extern giada::m::Clock        g_clock;
 extern giada::m::Mixer        g_mixer;
 extern giada::m::MixerHandler g_mixerHandler;
+extern giada::m::Synchronizer g_synchronizer;
 
 namespace giada::m
 {
@@ -69,7 +70,7 @@ int callback_(void* outBuf, void* inBuf, unsigned bufferSize, double /*streamTim
 
 #ifdef WITH_AUDIO_JACK
 	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
-		sync::recvJackSync(g_kernelAudio.jackTransportQuery());
+		g_synchronizer.recvJackSync(g_kernelAudio.jackTransportQuery());
 #endif
 
 	Mixer::RenderInfo info;

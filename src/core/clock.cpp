@@ -39,7 +39,8 @@
 #include <atomic>
 #include <cassert>
 
-extern giada::m::Sequencer g_sequencer;
+extern giada::m::Sequencer    g_sequencer;
+extern giada::m::Synchronizer g_synchronizer;
 
 namespace giada::m
 {
@@ -53,10 +54,10 @@ Clock::Clock(KernelAudio& k)
 
 	if (m_kernelAudio.getAPI() == G_SYS_API_JACK)
 	{
-		sync::onJackRewind    = []() { g_sequencer.rawRewind(); };
-		sync::onJackChangeBpm = [this](float bpm) { setBpmInternal(bpm); };
-		sync::onJackStart     = []() { g_sequencer.rawStart(); };
-		sync::onJackStop      = []() { g_sequencer.rawStop(); };
+		g_synchronizer.onJackRewind    = []() { g_sequencer.rawRewind(); };
+		g_synchronizer.onJackChangeBpm = [this](float bpm) { setBpmInternal(bpm); };
+		g_synchronizer.onJackStart     = []() { g_sequencer.rawStart(); };
+		g_synchronizer.onJackStop      = []() { g_sequencer.rawStop(); };
 	}
 
 #endif
@@ -214,9 +215,9 @@ void Clock::setStatus(ClockStatus s)
 	model::swap(model::SwapType::SOFT);
 
 	if (s == ClockStatus::RUNNING)
-		sync::sendMIDIstart();
+		g_synchronizer.sendMIDIstart();
 	else if (s == ClockStatus::STOPPED)
-		sync::sendMIDIstop();
+		g_synchronizer.sendMIDIstop();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -262,7 +263,7 @@ void Clock::rewind()
 	c.state->currentBeat.store(0);
 	c.state->currentFrameWait.store(0);
 
-	sync::sendMIDIrewind();
+	g_synchronizer.sendMIDIrewind();
 }
 
 /* -------------------------------------------------------------------------- */

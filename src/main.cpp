@@ -25,11 +25,13 @@
  * -------------------------------------------------------------------------- */
 
 #include "core/clock.h"
+#include "core/conf.h"
 #include "core/init.h"
 #include "core/kernelAudio.h"
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/sequencer.h"
+#include "core/sync.h"
 #include "gui/dialogs/mainWindow.h"
 #include <FL/Fl.H>
 #ifdef WITH_TESTS
@@ -49,6 +51,7 @@ giada::m::Clock        g_clock(g_kernelAudio);
 giada::m::Sequencer    g_sequencer(g_kernelAudio, g_clock);
 giada::m::Mixer        g_mixer(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 giada::m::MixerHandler g_mixerHandler(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
+giada::m::Synchronizer g_synchronizer(giada::m::conf::conf.samplerate, giada::m::conf::conf.midiTCfps);
 
 class giada::v::gdMainWindow* G_MainWin = nullptr;
 
