@@ -25,20 +25,31 @@
  * -------------------------------------------------------------------------- */
 
 #include "sync.h"
+#include "core/clock.h"
 #include "core/conf.h"
 #include "core/kernelAudio.h"
 #include "core/kernelMidi.h"
 #include "core/model/model.h"
 
+extern giada::m::Sequencer g_sequencer;
+extern giada::m::Clock     g_clock;
+
 namespace giada::m
 {
 Synchronizer::Synchronizer(int sampleRate, float midiTCfps)
-: onJackRewind(nullptr)
-, onJackChangeBpm(nullptr)
-, onJackStart(nullptr)
-, onJackStop(nullptr)
+: m_onJackRewind(nullptr)
+, m_onJackChangeBpm(nullptr)
+, m_onJackStart(nullptr)
+, m_onJackStop(nullptr)
 {
 	reset(sampleRate, midiTCfps);
+
+#ifdef WITH_AUDIO_JACK
+	m_onJackRewind    = []() { g_sequencer.rawRewind(); };
+	m_onJackChangeBpm = [this](float bpm) { g_clock.setBpmRaw(bpm); };
+	m_onJackStart     = []() { g_sequencer.rawStart(); };
+	m_onJackStop      = []() { g_sequencer.rawStop(); };
+#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -180,10 +191,10 @@ void Synchronizer::sendMIDIstop()
 
 void Synchronizer::recvJackSync(const JackTransport::State& state)
 {
-	assert(onJackRewind != nullptr);
-	assert(onJackChangeBpm != nullptr);
-	assert(onJackStart != nullptr);
-	assert(onJackStop != nullptr);
+	assert(m_onJackRewind != nullptr);
+	assert(m_onJackChangeBpm != nullptr);
+	assert(m_onJackStart != nullptr);
+	assert(m_onJackStop != nullptr);
 
 	JackTransport::State jackStateCurr = state;
 
@@ -192,20 +203,20 @@ void Synchronizer::recvJackSync(const JackTransport::State& state)
 		if (jackStateCurr.frame != m_jackStatePrev.frame && jackStateCurr.frame == 0)
 		{
 			G_DEBUG("JackState received - rewind to frame 0");
-			onJackRewind();
+			m_onJackRewind();
 		}
 
 		// jackStateCurr.bpm == 0 if JACK doesn't send that info
 		if (jackStateCurr.bpm != m_jackStatePrev.bpm && jackStateCurr.bpm > 1.0f)
 		{
 			G_DEBUG("JackState received - bpm=" << jackStateCurr.bpm);
-			onJackChangeBpm(jackStateCurr.bpm);
+			m_onJackChangeBpm(jackStateCurr.bpm);
 		}
 
 		if (jackStateCurr.running != m_jackStatePrev.running)
 		{
 			G_DEBUG("JackState received - running=" << jackStateCurr.running);
-			jackStateCurr.running ? onJackStart() : onJackStop();
+			jackStateCurr.running ? m_onJackStart() : m_onJackStop();
 		}
 	}
 

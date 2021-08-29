@@ -39,28 +39,14 @@
 #include <atomic>
 #include <cassert>
 
-extern giada::m::Sequencer    g_sequencer;
-extern giada::m::Synchronizer g_synchronizer;
-
 namespace giada::m
 {
-Clock::Clock(KernelAudio& k)
+Clock::Clock(KernelAudio& k, Synchronizer& s)
 : m_kernelAudio(k)
+, m_synchronizer(s)
 , m_quantizerStep(1)
 {
 	reset();
-
-#ifdef WITH_AUDIO_JACK
-
-	if (m_kernelAudio.getAPI() == G_SYS_API_JACK)
-	{
-		g_synchronizer.onJackRewind    = []() { g_sequencer.rawRewind(); };
-		g_synchronizer.onJackChangeBpm = [this](float bpm) { setBpmInternal(bpm); };
-		g_synchronizer.onJackStart     = []() { g_sequencer.rawStart(); };
-		g_synchronizer.onJackStop      = []() { g_sequencer.rawStop(); };
-	}
-
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -180,7 +166,7 @@ void Clock::setBpm(float b)
 	}
 #endif
 
-	setBpmInternal(b);
+	setBpmRaw(b);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -215,9 +201,9 @@ void Clock::setStatus(ClockStatus s)
 	model::swap(model::SwapType::SOFT);
 
 	if (s == ClockStatus::RUNNING)
-		g_synchronizer.sendMIDIstart();
+		m_synchronizer.sendMIDIstart();
 	else if (s == ClockStatus::STOPPED)
-		g_synchronizer.sendMIDIstop();
+		m_synchronizer.sendMIDIstop();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -263,7 +249,7 @@ void Clock::rewind()
 	c.state->currentBeat.store(0);
 	c.state->currentFrameWait.store(0);
 
-	g_synchronizer.sendMIDIrewind();
+	m_synchronizer.sendMIDIrewind();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -290,17 +276,17 @@ void Clock::recomputeFrames(model::Clock& c)
 
 /* -------------------------------------------------------------------------- */
 
-void Clock::setBpmInternal(float current)
+void Clock::setBpmRaw(float v)
 {
-	float ratio = model::get().clock.bpm / current;
+	float ratio = model::get().clock.bpm / v;
 
-	model::get().clock.bpm = current;
+	model::get().clock.bpm = v;
 	recomputeFrames(model::get().clock);
 
 	m::recorderHandler::updateBpm(ratio, m_quantizerStep);
 
 	model::swap(model::SwapType::HARD);
 
-	u::log::print("[clock::setBpmInternal] Bpm changed to %f\n", current);
+	u::log::print("[clock::setBpmRaw] Bpm changed to %f\n", v);
 }
 } // namespace giada::m

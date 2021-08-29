@@ -50,11 +50,11 @@
 // TODO - conf
 // TODO - patch
 giada::m::KernelAudio  g_kernelAudio;
-giada::m::Clock        g_clock(g_kernelAudio);
+giada::m::Synchronizer g_synchronizer(giada::m::conf::conf.samplerate, giada::m::conf::conf.midiTCfps);
+giada::m::Clock        g_clock(g_kernelAudio, g_synchronizer);
 giada::m::Sequencer    g_sequencer(g_kernelAudio, g_clock);
 giada::m::Mixer        g_mixer(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 giada::m::MixerHandler g_mixerHandler(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
-giada::m::Synchronizer g_synchronizer(giada::m::conf::conf.samplerate, giada::m::conf::conf.midiTCfps);
 giada::m::PluginHost   g_pluginHost(g_kernelAudio.getRealBufSize());
 
 class giada::v::gdMainWindow* G_MainWin = nullptr;

@@ -37,10 +37,11 @@ struct Clock;
 namespace giada::m
 {
 class KernelAudio;
+class Synchronizer;
 class Clock
 {
 public:
-	Clock(KernelAudio&);
+	Clock(KernelAudio&, Synchronizer&);
 
 	float       getBpm() const;
 	int         getBeats() const;
@@ -113,6 +114,13 @@ public:
 	void setBeats(int beats, int bars);
 	void setQuantize(int q);
 
+	/* setBpmRaw
+	Raw function to set the bpm, bypassing any JACK instruction. This functions 
+	must be called only by the Synchronizer when the JACK signal is received. 
+	Other modules should use the non-raw versions below. */
+
+	void setBpmRaw(float v);
+
 	/* recomputeFrames
     Updates bpm, frames, beats and so on. */
 
@@ -127,9 +135,8 @@ private:
 
 	void recomputeFrames(model::Clock& c);
 
-	void setBpmInternal(float current);
-
-	KernelAudio& m_kernelAudio;
+	KernelAudio&  m_kernelAudio;
+	Synchronizer& m_synchronizer;
 
 	/* m_quantizerStep
     Tells how many frames to wait to perform a quantized action. */

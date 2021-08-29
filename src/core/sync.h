@@ -70,14 +70,6 @@ public:
 
 	void recvJackSync(const JackTransport::State& state);
 
-	/* onJack[...]
-    Callbacks called when something happens in the JACK state. */
-
-	std::function<void()>      onJackRewind;
-	std::function<void(float)> onJackChangeBpm;
-	std::function<void()>      onJackStart;
-	std::function<void()>      onJackStop;
-
 #endif
 
 private:
@@ -91,7 +83,17 @@ private:
 	int m_midiTChours   = 0;
 
 #ifdef WITH_AUDIO_JACK
+
+	/* onJack[...]
+    Callbacks called when something happens in the JACK state. */
+
+	std::function<void()>      m_onJackRewind;
+	std::function<void(float)> m_onJackChangeBpm;
+	std::function<void()>      m_onJackStart;
+	std::function<void()>      m_onJackStop;
+
 	JackTransport::State m_jackStatePrev;
+
 #endif
 };
 } // namespace giada::m
