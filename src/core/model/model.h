@@ -27,13 +27,13 @@
 #ifndef G_RENDER_MODEL_H
 #define G_RENDER_MODEL_H
 
-#include "core/actionRecorder.h"
 #include "core/channels/channel.h"
 #include "core/const.h"
 #include "core/plugins/plugin.h"
 #include "core/recorder.h"
 #include "core/wave.h"
 #include "deps/mcl-atomic-swapper/src/atomic-swapper.hpp"
+#include "src/core/actions/actions.h"
 #include "utils/vector.h"
 #include <algorithm>
 
@@ -202,7 +202,6 @@ using ChannelStatePtr  = std::unique_ptr<channel::State>;
 using PluginPtrs = std::vector<PluginPtr>;
 #endif
 using WavePtrs          = std::vector<WavePtr>;
-using Actions           = ActionRecorder::ActionMap;
 using ChannelBufferPtrs = std::vector<ChannelBufferPtr>;
 using ChannelStatePtrs  = std::vector<ChannelStatePtr>;
 

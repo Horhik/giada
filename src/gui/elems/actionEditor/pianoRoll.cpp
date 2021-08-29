@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "pianoRoll.h"
-#include "core/action.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
@@ -34,6 +33,7 @@
 #include "glue/channel.h"
 #include "gui/dialogs/actionEditor/baseActionEditor.h"
 #include "gui/elems/actionEditor/pianoItem.h"
+#include "src/core/actions/action.h"
 #include "utils/log.h"
 #include "utils/math.h"
 #include "utils/string.h"

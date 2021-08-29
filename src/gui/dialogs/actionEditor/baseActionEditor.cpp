@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "baseActionEditor.h"
-#include "core/action.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
@@ -36,6 +35,7 @@
 #include "gui/elems/basics/button.h"
 #include "gui/elems/basics/choice.h"
 #include "gui/elems/basics/scrollPack.h"
+#include "src/core/actions/action.h"
 #include "utils/gui.h"
 #include "utils/string.h"
 #include <FL/Fl.H>

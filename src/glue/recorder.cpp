@@ -25,23 +25,23 @@
  * -------------------------------------------------------------------------- */
 
 #include "recorder.h"
-#include "core/action.h"
-#include "core/actionRecorder.h"
 #include "core/channels/channel.h"
 #include "core/clock.h"
 #include "core/const.h"
 #include "core/kernelMidi.h"
 #include "core/mixer.h"
 #include "core/model/model.h"
-#include "core/recorderHandler.h"
 #include "gui/dialogs/warnings.h"
 #include "gui/elems/mainWindow/keyboard/channel.h"
 #include "gui/elems/mainWindow/keyboard/sampleChannel.h"
+#include "src/core/actions/action.h"
+#include "src/core/actions/actionRecorder.h"
+#include "src/core/actions/actions.h"
 #include "utils/gui.h"
 #include "utils/log.h"
 #include <cassert>
 
-extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::Actions g_actions;
 
 namespace giada::c::recorder
 {
@@ -49,7 +49,7 @@ void clearAllActions(ID channelId)
 {
 	if (!v::gdConfirmWin("Warning", "Clear all actions: are you sure?"))
 		return;
-	g_actionRecorder.clearChannel(channelId);
+	g_actions.clearChannel(channelId);
 	updateChannel(channelId, /*updateActionEditor=*/true);
 }
 
@@ -59,7 +59,7 @@ void clearVolumeActions(ID channelId)
 {
 	if (!v::gdConfirmWin("Warning", "Clear all volume actions: are you sure?"))
 		return;
-	g_actionRecorder.clearActions(channelId, m::MidiEvent::ENVELOPE);
+	g_actions.clearActions(channelId, m::MidiEvent::ENVELOPE);
 	updateChannel(channelId, /*updateActionEditor=*/true);
 }
 
@@ -69,9 +69,9 @@ void clearStartStopActions(ID channelId)
 {
 	if (!v::gdConfirmWin("Warning", "Clear all start/stop actions: are you sure?"))
 		return;
-	g_actionRecorder.clearActions(channelId, m::MidiEvent::NOTE_ON);
-	g_actionRecorder.clearActions(channelId, m::MidiEvent::NOTE_OFF);
-	g_actionRecorder.clearActions(channelId, m::MidiEvent::NOTE_KILL);
+	g_actions.clearActions(channelId, m::MidiEvent::NOTE_ON);
+	g_actions.clearActions(channelId, m::MidiEvent::NOTE_OFF);
+	g_actions.clearActions(channelId, m::MidiEvent::NOTE_KILL);
 	updateChannel(channelId, /*updateActionEditor=*/true);
 }
 
@@ -80,7 +80,7 @@ void clearStartStopActions(ID channelId)
 void updateChannel(ID channelId, bool updateActionEditor)
 {
 	/* TODO - move somewhere else in the core area */
-	m::model::get().getChannel(channelId).hasActions = g_actionRecorder.hasActions(channelId);
+	m::model::get().getChannel(channelId).hasActions = g_actions.hasActions(channelId);
 	m::model::swap(m::model::SwapType::HARD);
 
 	if (updateActionEditor)

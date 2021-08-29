@@ -28,7 +28,6 @@
 #include "channelMode.h"
 #include "channelStatus.h"
 #include "column.h"
-#include "core/actionRecorder.h"
 #include "core/channels/channel.h"
 #include "core/channels/samplePlayer.h"
 #include "core/clock.h"
@@ -60,6 +59,7 @@
 #include "gui/elems/basics/statusButton.h"
 #include "keyboard.h"
 #include "sampleChannelButton.h"
+#include "src/core/actions/actions.h"
 #include "utils/gui.h"
 #include <cassert>
 

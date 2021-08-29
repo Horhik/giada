@@ -36,7 +36,6 @@
 #include "core/plugins/plugin.h"
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
-#include "core/recorderHandler.h"
 #include "core/wave.h"
 #include "core/waveManager.h"
 #include "gui/dialogs/browser/browserLoad.h"
@@ -48,6 +47,7 @@
 #include "gui/elems/mainWindow/keyboard/keyboard.h"
 #include "gui/model.h"
 #include "main.h"
+#include "src/core/actions/actionRecorder.h"
 #include "storage.h"
 #include "utils/fs.h"
 #include "utils/gui.h"
@@ -59,7 +59,7 @@ extern giada::v::gdMainWindow*         G_MainWin;
 extern giada::m::Clock                 g_clock;
 extern giada::m::Mixer                 g_mixer;
 extern giada::m::MixerHandler          g_mixerHandler;
-extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
+extern giada::m::ActionRecorder        g_actionRecorder;
 
 namespace giada::c::storage
 {
@@ -167,7 +167,7 @@ void loadProject(void* data)
 	in sequencer. */
 
 	g_mixerHandler.updateSoloCount();
-	g_actionRecorderHandler.updateSamplerate(m::conf::conf.samplerate, m::patch::patch.samplerate);
+	g_actionRecorder.updateSamplerate(m::conf::conf.samplerate, m::patch::patch.samplerate);
 	g_clock.recomputeFrames();
 	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop());
 

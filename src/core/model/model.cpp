@@ -47,7 +47,7 @@ struct Data
 {
 	std::vector<std::unique_ptr<channel::Buffer>> channels;
 	std::vector<std::unique_ptr<Wave>>            waves;
-	ActionRecorder::ActionMap                     actions;
+	Actions::Map                                  actions;
 #ifdef WITH_VST
 	std::vector<std::unique_ptr<Plugin>> plugins;
 #endif
@@ -171,7 +171,7 @@ T& getAll()
 #endif
 	if constexpr (std::is_same_v<T, WavePtrs>)
 		return data.waves;
-	if constexpr (std::is_same_v<T, Actions>)
+	if constexpr (std::is_same_v<T, Actions::Map>)
 		return data.actions;
 	if constexpr (std::is_same_v<T, ChannelBufferPtrs>)
 		return data.channels;
@@ -184,10 +184,10 @@ T& getAll()
 #ifdef WITH_VST
 template PluginPtrs& getAll<PluginPtrs>();
 #endif
-template WavePtrs&          getAll<WavePtrs>();
-template Actions&           getAll<Actions>();
-template ChannelBufferPtrs& getAll<ChannelBufferPtrs>();
-template ChannelStatePtrs&  getAll<ChannelStatePtrs>();
+template WavePtrs&                  getAll<WavePtrs>();
+template Actions::Map& getAll<Actions::Map>();
+template ChannelBufferPtrs&         getAll<ChannelBufferPtrs>();
+template ChannelStatePtrs&          getAll<ChannelStatePtrs>();
 
 /* -------------------------------------------------------------------------- */
 
@@ -334,7 +334,7 @@ void debug()
 
 	puts("model::data.actions");
 
-	for (const auto& [frame, actions] : getAll<Actions>())
+	for (const auto& [frame, actions] : getAll<Actions::Map>())
 	{
 		printf("\tframe: %d\n", frame);
 		for (const Action& a : actions)

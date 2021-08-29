@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "core/mixerHandler.h"
-#include "core/actionRecorder.h"
 #include "core/channels/channelManager.h"
 #include "core/clock.h"
 #include "core/conf.h"
@@ -41,11 +40,12 @@
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
 #include "core/recManager.h"
-#include "core/recorderHandler.h"
 #include "core/wave.h"
 #include "core/waveFx.h"
 #include "glue/channel.h"
 #include "glue/main.h"
+#include "src/core/actions/actionRecorder.h"
+#include "src/core/actions/actions.h"
 #include "utils/fs.h"
 #include "utils/log.h"
 #include "utils/string.h"
@@ -58,7 +58,7 @@ extern giada::m::KernelAudio           g_kernelAudio;
 extern giada::m::Clock                 g_clock;
 extern giada::m::Mixer                 g_mixer;
 extern giada::m::PluginHost            g_pluginHost;
-extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
+extern giada::m::ActionRecorder        g_actionRecorder;
 
 namespace giada::m
 {
@@ -160,7 +160,7 @@ void MixerHandler::cloneChannel(ID channelId)
 #ifdef WITH_VST
 	newChannel.plugins = g_pluginHost.clonePlugins(oldChannel.plugins);
 #endif
-	g_actionRecorderHandler.cloneActions(channelId, newChannel.id);
+	g_actionRecorder.cloneActions(channelId, newChannel.id);
 
 	if (newChannel.samplePlayer && newChannel.samplePlayer->hasWave())
 	{

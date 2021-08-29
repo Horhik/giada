@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "main.h"
-#include "core/actionRecorder.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
@@ -38,13 +37,14 @@
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
 #include "core/recManager.h"
-#include "core/recorderHandler.h"
 #include "gui/dialogs/mainWindow.h"
 #include "gui/dialogs/warnings.h"
 #include "gui/elems/mainWindow/keyboard/keyboard.h"
 #include "gui/elems/mainWindow/keyboard/sampleChannel.h"
 #include "gui/elems/mainWindow/mainIO.h"
 #include "gui/elems/mainWindow/mainTimer.h"
+#include "src/core/actions/actionRecorder.h"
+#include "src/core/actions/actions.h"
 #include "utils/gui.h"
 #include "utils/log.h"
 #include "utils/string.h"
@@ -57,7 +57,7 @@ extern giada::m::KernelAudio           g_kernelAudio;
 extern giada::m::Clock                 g_clock;
 extern giada::m::Mixer                 g_mixer;
 extern giada::m::MixerHandler          g_mixerHandler;
-extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
+extern giada::m::ActionRecorder        g_actionRecorder;
 
 namespace giada::c::main
 {
@@ -195,7 +195,7 @@ void clearAllSamples()
 	G_MainWin->delSubWindow(WID_SAMPLE_EDITOR);
 	g_clock.setStatus(ClockStatus::STOPPED);
 	g_mixerHandler.freeAllChannels();
-	g_actionRecorderHandler.clearAllActions();
+	g_actionRecorder.clearAllActions();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -205,7 +205,7 @@ void clearAllActions()
 	if (!v::gdConfirmWin("Warning", "Clear all actions: are you sure?"))
 		return;
 	G_MainWin->delSubWindow(WID_ACTION_EDITOR);
-	g_actionRecorderHandler.clearAllActions();
+	g_actionRecorder.clearAllActions();
 }
 
 /* -------------------------------------------------------------------------- */

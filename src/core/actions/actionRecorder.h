@@ -27,7 +27,7 @@
 #ifndef G_ACTION_RECORDER_HANDLER_H
 #define G_ACTION_RECORDER_HANDLER_H
 
-#include "core/actionRecorder.h"
+#include "actions.h"
 #include "core/midiEvent.h"
 #include "core/types.h"
 #include <unordered_set>
@@ -44,10 +44,10 @@ struct Action;
 
 namespace giada::m
 {
-class ActionRecorderHandler
+class ActionRecorder
 {
 public:
-	ActionRecorderHandler();
+	ActionRecorder();
 
 	bool isBoundaryEnvelopeAction(const Action& a) const;
 
@@ -88,8 +88,8 @@ public:
 	/* (de)serializeActions
     Creates new Actions given the patch raw data and vice versa. */
 
-	ActionRecorder::ActionMap  deserializeActions(const std::vector<patch::Action>& as);
-	std::vector<patch::Action> serializeActions(const ActionRecorder::ActionMap& as);
+	Actions::Map               deserializeActions(const std::vector<patch::Action>& as);
+	std::vector<patch::Action> serializeActions(const Actions::Map& as);
 
 private:
 	/* areComposite
@@ -97,7 +97,7 @@ private:
 
 	bool areComposite(const Action& a1, const Action& a2) const;
 
-	const Action* getActionPtrById(int id, const ActionRecorder::ActionMap& source);
+	const Action* getActionPtrById(int id, const Actions::Map& source);
 
 	/* consolidate
     Given an action 'a1' tries to find the matching NOTE_OFF and updates the

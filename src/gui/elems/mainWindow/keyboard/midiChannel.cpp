@@ -26,7 +26,6 @@
 
 #include "midiChannel.h"
 #include "column.h"
-#include "core/actionRecorder.h"
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/graphics.h"
@@ -48,6 +47,7 @@
 #include "gui/elems/basics/dial.h"
 #include "gui/elems/basics/statusButton.h"
 #include "midiChannelButton.h"
+#include "src/core/actions/actions.h"
 #include "utils/gui.h"
 #include "utils/string.h"
 #include <FL/Fl_Menu_Button.H>

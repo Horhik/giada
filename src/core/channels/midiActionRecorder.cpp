@@ -25,18 +25,18 @@
  * -------------------------------------------------------------------------- */
 
 #include "midiActionRecorder.h"
-#include "core/action.h"
 #include "core/channels/channel.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/eventDispatcher.h"
 #include "core/mixer.h"
 #include "core/recManager.h"
-#include "core/recorderHandler.h"
+#include "src/core/actions/action.h"
+#include "src/core/actions/actionRecorder.h"
 #include <cassert>
 
 extern giada::m::Clock                 g_clock;
-extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
+extern giada::m::ActionRecorder        g_actionRecorder;
 
 namespace giada::m::midiActionRecorder
 {
@@ -46,7 +46,7 @@ void record_(channel::Data& ch, const MidiEvent& e)
 {
 	MidiEvent flat(e);
 	flat.setChannel(0);
-	g_actionRecorderHandler.liveRec(ch.id, flat, g_clock.quantize(g_clock.getCurrentFrame()));
+	g_actionRecorder.liveRec(ch.id, flat, g_clock.quantize(g_clock.getCurrentFrame()));
 	ch.hasActions = true;
 }
 

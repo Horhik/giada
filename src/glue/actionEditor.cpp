@@ -25,19 +25,19 @@
  * -------------------------------------------------------------------------- */
 
 #include "actionEditor.h"
-#include "core/action.h"
-#include "core/actionRecorder.h"
 #include "core/clock.h"
 #include "core/const.h"
 #include "core/model/model.h"
-#include "core/recorderHandler.h"
 #include "glue/events.h"
 #include "glue/recorder.h"
+#include "src/core/actions/action.h"
+#include "src/core/actions/actionRecorder.h"
+#include "src/core/actions/actions.h"
 #include <cassert>
 
 extern giada::m::Clock                 g_clock;
+extern giada::m::Actions               g_actions;
 extern giada::m::ActionRecorder        g_actionRecorder;
-extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
 
 namespace giada::c::actionEditor
 {
@@ -64,13 +64,13 @@ void recordFirstEnvelopeAction_(ID channelId, Frame frame, int value)
 	// TODO - use MidiEvent(float)
 	m::MidiEvent    e1 = m::MidiEvent(m::MidiEvent::ENVELOPE, 0, G_MAX_VELOCITY);
 	m::MidiEvent    e2 = m::MidiEvent(m::MidiEvent::ENVELOPE, 0, value);
-	const m::Action a1 = g_actionRecorder.rec(channelId, 0, e1);
-	const m::Action a2 = g_actionRecorder.rec(channelId, frame, e2);
-	const m::Action a3 = g_actionRecorder.rec(channelId, g_clock.getFramesInLoop() - 1, e1);
+	const m::Action a1 = g_actions.rec(channelId, 0, e1);
+	const m::Action a2 = g_actions.rec(channelId, frame, e2);
+	const m::Action a3 = g_actions.rec(channelId, g_clock.getFramesInLoop() - 1, e1);
 
-	g_actionRecorder.updateSiblings(a1.id, /*prev=*/a3.id, /*next=*/a2.id); // Circular loop (begin)
-	g_actionRecorder.updateSiblings(a2.id, /*prev=*/a1.id, /*next=*/a3.id);
-	g_actionRecorder.updateSiblings(a3.id, /*prev=*/a2.id, /*next=*/a1.id); // Circular loop (end)
+	g_actions.updateSiblings(a1.id, /*prev=*/a3.id, /*next=*/a2.id); // Circular loop (begin)
+	g_actions.updateSiblings(a2.id, /*prev=*/a1.id, /*next=*/a3.id);
+	g_actions.updateSiblings(a3.id, /*prev=*/a2.id, /*next=*/a1.id); // Circular loop (end)
 }
 
 /* -------------------------------------------------------------------------- */
@@ -81,7 +81,7 @@ Vertical envelope points are forbidden. */
 
 void recordNonFirstEnvelopeAction_(ID channelId, Frame frame, int value)
 {
-	const m::Action a1 = g_actionRecorder.getClosestAction(channelId, frame, m::MidiEvent::ENVELOPE);
+	const m::Action a1 = g_actions.getClosestAction(channelId, frame, m::MidiEvent::ENVELOPE);
 	const m::Action a3 = a1.next != nullptr ? *a1.next : m::Action{};
 
 	assert(a1.isValid());
@@ -93,9 +93,9 @@ void recordNonFirstEnvelopeAction_(ID channelId, Frame frame, int value)
 
 	// TODO - use MidiEvent(float)
 	m::MidiEvent    e2 = m::MidiEvent(m::MidiEvent::ENVELOPE, 0, value);
-	const m::Action a2 = g_actionRecorder.rec(channelId, frame, e2);
+	const m::Action a2 = g_actions.rec(channelId, frame, e2);
 
-	g_actionRecorder.updateSiblings(a2.id, a1.id, a3.id);
+	g_actions.updateSiblings(a2.id, a1.id, a3.id);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -122,7 +122,7 @@ SampleData::SampleData(const m::samplePlayer::Data& s)
 Data::Data(const m::channel::Data& c)
 : channelId(c.id)
 , channelName(c.name)
-, actions(g_actionRecorder.getActionsOnChannel(c.id))
+, actions(g_actions.getActionsOnChannel(c.id))
 {
 	if (c.type == ChannelType::SAMPLE)
 		sample = std::make_optional<SampleData>(c.samplePlayer.value());
@@ -170,7 +170,7 @@ void recordMidiAction(ID channelId, int note, int velocity, Frame f1, Frame f2)
 	m::MidiEvent e1 = m::MidiEvent(m::MidiEvent::NOTE_ON, note, velocity);
 	m::MidiEvent e2 = m::MidiEvent(m::MidiEvent::NOTE_OFF, note, velocity);
 
-	g_actionRecorder.rec(channelId, f1, f2, e1, e2);
+	g_actions.rec(channelId, f1, f2, e1, e2);
 
 	recorder::updateChannel(channelId, /*updateActionEditor=*/false);
 }
@@ -188,10 +188,10 @@ void deleteMidiAction(ID channelId, const m::Action& a)
 	if (a.next != nullptr)
 	{
 		events::sendMidiToChannel(channelId, a.next->event, Thread::MAIN);
-		g_actionRecorder.deleteAction(a.id, a.next->id);
+		g_actions.deleteAction(a.id, a.next->id);
 	}
 	else
-		g_actionRecorder.deleteAction(a.id);
+		g_actions.deleteAction(a.id);
 
 	recorder::updateChannel(channelId, /*updateActionEditor=*/false);
 }
@@ -201,7 +201,7 @@ void deleteMidiAction(ID channelId, const m::Action& a)
 void updateMidiAction(ID channelId, const m::Action& a, int note, int velocity,
     Frame f1, Frame f2)
 {
-	g_actionRecorder.deleteAction(a.id, a.next->id);
+	g_actions.deleteAction(a.id, a.next->id);
 	recordMidiAction(channelId, note, velocity, f1, f2);
 }
 
@@ -215,12 +215,12 @@ void recordSampleAction(ID channelId, int type, Frame f1, Frame f2)
 			f2 = f1 + G_DEFAULT_ACTION_SIZE;
 		m::MidiEvent e1 = m::MidiEvent(m::MidiEvent::NOTE_ON, 0, 0);
 		m::MidiEvent e2 = m::MidiEvent(m::MidiEvent::NOTE_OFF, 0, 0);
-		g_actionRecorder.rec(channelId, f1, f2, e1, e2);
+		g_actions.rec(channelId, f1, f2, e1, e2);
 	}
 	else
 	{
 		m::MidiEvent e1 = m::MidiEvent(type, 0, 0);
-		g_actionRecorder.rec(channelId, f1, e1);
+		g_actions.rec(channelId, f1, e1);
 	}
 
 	recorder::updateChannel(channelId, /*updateActionEditor=*/false);
@@ -232,9 +232,9 @@ void updateSampleAction(ID channelId, const m::Action& a, int type,
     Frame f1, Frame f2)
 {
 	if (isSinglePressMode_(channelId))
-		g_actionRecorder.deleteAction(a.id, a.next->id);
+		g_actions.deleteAction(a.id, a.next->id);
 	else
-		g_actionRecorder.deleteAction(a.id);
+		g_actions.deleteAction(a.id);
 
 	recordSampleAction(channelId, type, f1, f2);
 }
@@ -244,9 +244,9 @@ void updateSampleAction(ID channelId, const m::Action& a, int type,
 void deleteSampleAction(ID channelId, const m::Action& a)
 {
 	if (a.next != nullptr) // For ChannelMode::SINGLE_PRESS combo
-		g_actionRecorder.deleteAction(a.id, a.next->id);
+		g_actions.deleteAction(a.id, a.next->id);
 	else
-		g_actionRecorder.deleteAction(a.id);
+		g_actions.deleteAction(a.id);
 
 	recorder::updateChannel(channelId, /*updateActionEditor=*/false);
 }
@@ -261,7 +261,7 @@ void recordEnvelopeAction(ID channelId, Frame f, int value)
 	before frame 'f' and inject a new action in there. Vertical envelope points 
 	are forbidden for now. */
 
-	if (!g_actionRecorder.hasActions(channelId, m::MidiEvent::ENVELOPE))
+	if (!g_actions.hasActions(channelId, m::MidiEvent::ENVELOPE))
 		recordFirstEnvelopeAction_(channelId, f, value);
 	else
 		recordNonFirstEnvelopeAction_(channelId, f, value);
@@ -277,7 +277,7 @@ void deleteEnvelopeAction(ID channelId, const m::Action& a)
 	to restore _i and _d members in channel. */
 	/* TODO - move this to c::*/
 	/* TODO - FIX*/
-	if (g_actionRecorderHandler.isBoundaryEnvelopeAction(a))
+	if (g_actionRecorder.isBoundaryEnvelopeAction(a))
 	{
 		if (a.isVolumeEnvelope())
 		{
@@ -288,7 +288,7 @@ void deleteEnvelopeAction(ID channelId, const m::Action& a)
 				c.volume_d = 0.0;
 			});*/
 		}
-		g_actionRecorder.clearActions(channelId, a.event.getStatus());
+		g_actions.clearActions(channelId, a.event.getStatus());
 	}
 	else
 	{
@@ -306,9 +306,9 @@ void deleteEnvelopeAction(ID channelId, const m::Action& a)
 		Otherwise ActionRecorder::deleteAction() would complain of missing 
 		prevId/nextId no longer found. */
 
-		g_actionRecorder.updateSiblings(a1.id, a1prev.id, a3.id);
-		g_actionRecorder.updateSiblings(a3.id, a1.id, a3next.id);
-		g_actionRecorder.deleteAction(a.id);
+		g_actions.updateSiblings(a1.id, a1prev.id, a3.id);
+		g_actions.updateSiblings(a3.id, a1.id, a3next.id);
+		g_actions.deleteAction(a.id);
 	}
 
 	recorder::updateChannel(channelId, /*updateActionEditor=*/false);
@@ -321,8 +321,8 @@ void updateEnvelopeAction(ID channelId, const m::Action& a, Frame f, int value)
 	/* Update the action directly if it is a boundary one. Else, delete the
 	previous one and record a new action. */
 
-	if (g_actionRecorderHandler.isBoundaryEnvelopeAction(a))
-		g_actionRecorder.updateEvent(a.id, m::MidiEvent(m::MidiEvent::ENVELOPE, 0, value));
+	if (g_actionRecorder.isBoundaryEnvelopeAction(a))
+		g_actions.updateEvent(a.id, m::MidiEvent(m::MidiEvent::ENVELOPE, 0, value));
 	else
 	{
 		deleteEnvelopeAction(channelId, a);
@@ -334,7 +334,7 @@ void updateEnvelopeAction(ID channelId, const m::Action& a, Frame f, int value)
 
 std::vector<m::Action> getActions(ID channelId)
 {
-	return g_actionRecorder.getActionsOnChannel(channelId);
+	return g_actions.getActionsOnChannel(channelId);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -344,6 +344,6 @@ void updateVelocity(const m::Action& a, int value)
 	m::MidiEvent event(a.event);
 	event.setVelocity(value);
 
-	g_actionRecorder.updateEvent(a.id, event);
+	g_actions.updateEvent(a.id, event);
 }
 } // namespace giada::c::actionEditor

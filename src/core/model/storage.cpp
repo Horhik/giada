@@ -31,13 +31,13 @@
 #include "core/model/model.h"
 #include "core/patch.h"
 #include "core/plugins/pluginManager.h"
-#include "core/recorderHandler.h"
 #include "core/sequencer.h"
 #include "core/waveManager.h"
+#include "src/core/actions/actionRecorder.h"
 #include <cassert>
 
 extern giada::m::Sequencer             g_sequencer;
-extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
+extern giada::m::ActionRecorder        g_actionRecorder;
 
 namespace giada::m::model
 {
@@ -55,7 +55,7 @@ void loadChannels_(const std::vector<patch::Channel>& channels, int samplerate)
 
 void loadActions_(const std::vector<patch::Action>& pactions)
 {
-	getAll<Actions>() = std::move(g_actionRecorderHandler.deserializeActions(pactions));
+	getAll<Actions::Map>() = std::move(g_actionRecorder.deserializeActions(pactions));
 }
 } // namespace
 
@@ -79,7 +79,7 @@ void store(patch::Patch& patch)
 		patch.plugins.push_back(pluginManager::serializePlugin(*p));
 #endif
 
-	patch.actions = g_actionRecorderHandler.serializeActions(getAll<Actions>());
+	patch.actions = g_actionRecorder.serializeActions(getAll<Actions::Map>());
 
 	for (const auto& w : getAll<WavePtrs>())
 		patch.waves.push_back(waveManager::serializeWave(*w));

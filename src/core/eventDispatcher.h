@@ -27,12 +27,12 @@
 #ifndef G_EVENT_DISPATCHER_H
 #define G_EVENT_DISPATCHER_H
 
-#include "core/action.h"
 #include "core/const.h"
 #include "core/queue.h"
 #include "core/ringBuffer.h"
 #include "core/types.h"
 #include "core/worker.h"
+#include "src/core/actions/action.h"
 #include <atomic>
 #include <functional>
 #include <thread>

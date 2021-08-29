@@ -24,7 +24,6 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "core/actionRecorder.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/eventDispatcher.h"
@@ -35,10 +34,11 @@
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/plugins/pluginHost.h"
-#include "core/recorderHandler.h"
 #include "core/sequencer.h"
 #include "core/sync.h"
 #include "gui/dialogs/mainWindow.h"
+#include "src/core/actions/actionRecorder.h"
+#include "src/core/actions/actions.h"
 #include <FL/Fl.H>
 #ifdef WITH_TESTS
 #define CATCH_CONFIG_RUNNER
@@ -58,8 +58,8 @@ giada::m::KernelAudio           g_kernelAudio;
 giada::m::KernelMidi            g_kernelMidi;
 giada::m::MidiDispatcher        g_midiDispatcher;
 giada::m::EventDispatcher       g_eventDispatcher;
+giada::m::Actions               g_actions;
 giada::m::ActionRecorder        g_actionRecorder;
-giada::m::ActionRecorderHandler g_actionRecorderHandler;
 giada::m::Synchronizer          g_synchronizer(giada::m::conf::conf.samplerate, giada::m::conf::conf.midiTCfps);
 giada::m::Clock                 g_clock(g_kernelAudio, g_synchronizer);
 giada::m::Sequencer             g_sequencer(g_kernelAudio, g_clock);

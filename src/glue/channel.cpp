@@ -26,7 +26,6 @@
 
 #include "gui/elems/mainWindow/keyboard/channel.h"
 #include "channel.h"
-#include "core/actionRecorder.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/kernelAudio.h"
@@ -54,6 +53,7 @@
 #include "gui/elems/sampleEditor/waveTools.h"
 #include "gui/elems/sampleEditor/waveform.h"
 #include "main.h"
+#include "src/core/actions/actions.h"
 #include "utils/fs.h"
 #include "utils/gui.h"
 #include "utils/log.h"
@@ -64,7 +64,7 @@
 
 extern giada::v::gdMainWindow*  G_MainWin;
 extern giada::m::MixerHandler   g_mixerHandler;
-extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::Actions        g_actions;
 
 namespace giada::c::channel
 {
@@ -219,7 +219,7 @@ void deleteChannel(ID channelId)
 	if (!v::gdConfirmWin("Warning", "Delete channel: are you sure?"))
 		return;
 	u::gui::closeAllSubwindows();
-	g_actionRecorder.clearChannel(channelId);
+	g_actions.clearChannel(channelId);
 	g_mixerHandler.deleteChannel(channelId);
 }
 
@@ -230,7 +230,7 @@ void freeChannel(ID channelId)
 	if (!v::gdConfirmWin("Warning", "Free channel: are you sure?"))
 		return;
 	u::gui::closeAllSubwindows();
-	g_actionRecorder.clearChannel(channelId);
+	g_actions.clearChannel(channelId);
 	g_mixerHandler.freeChannel(channelId);
 }
 

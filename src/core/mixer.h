@@ -27,13 +27,13 @@
 #ifndef G_MIXER_H
 #define G_MIXER_H
 
-#include "core/actionRecorder.h"
 #include "core/midiEvent.h"
 #include "core/queue.h"
 #include "core/ringBuffer.h"
 #include "core/types.h"
 #include "deps/mcl-audio-buffer/src/audioBuffer.hpp"
 #include "deps/rtaudio/RtAudio.h"
+#include "src/core/actions/actions.h"
 #include <functional>
 
 namespace mcl

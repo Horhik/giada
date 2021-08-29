@@ -33,7 +33,6 @@
 #if (defined(__linux__) || defined(__FreeBSD__)) && defined(WITH_VST)
 #include <X11/Xlib.h> // For XInitThreads
 #endif
-#include "core/actionRecorder.h"
 #include "core/channels/channelManager.h"
 #include "core/clock.h"
 #include "core/conf.h"
@@ -50,7 +49,6 @@
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
 #include "core/recManager.h"
-#include "core/recorderHandler.h"
 #include "core/sequencer.h"
 #include "core/sync.h"
 #include "core/wave.h"
@@ -61,6 +59,8 @@
 #include "gui/dialogs/warnings.h"
 #include "gui/updater.h"
 #include "init.h"
+#include "src/core/actions/actionRecorder.h"
+#include "src/core/actions/actions.h"
 #include "utils/fs.h"
 #include "utils/gui.h"
 #include "utils/log.h"
@@ -77,7 +77,7 @@ extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::Synchronizer   g_synchronizer;
 extern giada::m::PluginHost     g_pluginHost;
 extern giada::m::KernelMidi     g_kernelMidi;
-extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::Actions        g_actions;
 
 namespace giada::m::init
 {
@@ -251,7 +251,7 @@ void reset()
 	g_clock.reset();
 	g_mixerHandler.reset(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 	g_sequencer.reset();
-	g_actionRecorder.reset();
+	g_actions.reset();
 #ifdef WITH_VST
 	g_pluginHost.reset(g_kernelAudio.getRealBufSize());
 	pluginManager::init(conf::conf.samplerate, g_kernelAudio.getRealBufSize());

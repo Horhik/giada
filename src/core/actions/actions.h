@@ -24,10 +24,10 @@
  *
  * -------------------------------------------------------------------------- */
 
-#ifndef G_ACTION_RECORDER_H
-#define G_ACTION_RECORDER_H
+#ifndef G_ACTIONS_H
+#define G_ACTIONS_H
 
-#include "core/action.h"
+#include "action.h"
 #include "core/idManager.h"
 #include "core/midiEvent.h"
 #include "core/patch.h"
@@ -39,12 +39,12 @@
 
 namespace giada::m
 {
-class ActionRecorder
+class Actions
 {
 public:
-	using ActionMap = std::map<Frame, std::vector<Action>>;
+	using Map = std::map<Frame, std::vector<Action>>;
 
-	ActionRecorder();
+	Actions();
 
 	/* forEachAction
     Applies a read-only callback on each action recorded. NEVER do anything
@@ -151,22 +151,22 @@ public:
 	ID getNewActionId();
 
 private:
-	bool exists(ID channelId, Frame frame, const MidiEvent& event, const ActionMap& target) const;
+	bool exists(ID channelId, Frame frame, const MidiEvent& event, const Map& target) const;
 	bool exists(ID channelId, Frame frame, const MidiEvent& event) const;
 
-	Action* findAction(ActionMap& src, ID id);
+	Action* findAction(Map& src, ID id);
 
 	/* updateMapPointers
     Updates all prev/next actions pointers into the action map. This is required
     after an action has been recorded, since pushing back new actions in a Action 
     vector makes it reallocating the existing ones. */
 
-	void updateMapPointers(ActionMap& src);
+	void updateMapPointers(Map& src);
 
 	/* optimize
     Removes frames without actions. */
 
-	void optimize(ActionMap& map);
+	void optimize(Map& map);
 
 	void removeIf(std::function<bool(const Action&)> f);
 

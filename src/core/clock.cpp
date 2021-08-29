@@ -30,16 +30,16 @@
 #include "core/kernelAudio.h"
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
-#include "core/recorderHandler.h"
 #include "core/sequencer.h"
 #include "core/sync.h"
 #include "glue/events.h"
+#include "src/core/actions/actionRecorder.h"
 #include "utils/log.h"
 #include "utils/math.h"
 #include <atomic>
 #include <cassert>
 
-extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
+extern giada::m::ActionRecorder g_actionRecorder;
 
 namespace giada::m
 {
@@ -285,7 +285,7 @@ void Clock::setBpmRaw(float v)
 	model::get().clock.bpm = v;
 	recomputeFrames(model::get().clock);
 
-	g_actionRecorderHandler.updateBpm(ratio, m_quantizerStep);
+	g_actionRecorder.updateBpm(ratio, m_quantizerStep);
 
 	model::swap(model::SwapType::HARD);
 

@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "channelManager.h"
-#include "core/action.h"
 #include "core/channels/channel.h"
 #include "core/channels/samplePlayer.h"
 #include "core/conf.h"
@@ -38,9 +37,10 @@
 #include "core/plugins/plugin.h"
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
-#include "core/recorderHandler.h"
 #include "core/wave.h"
 #include "core/waveManager.h"
+#include "src/core/actions/action.h"
+#include "src/core/actions/actionRecorder.h"
 #include "utils/fs.h"
 #include <cassert>
 

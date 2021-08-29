@@ -25,11 +25,11 @@
  * -------------------------------------------------------------------------- */
 
 #include "channelButton.h"
-#include "core/actionRecorder.h"
 #include "core/channels/channel.h"
 #include "core/const.h"
 #include "core/model/model.h"
 #include "glue/channel.h"
+#include "src/core/actions/actions.h"
 #include "utils/string.h"
 #include <FL/fl_draw.H>
 
