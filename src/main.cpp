@@ -34,6 +34,7 @@
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/plugins/pluginHost.h"
+#include "core/recorder.h"
 #include "core/sequencer.h"
 #include "core/sync.h"
 #include "gui/dialogs/mainWindow.h"
@@ -56,6 +57,7 @@ giada::m::KernelAudio     g_kernelAudio;
 giada::m::KernelMidi      g_kernelMidi;
 giada::m::MidiDispatcher  g_midiDispatcher;
 giada::m::EventDispatcher g_eventDispatcher;
+giada::m::ActionRecorder  g_actionRecorder;
 giada::m::Synchronizer    g_synchronizer(giada::m::conf::conf.samplerate, giada::m::conf::conf.midiTCfps);
 giada::m::Clock           g_clock(g_kernelAudio, g_synchronizer);
 giada::m::Sequencer       g_sequencer(g_kernelAudio, g_clock);

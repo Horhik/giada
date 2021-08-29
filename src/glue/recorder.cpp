@@ -41,13 +41,15 @@
 #include "utils/log.h"
 #include <cassert>
 
+extern giada::m::ActionRecorder g_actionRecorder;
+
 namespace giada::c::recorder
 {
 void clearAllActions(ID channelId)
 {
 	if (!v::gdConfirmWin("Warning", "Clear all actions: are you sure?"))
 		return;
-	m::recorder::clearChannel(channelId);
+	g_actionRecorder.clearChannel(channelId);
 	updateChannel(channelId, /*updateActionEditor=*/true);
 }
 
@@ -57,7 +59,7 @@ void clearVolumeActions(ID channelId)
 {
 	if (!v::gdConfirmWin("Warning", "Clear all volume actions: are you sure?"))
 		return;
-	m::recorder::clearActions(channelId, m::MidiEvent::ENVELOPE);
+	g_actionRecorder.clearActions(channelId, m::MidiEvent::ENVELOPE);
 	updateChannel(channelId, /*updateActionEditor=*/true);
 }
 
@@ -67,9 +69,9 @@ void clearStartStopActions(ID channelId)
 {
 	if (!v::gdConfirmWin("Warning", "Clear all start/stop actions: are you sure?"))
 		return;
-	m::recorder::clearActions(channelId, m::MidiEvent::NOTE_ON);
-	m::recorder::clearActions(channelId, m::MidiEvent::NOTE_OFF);
-	m::recorder::clearActions(channelId, m::MidiEvent::NOTE_KILL);
+	g_actionRecorder.clearActions(channelId, m::MidiEvent::NOTE_ON);
+	g_actionRecorder.clearActions(channelId, m::MidiEvent::NOTE_OFF);
+	g_actionRecorder.clearActions(channelId, m::MidiEvent::NOTE_KILL);
 	updateChannel(channelId, /*updateActionEditor=*/true);
 }
 
@@ -78,7 +80,7 @@ void clearStartStopActions(ID channelId)
 void updateChannel(ID channelId, bool updateActionEditor)
 {
 	/* TODO - move somewhere else in the core area */
-	m::model::get().getChannel(channelId).hasActions = m::recorder::hasActions(channelId);
+	m::model::get().getChannel(channelId).hasActions = g_actionRecorder.hasActions(channelId);
 	m::model::swap(m::model::SwapType::HARD);
 
 	if (updateActionEditor)

@@ -33,99 +33,24 @@
 #include <cassert>
 #include <memory>
 
-namespace giada::m::recorder
+namespace giada::m
 {
-namespace
+ActionRecorder::ActionRecorder()
 {
-IdManager actionId_;
-
-/* -------------------------------------------------------------------------- */
-
-Action* findAction_(ActionMap& src, ID id)
-{
-	for (auto& [frame, actions] : src)
-		for (Action& a : actions)
-			if (a.id == id)
-				return &a;
-	assert(false);
-	return nullptr;
+	reset();
 }
 
 /* -------------------------------------------------------------------------- */
 
-/* updateMapPointers_
-Updates all prev/next actions pointers into the action map. This is required
-after an action has been recorded, since pushing back new actions in a Action 
-vector makes it reallocating the existing ones. */
-
-void updateMapPointers_(ActionMap& src)
+void ActionRecorder::reset()
 {
-	for (auto& kv : src)
-	{
-		for (Action& action : kv.second)
-		{
-			if (action.nextId != 0)
-				action.next = findAction_(src, action.nextId);
-			if (action.prevId != 0)
-				action.prev = findAction_(src, action.prevId);
-		}
-	}
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* optimize
-Removes frames without actions. */
-
-void optimize_(ActionMap& map)
-{
-	for (auto it = map.cbegin(); it != map.cend();)
-		it->second.size() == 0 ? it = map.erase(it) : ++it;
-}
-
-/* -------------------------------------------------------------------------- */
-
-void removeIf_(std::function<bool(const Action&)> f)
-{
-	model::DataLock lock;
-
-	ActionMap& map = model::getAll<model::Actions>();
-	for (auto& [frame, actions] : map)
-		actions.erase(std::remove_if(actions.begin(), actions.end(), f), actions.end());
-	optimize_(map);
-	updateMapPointers_(map);
-}
-
-/* -------------------------------------------------------------------------- */
-
-bool exists_(ID channelId, Frame frame, const MidiEvent& event, const ActionMap& target)
-{
-	for (const auto& [_, actions] : target)
-		for (const Action& a : actions)
-			if (a.channelId == channelId && a.frame == frame && a.event.getRaw() == event.getRaw())
-				return true;
-	return false;
-}
-
-bool exists_(ID channelId, Frame frame, const MidiEvent& event)
-{
-	return exists_(channelId, frame, event, model::getAll<model::Actions>());
-}
-} // namespace
-
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-void init()
-{
-	actionId_ = IdManager();
+	m_actionId = IdManager();
 	clearAll();
 }
 
 /* -------------------------------------------------------------------------- */
 
-void clearAll()
+void ActionRecorder::clearAll()
 {
 	model::DataLock lock;
 	model::getAll<model::Actions>().clear();
@@ -133,37 +58,37 @@ void clearAll()
 
 /* -------------------------------------------------------------------------- */
 
-void clearChannel(ID channelId)
+void ActionRecorder::clearChannel(ID channelId)
 {
-	removeIf_([=](const Action& a) { return a.channelId == channelId; });
+	removeIf([=](const Action& a) { return a.channelId == channelId; });
 }
 
 /* -------------------------------------------------------------------------- */
 
-void clearActions(ID channelId, int type)
+void ActionRecorder::clearActions(ID channelId, int type)
 {
-	removeIf_([=](const Action& a) {
+	removeIf([=](const Action& a) {
 		return a.channelId == channelId && a.event.getStatus() == type;
 	});
 }
 
 /* -------------------------------------------------------------------------- */
 
-void deleteAction(ID id)
+void ActionRecorder::deleteAction(ID id)
 {
-	removeIf_([=](const Action& a) { return a.id == id; });
+	removeIf([=](const Action& a) { return a.id == id; });
 }
 
-void deleteAction(ID currId, ID nextId)
+void ActionRecorder::deleteAction(ID currId, ID nextId)
 {
-	removeIf_([=](const Action& a) { return a.id == currId || a.id == nextId; });
+	removeIf([=](const Action& a) { return a.id == currId || a.id == nextId; });
 }
 
 /* -------------------------------------------------------------------------- */
 
-void updateKeyFrames(std::function<Frame(Frame old)> f)
+void ActionRecorder::updateKeyFrames(std::function<Frame(Frame old)> f)
 {
-	recorder::ActionMap temp;
+	ActionMap temp;
 
 	/* Copy all existing actions in local map by cloning them, with just a
 	difference: they have a new frame value. */
@@ -180,7 +105,7 @@ void updateKeyFrames(std::function<Frame(Frame old)> f)
 		G_DEBUG(oldFrame << " -> " << newFrame);
 	}
 
-	updateMapPointers_(temp);
+	updateMapPointers(temp);
 
 	model::DataLock lock;
 	model::getAll<model::Actions>() = std::move(temp);
@@ -188,21 +113,21 @@ void updateKeyFrames(std::function<Frame(Frame old)> f)
 
 /* -------------------------------------------------------------------------- */
 
-void updateEvent(ID id, MidiEvent e)
+void ActionRecorder::updateEvent(ID id, MidiEvent e)
 {
 	model::DataLock lock;
-	findAction_(model::getAll<model::Actions>(), id)->event = e;
+	findAction(model::getAll<model::Actions>(), id)->event = e;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void updateSiblings(ID id, ID prevId, ID nextId)
+void ActionRecorder::updateSiblings(ID id, ID prevId, ID nextId)
 {
 	model::DataLock lock;
 
-	Action* pcurr = findAction_(model::getAll<model::Actions>(), id);
-	Action* pprev = findAction_(model::getAll<model::Actions>(), prevId);
-	Action* pnext = findAction_(model::getAll<model::Actions>(), nextId);
+	Action* pcurr = findAction(model::getAll<model::Actions>(), id);
+	Action* pprev = findAction(model::getAll<model::Actions>(), prevId);
+	Action* pnext = findAction(model::getAll<model::Actions>(), nextId);
 
 	pcurr->prev   = pprev;
 	pcurr->prevId = pprev->id;
@@ -223,7 +148,7 @@ void updateSiblings(ID id, ID prevId, ID nextId)
 
 /* -------------------------------------------------------------------------- */
 
-bool hasActions(ID channelId, int type)
+bool ActionRecorder::hasActions(ID channelId, int type) const
 {
 	for (const auto& [frame, actions] : model::getAll<model::Actions>())
 		for (const Action& a : actions)
@@ -234,27 +159,27 @@ bool hasActions(ID channelId, int type)
 
 /* -------------------------------------------------------------------------- */
 
-Action makeAction(ID id, ID channelId, Frame frame, MidiEvent e)
+Action ActionRecorder::makeAction(ID id, ID channelId, Frame frame, MidiEvent e)
 {
-	Action out{actionId_.generate(id), channelId, frame, e, -1, -1};
-	actionId_.set(id);
+	Action out{m_actionId.generate(id), channelId, frame, e, -1, -1};
+	m_actionId.set(id);
 	return out;
 }
 
-Action makeAction(const patch::Action& a)
+Action ActionRecorder::makeAction(const patch::Action& a)
 {
-	actionId_.set(a.id);
+	m_actionId.set(a.id);
 	return Action{a.id, a.channelId, a.frame, a.event, -1, -1, a.prevId,
 	    a.nextId};
 }
 
 /* -------------------------------------------------------------------------- */
 
-Action rec(ID channelId, Frame frame, MidiEvent event)
+Action ActionRecorder::rec(ID channelId, Frame frame, MidiEvent event)
 {
 	/* Skip duplicates. */
 
-	if (exists_(channelId, frame, event))
+	if (exists(channelId, frame, event))
 		return {};
 
 	Action a = makeAction(0, channelId, frame, event);
@@ -265,14 +190,14 @@ Action rec(ID channelId, Frame frame, MidiEvent event)
 	model::DataLock lock;
 
 	model::getAll<model::Actions>()[frame].push_back(a);
-	updateMapPointers_(model::getAll<model::Actions>());
+	updateMapPointers(model::getAll<model::Actions>());
 
 	return a;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void rec(std::vector<Action>& actions)
+void ActionRecorder::rec(std::vector<Action>& actions)
 {
 	if (actions.size() == 0)
 		return;
@@ -282,14 +207,14 @@ void rec(std::vector<Action>& actions)
 	ActionMap& map = model::getAll<model::Actions>();
 
 	for (const Action& a : actions)
-		if (!exists_(a.channelId, a.frame, a.event, map))
+		if (!exists(a.channelId, a.frame, a.event, map))
 			map[a.frame].push_back(a);
-	updateMapPointers_(map);
+	updateMapPointers(map);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2)
+void ActionRecorder::rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2)
 {
 	model::DataLock lock;
 
@@ -298,17 +223,17 @@ void rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2)
 	map[f1].push_back(makeAction(0, channelId, f1, e1));
 	map[f2].push_back(makeAction(0, channelId, f2, e2));
 
-	Action* a1 = findAction_(map, map[f1].back().id);
-	Action* a2 = findAction_(map, map[f2].back().id);
+	Action* a1 = findAction(map, map[f1].back().id);
+	Action* a2 = findAction(map, map[f2].back().id);
 	a1->nextId = a2->id;
 	a2->prevId = a1->id;
 
-	updateMapPointers_(map);
+	updateMapPointers(map);
 }
 
 /* -------------------------------------------------------------------------- */
 
-const std::vector<Action>* getActionsOnFrame(Frame frame)
+const std::vector<Action>* ActionRecorder::getActionsOnFrame(Frame frame) const
 {
 	if (model::getAll<model::Actions>().count(frame) == 0)
 		return nullptr;
@@ -317,7 +242,7 @@ const std::vector<Action>* getActionsOnFrame(Frame frame)
 
 /* -------------------------------------------------------------------------- */
 
-Action getClosestAction(ID channelId, Frame f, int type)
+Action ActionRecorder::getClosestAction(ID channelId, Frame f, int type) const
 {
 	Action out = {};
 	forEachAction([&](const Action& a) {
@@ -331,7 +256,7 @@ Action getClosestAction(ID channelId, Frame f, int type)
 
 /* -------------------------------------------------------------------------- */
 
-std::vector<Action> getActionsOnChannel(ID channelId)
+std::vector<Action> ActionRecorder::getActionsOnChannel(ID channelId) const
 {
 	std::vector<Action> out;
 	forEachAction([&](const Action& a) {
@@ -343,7 +268,7 @@ std::vector<Action> getActionsOnChannel(ID channelId)
 
 /* -------------------------------------------------------------------------- */
 
-void forEachAction(std::function<void(const Action&)> f)
+void ActionRecorder::forEachAction(std::function<void(const Action&)> f) const
 {
 	for (auto& [_, actions] : model::getAll<model::Actions>())
 		for (const Action& action : actions)
@@ -352,8 +277,75 @@ void forEachAction(std::function<void(const Action&)> f)
 
 /* -------------------------------------------------------------------------- */
 
-ID getNewActionId()
+ID ActionRecorder::getNewActionId()
 {
-	return actionId_.generate();
+	return m_actionId.generate();
 }
-} // namespace giada::m::recorder
+
+/* -------------------------------------------------------------------------- */
+
+Action* ActionRecorder::findAction(ActionMap& src, ID id)
+{
+	for (auto& [frame, actions] : src)
+		for (Action& a : actions)
+			if (a.id == id)
+				return &a;
+	assert(false);
+	return nullptr;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void ActionRecorder::updateMapPointers(ActionMap& src)
+{
+	for (auto& kv : src)
+	{
+		for (Action& action : kv.second)
+		{
+			if (action.nextId != 0)
+				action.next = findAction(src, action.nextId);
+			if (action.prevId != 0)
+				action.prev = findAction(src, action.prevId);
+		}
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+
+void ActionRecorder::optimize(ActionMap& map)
+{
+	for (auto it = map.cbegin(); it != map.cend();)
+		it->second.size() == 0 ? it = map.erase(it) : ++it;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void ActionRecorder::removeIf(std::function<bool(const Action&)> f)
+{
+	model::DataLock lock;
+
+	ActionMap& map = model::getAll<model::Actions>();
+	for (auto& [frame, actions] : map)
+		actions.erase(std::remove_if(actions.begin(), actions.end(), f), actions.end());
+	optimize(map);
+	updateMapPointers(map);
+}
+
+/* -------------------------------------------------------------------------- */
+
+bool ActionRecorder::exists(ID channelId, Frame frame, const MidiEvent& event, const ActionMap& target) const
+{
+	for (const auto& [_, actions] : target)
+		for (const Action& a : actions)
+			if (a.channelId == channelId && a.frame == frame && a.event.getRaw() == event.getRaw())
+				return true;
+	return false;
+}
+
+/* -------------------------------------------------------------------------- */
+
+bool ActionRecorder::exists(ID channelId, Frame frame, const MidiEvent& event) const
+{
+	return exists(channelId, frame, event, model::getAll<model::Actions>());
+}
+} // namespace giada::m

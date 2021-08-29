@@ -38,6 +38,8 @@
 #include <cmath>
 #include <unordered_map>
 
+extern giada::m::ActionRecorder g_actionRecorder;
+
 namespace giada::m::recorderHandler
 {
 namespace
@@ -48,7 +50,7 @@ std::vector<Action> recs_;
 
 /* -------------------------------------------------------------------------- */
 
-const Action* getActionPtrById_(int id, const recorder::ActionMap& source)
+const Action* getActionPtrById_(int id, const ActionRecorder::ActionMap& source)
 {
 	for (const auto& [_, actions] : source)
 		for (const Action& action : actions)
@@ -130,7 +132,7 @@ void updateBpm(float ratio, int quantizerStep)
 	if (ratio == 1.0f)
 		return;
 
-	recorder::updateKeyFrames([=](Frame old) {
+	g_actionRecorder.updateKeyFrames([=](Frame old) {
 		/* The division here cannot be precise. A new frame can be 44099 and the 
 		quantizer set to 44100. That would mean two recs completely useless. So we 
 		compute a reject value ('delta'): if it's lower than 6 frames the new frame 
@@ -155,7 +157,7 @@ void updateSamplerate(int systemRate, int patchRate)
 
 	float ratio = systemRate / (float)patchRate;
 
-	recorder::updateKeyFrames([=](Frame old) { return floorf(old * ratio); });
+	g_actionRecorder.updateKeyFrames([=](Frame old) { return floorf(old * ratio); });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -166,11 +168,11 @@ bool cloneActions(ID channelId, ID newChannelId)
 	std::vector<Action>        actions;
 	std::unordered_map<ID, ID> map; // Action ID mapper, old -> new
 
-	recorder::forEachAction([&](const Action& a) {
+	g_actionRecorder.forEachAction([&](const Action& a) {
 		if (a.channelId != channelId)
 			return;
 
-		ID newActionId = recorder::getNewActionId();
+		ID newActionId = g_actionRecorder.getNewActionId();
 
 		map.insert({a.id, newActionId});
 
@@ -192,7 +194,7 @@ bool cloneActions(ID channelId, ID newChannelId)
 			a.nextId = map.at(a.nextId);
 	}
 
-	recorder::rec(actions);
+	g_actionRecorder.rec(actions);
 
 	return cloned;
 }
@@ -207,7 +209,7 @@ void liveRec(ID channelId, MidiEvent e, Frame globalFrame)
 	if (recs_.size() >= recs_.capacity())
 		recs_.reserve(recs_.size() + MAX_LIVE_RECS_CHUNK);
 
-	recs_.push_back(recorder::makeAction(recorder::getNewActionId(), channelId, globalFrame, e));
+	recs_.push_back(g_actionRecorder.makeAction(g_actionRecorder.getNewActionId(), channelId, globalFrame, e));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -215,7 +217,7 @@ void liveRec(ID channelId, MidiEvent e, Frame globalFrame)
 std::unordered_set<ID> consolidate()
 {
 	consolidate_();
-	recorder::rec(recs_);
+	g_actionRecorder.rec(recs_);
 
 	std::unordered_set<ID> out;
 	for (const Action& action : recs_)
@@ -234,20 +236,20 @@ void clearAllActions()
 
 	model::swap(model::SwapType::HARD);
 
-	recorder::clearAll();
+	g_actionRecorder.clearAll();
 }
 
 /* -------------------------------------------------------------------------- */
 
-recorder::ActionMap deserializeActions(const std::vector<patch::Action>& pactions)
+ActionRecorder::ActionMap deserializeActions(const std::vector<patch::Action>& pactions)
 {
-	recorder::ActionMap out;
+	ActionRecorder::ActionMap out;
 
 	/* First pass: add actions with no relationship, that is with no prev/next
 	pointers filled in. */
 
 	for (const patch::Action& paction : pactions)
-		out[paction.frame].push_back(recorder::makeAction(paction));
+		out[paction.frame].push_back(g_actionRecorder.makeAction(paction));
 
 	/* Second pass: fill in previous and next actions, if any. Is this the
 	fastest/smartest way to do it? Maybe not. Optimizations are welcome. */
@@ -275,7 +277,7 @@ recorder::ActionMap deserializeActions(const std::vector<patch::Action>& paction
 
 /* -------------------------------------------------------------------------- */
 
-std::vector<patch::Action> serializeActions(const recorder::ActionMap& actions)
+std::vector<patch::Action> serializeActions(const ActionRecorder::ActionMap& actions)
 {
 	std::vector<patch::Action> out;
 	for (const auto& kv : actions)

@@ -83,8 +83,8 @@ void clearAllActions();
 /* (de)serializeActions
 Creates new Actions given the patch raw data and vice versa. */
 
-recorder::ActionMap        deserializeActions(const std::vector<patch::Action>& as);
-std::vector<patch::Action> serializeActions(const recorder::ActionMap& as);
+ActionRecorder::ActionMap  deserializeActions(const std::vector<patch::Action>& as);
+std::vector<patch::Action> serializeActions(const ActionRecorder::ActionMap& as);
 } // namespace giada::m::recorderHandler
 
 #endif

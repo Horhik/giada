@@ -47,7 +47,7 @@ struct Data
 {
 	std::vector<std::unique_ptr<channel::Buffer>> channels;
 	std::vector<std::unique_ptr<Wave>>            waves;
-	recorder::ActionMap                           actions;
+	ActionRecorder::ActionMap                     actions;
 #ifdef WITH_VST
 	std::vector<std::unique_ptr<Plugin>> plugins;
 #endif

@@ -201,7 +201,7 @@ using ChannelStatePtr  = std::unique_ptr<channel::State>;
 using PluginPtrs = std::vector<PluginPtr>;
 #endif
 using WavePtrs          = std::vector<WavePtr>;
-using Actions           = recorder::ActionMap;
+using Actions           = ActionRecorder::ActionMap;
 using ChannelBufferPtrs = std::vector<ChannelBufferPtr>;
 using ChannelStatePtrs  = std::vector<ChannelStatePtr>;
 

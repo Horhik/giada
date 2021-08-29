@@ -62,8 +62,9 @@
 #include <cmath>
 #include <functional>
 
-extern giada::v::gdMainWindow* G_MainWin;
-extern giada::m::MixerHandler  g_mixerHandler;
+extern giada::v::gdMainWindow*  G_MainWin;
+extern giada::m::MixerHandler   g_mixerHandler;
+extern giada::m::ActionRecorder g_actionRecorder;
 
 namespace giada::c::channel
 {
@@ -218,7 +219,7 @@ void deleteChannel(ID channelId)
 	if (!v::gdConfirmWin("Warning", "Delete channel: are you sure?"))
 		return;
 	u::gui::closeAllSubwindows();
-	m::recorder::clearChannel(channelId);
+	g_actionRecorder.clearChannel(channelId);
 	g_mixerHandler.deleteChannel(channelId);
 }
 
@@ -229,7 +230,7 @@ void freeChannel(ID channelId)
 	if (!v::gdConfirmWin("Warning", "Free channel: are you sure?"))
 		return;
 	u::gui::closeAllSubwindows();
-	m::recorder::clearChannel(channelId);
+	g_actionRecorder.clearChannel(channelId);
 	g_mixerHandler.freeChannel(channelId);
 }
 

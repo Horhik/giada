@@ -68,15 +68,16 @@
 #include "utils/ver.h"
 #include <FL/Fl.H>
 
-extern giada::v::gdMainWindow* G_MainWin;
-extern giada::m::KernelAudio   g_kernelAudio;
-extern giada::m::Clock         g_clock;
-extern giada::m::Sequencer     g_sequencer;
-extern giada::m::Mixer         g_mixer;
-extern giada::m::MixerHandler  g_mixerHandler;
-extern giada::m::Synchronizer  g_synchronizer;
-extern giada::m::PluginHost    g_pluginHost;
-extern giada::m::KernelMidi    g_kernelMidi;
+extern giada::v::gdMainWindow*  G_MainWin;
+extern giada::m::KernelAudio    g_kernelAudio;
+extern giada::m::Clock          g_clock;
+extern giada::m::Sequencer      g_sequencer;
+extern giada::m::Mixer          g_mixer;
+extern giada::m::MixerHandler   g_mixerHandler;
+extern giada::m::Synchronizer   g_synchronizer;
+extern giada::m::PluginHost     g_pluginHost;
+extern giada::m::KernelMidi     g_kernelMidi;
+extern giada::m::ActionRecorder g_actionRecorder;
 
 namespace giada::m::init
 {
@@ -112,7 +113,6 @@ void initSystem_()
 void initAudio_()
 {
 	g_kernelAudio.openDevice(conf::conf);
-	recorder::init();
 	recorderHandler::init();
 
 #ifdef WITH_VST
@@ -252,7 +252,7 @@ void reset()
 	g_clock.reset();
 	g_mixerHandler.reset(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 	g_sequencer.reset();
-	recorder::init();
+	g_actionRecorder.reset();
 #ifdef WITH_VST
 	g_pluginHost.reset(g_kernelAudio.getRealBufSize());
 	pluginManager::init(conf::conf.samplerate, g_kernelAudio.getRealBufSize());

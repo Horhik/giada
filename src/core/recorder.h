@@ -28,6 +28,7 @@
 #define G_RECORDER_H
 
 #include "core/action.h"
+#include "core/idManager.h"
 #include "core/midiEvent.h"
 #include "core/patch.h"
 #include "core/types.h"
@@ -36,111 +37,142 @@
 #include <memory>
 #include <vector>
 
-namespace giada::m::recorder
+namespace giada::m
 {
-using ActionMap = std::map<Frame, std::vector<Action>>;
+class ActionRecorder
+{
+public:
+	using ActionMap = std::map<Frame, std::vector<Action>>;
 
-/* init
-Initializes the recorder: everything starts from here. */
+	ActionRecorder();
 
-void init();
+	/* forEachAction
+    Applies a read-only callback on each action recorded. NEVER do anything
+    inside the callback that might alter the ActionMap. */
 
-/* clearAll
-Deletes all recorded actions. */
+	void forEachAction(std::function<void(const Action&)> f) const;
 
-void clearAll();
+	/* getActionsOnChannel
+    Returns a vector of actions belonging to channel 'ch'. */
 
-/* clearChannel
-Clears all actions from a channel. */
+	std::vector<Action> getActionsOnChannel(ID channelId) const;
 
-void clearChannel(ID channelId);
+	/* getClosestAction
+    Given a frame 'f' returns the closest action. */
 
-/* clearActions
-Clears the actions by type from a channel. */
+	Action getClosestAction(ID channelId, Frame f, int type) const;
 
-void clearActions(ID channelId, int type);
+	/* getActionsOnFrame
+    Returns a pointer to a vector of actions recorded on frame 'f', or nullptr 
+    if the frame has no actions. */
 
-/* deleteAction (1)
-Deletes a specific action. */
+	const std::vector<Action>* getActionsOnFrame(Frame f) const;
 
-void deleteAction(ID id);
+	/* hasActions
+    Checks if the channel has at least one action recorded. */
 
-/* deleteAction (2)
-Deletes a specific pair of actions. Useful for composite stuff (i.e. MIDI). */
+	bool hasActions(ID channelId, int type = 0) const;
 
-void deleteAction(ID currId, ID nextId);
+	/* makeAction
+    Makes a new action given some data. */
+	//TODO - move to actionManager
 
-/* updateKeyFrames
-Update all the key frames in the internal map of actions, according to a lambda 
-function 'f'. */
+	Action makeAction(ID id, ID channelId, Frame frame, MidiEvent e);
+	Action makeAction(const patch::Action& a);
 
-void updateKeyFrames(std::function<Frame(Frame old)> f);
+	/* reset
+	Brings everything back to the initial state. */
 
-/* updateEvent
-Changes the event in action 'a'. */
+	void reset();
 
-void updateEvent(ID id, MidiEvent e);
+	/* clearAll
+    Deletes all recorded actions. */
 
-/* updateSiblings
-Changes previous and next actions in action with id 'id'. Mostly used for 
-chained actions such as envelopes. */
+	void clearAll();
 
-void updateSiblings(ID id, ID prevId, ID nextId);
+	/* clearChannel
+    Clears all actions from a channel. */
 
-/* hasActions
-Checks if the channel has at least one action recorded. */
+	void clearChannel(ID channelId);
 
-bool hasActions(ID channelId, int type = 0);
+	/* clearActions
+    Clears the actions by type from a channel. */
 
-/* makeAction
-Makes a new action given some data. */
+	void clearActions(ID channelId, int type);
 
-Action makeAction(ID id, ID channelId, Frame frame, MidiEvent e);
-Action makeAction(const patch::Action& a);
+	/* deleteAction (1)
+    Deletes a specific action. */
 
-/* rec (1)
-Records an action and returns it. Used by the Action Editor. */
+	void deleteAction(ID id);
 
-Action rec(ID channelId, Frame frame, MidiEvent e);
+	/* deleteAction (2)
+    Deletes a specific pair of actions. Useful for composite stuff (i.e. MIDI). */
 
-/* rec (2)
-Transfer a vector of actions into the current ActionMap. This is called by 
-recordHandler when a live session is over and consolidation is required. */
+	void deleteAction(ID currId, ID nextId);
 
-void rec(std::vector<Action>& actions);
+	/* updateKeyFrames
+    Update all the key frames in the internal map of actions, according to a 
+    lambda function 'f'. */
 
-/* rec (3)
-Records two actions on channel 'channel'. Useful when recording composite 
-actions in the Action Editor. */
+	void updateKeyFrames(std::function<Frame(Frame old)> f);
 
-void rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2);
+	/* updateEvent
+    Changes the event in action 'a'. */
 
-/* forEachAction
-Applies a read-only callback on each action recorded. NEVER do anything inside 
-the callback that might alter the ActionMap. */
+	void updateEvent(ID id, MidiEvent e);
 
-void forEachAction(std::function<void(const Action&)> f);
+	/* updateSiblings
+    Changes previous and next actions in action with id 'id'. Mostly used for
+    chained actions such as envelopes. */
 
-/* getActionsOnFrame
-Returns a pointer to a vector of actions recorded on frame 'f', or nullptr if
-the frame has no actions. */
+	void updateSiblings(ID id, ID prevId, ID nextId);
 
-const std::vector<Action>* getActionsOnFrame(Frame f);
+	/* rec (1)
+    Records an action and returns it. Used by the Action Editor. */
 
-/* getActionsOnChannel
-Returns a vector of actions belonging to channel 'ch'. */
+	Action rec(ID channelId, Frame frame, MidiEvent e);
 
-std::vector<Action> getActionsOnChannel(ID channelId);
+	/* rec (2)
+    Transfer a vector of actions into the current ActionMap. This is called by 
+    recordHandler when a live session is over and consolidation is required. */
 
-/* getClosestAction
-Given a frame 'f' returns the closest action. */
+	void rec(std::vector<Action>& actions);
 
-Action getClosestAction(ID channelId, Frame f, int type);
+	/* rec (3)
+    Records two actions on channel 'channel'. Useful when recording composite 
+    actions in the Action Editor. */
 
-/* getNewActionId
-Returns a new action ID, internally generated. */
+	void rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2);
 
-ID getNewActionId();
-} // namespace giada::m::recorder
+	/* getNewActionId
+    Returns a new action ID, internally generated. */
+	//TODO - move to actionManager
+
+	ID getNewActionId();
+
+private:
+	bool exists(ID channelId, Frame frame, const MidiEvent& event, const ActionMap& target) const;
+	bool exists(ID channelId, Frame frame, const MidiEvent& event) const;
+
+	Action* findAction(ActionMap& src, ID id);
+
+	/* updateMapPointers
+    Updates all prev/next actions pointers into the action map. This is required
+    after an action has been recorded, since pushing back new actions in a Action 
+    vector makes it reallocating the existing ones. */
+
+	void updateMapPointers(ActionMap& src);
+
+	/* optimize
+    Removes frames without actions. */
+
+	void optimize(ActionMap& map);
+
+	void removeIf(std::function<bool(const Action&)> f);
+
+	//TODO - move to actionManager
+	IdManager m_actionId;
+};
+} // namespace giada::m
 
 #endif
