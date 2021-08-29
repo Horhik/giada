@@ -56,6 +56,7 @@
 
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::Clock         g_clock;
+extern giada::m::MixerHandler  g_mixerHandler;
 
 namespace giada::u::gui
 {
@@ -124,10 +125,8 @@ bool shouldBlink()
 
 void updateStaticWidgets()
 {
-	using namespace giada::m;
-
-	G_MainWin->mainIO->setOutVol(mh::getOutVol());
-	G_MainWin->mainIO->setInVol(mh::getInVol());
+	G_MainWin->mainIO->setOutVol(g_mixerHandler.getOutVol());
+	G_MainWin->mainIO->setInVol(g_mixerHandler.getInVol());
 
 #ifdef WITH_VST
 

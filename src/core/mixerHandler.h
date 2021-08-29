@@ -27,105 +27,145 @@
 #ifndef G_MIXER_HANDLER_H
 #define G_MIXER_HANDLER_H
 
+#include "core/waveManager.h"
 #include "types.h"
+#include <functional>
 #include <memory>
 #include <string>
+
+namespace giada::m::channel
+{
+class Data;
+}
 
 namespace giada::m
 {
 class Wave;
-class Channel;
-class SampleChannel;
-} // namespace giada::m
-namespace giada::m::mh
+}
+
+namespace giada::m
 {
-/* init
-Initializes mixer. */
+class MixerHandler
+{
+public:
+	MixerHandler(Frame framesInLoop, Frame framesInBuffer);
 
-void init();
+	/* hasLogicalSamples
+    True if 1 or more samples are logical (memory only, such as takes). */
 
-/* close
-Closes mixer and frees resources. */
+	bool hasLogicalSamples() const;
 
-void close();
+	/* hasEditedSamples
+    True if 1 or more samples was edited via gEditor */
 
-/* addChannel
-Adds a new channel of type 'type' into the channels stack. Returns the new
-channel ID. */
+	bool hasEditedSamples() const;
 
-void addChannel(ChannelType type, ID columnId);
+	/* has(Input|Action)RecordableChannels
+    Tells whether Mixer has one or more input or action recordable channels. */
 
-/* loadChannel
-Loads a new Wave inside a Sample Channel. */
+	bool hasInputRecordableChannels() const;
+	bool hasActionRecordableChannels() const;
 
-int loadChannel(ID channelId, const std::string& fname);
+	/* hasActions
+    True if at least one Channel has actions recorded in it. */
 
-/* addAndLoadChannel (1)
-Creates a new channels, fills it with a Wave and then add it to the stack. */
+	bool hasActions() const;
 
-int addAndLoadChannel(ID columnId, const std::string& fname);
+	/* hasAudioData
+    True if at least one Sample Channel has some audio recorded in it. */
 
-/* addAndLoadChannel (2)
-Same as (1), but Wave is already provided. */
+	bool hasAudioData() const;
 
-void addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w);
+	float getInVol() const;
+	float getOutVol() const;
+	bool  getInToOut() const;
 
-/* freeChannel
-Unloads existing Wave from a Sample Channel. */
+	/* reset
+	Brings everything back to the initial state. */
 
-void freeChannel(ID channelId);
+	void reset(Frame framesInLoop, Frame framesInBuffer);
 
-/* deleteChannel
-Completely removes a channel from the stack. */
+	/* startRendering
+    Fires up mixer. */
 
-void deleteChannel(ID channelId);
+	void startRendering();
 
-void cloneChannel(ID channelId);
-void renameChannel(ID channelId, const std::string& name);
-void freeAllChannels();
+	/* stopRendering
+    Stops mixer from running. */
 
-void setInToOut(bool v);
+	void stopRendering();
 
-/* updateSoloCount
-Updates the number of solo-ed channels in mixer. */
+	/* addChannel
+    Adds a new channel of type 'type' into the channels stack. Returns the new
+    channel ID. */
 
-void updateSoloCount();
+	void addChannel(ChannelType type, ID columnId);
 
-/* finalizeInputRec
-Fills armed Sample Channels with audio data coming from an input recording
-session. */
+	/* loadChannel
+    Loads a new Wave inside a Sample Channel. */
 
-void finalizeInputRec(Frame recordedFrames);
+	int loadChannel(ID channelId, const std::string& fname);
 
-/* hasLogicalSamples
-True if 1 or more samples are logical (memory only, such as takes) */
+	/* addAndLoadChannel (1)
+    Creates a new channels, fills it with a Wave and then add it to the stack. */
 
-bool hasLogicalSamples();
+	int addAndLoadChannel(ID columnId, const std::string& fname);
 
-/* hasEditedSamples
-True if 1 or more samples was edited via gEditor */
+	/* addAndLoadChannel (2)
+    Same as (1), but Wave is already provided. */
 
-bool hasEditedSamples();
+	void addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w);
 
-/* has(Input|Action)RecordableChannels
-Tells whether Mixer has one or more input or action recordable channels. */
+	/* freeChannel
+    Unloads existing Wave from a Sample Channel. */
 
-bool hasInputRecordableChannels();
-bool hasActionRecordableChannels();
+	void freeChannel(ID channelId);
 
-/* hasActions
-True if at least one Channel has actions recorded in it. */
+	/* deleteChannel
+    Completely removes a channel from the stack. */
 
-bool hasActions();
+	void deleteChannel(ID channelId);
 
-/* hasAudioData
-True if at least one Sample Channel has some audio recorded in it. */
+	void cloneChannel(ID channelId);
+	void renameChannel(ID channelId, const std::string& name);
+	void freeAllChannels();
 
-bool hasAudioData();
+	void setInToOut(bool v);
 
-float getInVol();
-float getOutVol();
-bool  getInToOut();
-} // namespace giada::m::mh
+	/* updateSoloCount
+    Updates the number of solo-ed channels in mixer. */
+
+	void updateSoloCount();
+
+	/* finalizeInputRec
+    Fills armed Sample Channels with audio data coming from an input recording
+    session. */
+
+	void finalizeInputRec(Frame recordedFrames);
+
+private:
+	bool                        forAnyChannel(std::function<bool(const channel::Data&)> f) const;
+	std::vector<channel::Data*> getChannelsIf(std::function<bool(const channel::Data&)> f);
+
+	channel::Data&      addChannelInternal(ChannelType type, ID columnId);
+	waveManager::Result createWave(const std::string& fname);
+
+	std::vector<channel::Data*> getRecordableChannels();
+	std::vector<channel::Data*> getOverdubbableChannels();
+
+	void setupChannelPostRecording(channel::Data& ch);
+
+	/* recordChannel
+	Records the current Mixer audio input data into an empty channel. */
+
+	void recordChannel(channel::Data& ch, Frame recordedFrames);
+
+	/* overdubChannel
+	Records the current Mixer audio input data into a channel with an existing
+	Wave, overdub mode. */
+
+	void overdubChannel(channel::Data& ch);
+};
+} // namespace giada::m
 
 #endif

@@ -44,7 +44,6 @@
 #include "core/recorderHandler.h"
 #include "core/wave.h"
 #include "core/waveFx.h"
-#include "core/waveManager.h"
 #include "glue/channel.h"
 #include "glue/main.h"
 #include "utils/fs.h"
@@ -59,123 +58,18 @@ extern giada::m::KernelAudio g_kernelAudio;
 extern giada::m::Clock       g_clock;
 extern giada::m::Mixer       g_mixer;
 
-namespace giada::m::mh
+namespace giada::m
 {
-namespace
+MixerHandler::MixerHandler(Frame framesInLoop, Frame framesInBuffer)
 {
-channel::Data& addChannel_(ChannelType type, ID columnId)
-{
-	model::get().channels.push_back(channelManager::create(/*id=*/0, type, columnId));
-	model::swap(model::SwapType::HARD);
-
-	return model::get().channels.back();
+	reset(framesInLoop, framesInBuffer);
 }
 
 /* -------------------------------------------------------------------------- */
 
-waveManager::Result createWave_(const std::string& fname)
+void MixerHandler::reset(Frame framesInLoop, Frame framesInBuffer)
 {
-	return waveManager::createFromFile(fname, /*id=*/0, conf::conf.samplerate,
-	    conf::conf.rsmpQuality);
-}
-
-/* -------------------------------------------------------------------------- */
-
-bool anyChannel_(std::function<bool(const channel::Data&)> f)
-{
-	return std::any_of(model::get().channels.begin(), model::get().channels.end(), f);
-}
-
-/* -------------------------------------------------------------------------- */
-
-template <typename F>
-std::vector<channel::Data*> getChannelsIf_(F f)
-{
-	std::vector<channel::Data*> out;
-	for (channel::Data& ch : model::get().channels)
-		if (f(ch))
-			out.push_back(&ch);
-	return out;
-}
-
-std::vector<channel::Data*> getRecordableChannels_()
-{
-	return getChannelsIf_([](const channel::Data& c) { return c.canInputRec() && !c.hasWave(); });
-}
-
-std::vector<channel::Data*> getOverdubbableChannels_()
-{
-	return getChannelsIf_([](const channel::Data& c) { return c.canInputRec() && c.hasWave(); });
-}
-
-/* -------------------------------------------------------------------------- */
-
-void setupChannelPostRecording_(channel::Data& ch)
-{
-	/* Start sample channels in loop mode right away. */
-	if (ch.samplePlayer->isAnyLoopMode())
-		samplePlayer::kickIn(ch, g_clock.getCurrentFrame());
-	/* Disable 'arm' button if overdub protection is on. */
-	if (ch.audioReceiver->overdubProtection == true)
-		ch.armed = false;
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* recordChannel_
-Records the current Mixer audio input data into an empty channel. */
-
-void recordChannel_(channel::Data& ch, Frame recordedFrames)
-{
-	/* Create a new Wave with audio coming from Mixer's input buffer. */
-
-	std::string           filename = "TAKE-" + std::to_string(patch::patch.lastTakeId++) + ".wav";
-	std::unique_ptr<Wave> wave     = waveManager::createEmpty(recordedFrames, G_MAX_IO_CHANS,
-        conf::conf.samplerate, filename);
-
-	G_DEBUG("Created new Wave, size=" << wave->getBuffer().countFrames());
-
-	/* Copy up to wave.getSize() from the mixer's input buffer into wave's. */
-
-	wave->getBuffer().set(g_mixer.getRecBuffer(), wave->getBuffer().countFrames());
-
-	/* Update channel with the new Wave. */
-
-	model::add(std::move(wave));
-	samplePlayer::loadWave(ch, &model::back<Wave>());
-	setupChannelPostRecording_(ch);
-
-	model::swap(model::SwapType::HARD);
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* overdubChannel_
-Records the current Mixer audio input data into a channel with an existing
-Wave, overdub mode. */
-
-void overdubChannel_(channel::Data& ch)
-{
-	Wave* wave = ch.samplePlayer->getWave();
-
-	/* Need model::DataLock here, as data might be being read by the audio
-	thread at the same time. */
-
-	model::DataLock lock;
-	wave->getBuffer().sum(g_mixer.getRecBuffer(), /*gain=*/1.0f);
-	wave->setLogical(true);
-
-	setupChannelPostRecording_(ch);
-}
-} // namespace
-
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-void init()
-{
-	g_mixer.reset(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
+	g_mixer.reset(framesInLoop, framesInBuffer);
 
 	model::get().channels.clear();
 
@@ -191,23 +85,21 @@ void init()
 
 /* -------------------------------------------------------------------------- */
 
-void close()
+void MixerHandler::startRendering() { g_mixer.enable(); }
+void MixerHandler::stopRendering() { g_mixer.disable(); }
+
+/* -------------------------------------------------------------------------- */
+
+void MixerHandler::addChannel(ChannelType type, ID columnId)
 {
-	g_mixer.disable();
+	addChannelInternal(type, columnId);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void addChannel(ChannelType type, ID columnId)
+int MixerHandler::loadChannel(ID channelId, const std::string& fname)
 {
-	addChannel_(type, columnId);
-}
-
-/* -------------------------------------------------------------------------- */
-
-int loadChannel(ID channelId, const std::string& fname)
-{
-	waveManager::Result res = createWave_(fname);
+	waveManager::Result res = createWave(fname);
 
 	if (res.status != G_RES_OK)
 		return res.status;
@@ -233,20 +125,20 @@ int loadChannel(ID channelId, const std::string& fname)
 
 /* -------------------------------------------------------------------------- */
 
-int addAndLoadChannel(ID columnId, const std::string& fname)
+int MixerHandler::addAndLoadChannel(ID columnId, const std::string& fname)
 {
-	waveManager::Result res = createWave_(fname);
+	waveManager::Result res = createWave(fname);
 	if (res.status == G_RES_OK)
 		addAndLoadChannel(columnId, std::move(res.wave));
 	return res.status;
 }
 
-void addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
+void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
 {
 	model::add(std::move(w));
 
 	Wave&          wave    = model::back<Wave>();
-	channel::Data& channel = addChannel_(ChannelType::SAMPLE, columnId);
+	channel::Data& channel = addChannelInternal(ChannelType::SAMPLE, columnId);
 
 	samplePlayer::loadWave(channel, &wave);
 	model::swap(model::SwapType::HARD);
@@ -256,7 +148,7 @@ void addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
 
 /* -------------------------------------------------------------------------- */
 
-void cloneChannel(ID channelId)
+void MixerHandler::cloneChannel(ID channelId)
 {
 	channel::Data& oldChannel = model::get().getChannel(channelId);
 	channel::Data  newChannel = channelManager::create(oldChannel);
@@ -282,7 +174,7 @@ void cloneChannel(ID channelId)
 
 /* -------------------------------------------------------------------------- */
 
-void freeChannel(ID channelId)
+void MixerHandler::freeChannel(ID channelId)
 {
 	channel::Data& ch = model::get().getChannel(channelId);
 
@@ -301,7 +193,7 @@ void freeChannel(ID channelId)
 
 /* -------------------------------------------------------------------------- */
 
-void freeAllChannels()
+void MixerHandler::freeAllChannels()
 {
 	for (channel::Data& ch : model::get().channels)
 		if (ch.samplePlayer)
@@ -315,7 +207,7 @@ void freeAllChannels()
 
 /* -------------------------------------------------------------------------- */
 
-void deleteChannel(ID channelId)
+void MixerHandler::deleteChannel(ID channelId)
 {
 	const channel::Data& ch   = model::get().getChannel(channelId);
 	const Wave*          wave = ch.samplePlayer ? ch.samplePlayer->getWave() : nullptr;
@@ -340,7 +232,7 @@ void deleteChannel(ID channelId)
 
 /* -------------------------------------------------------------------------- */
 
-void renameChannel(ID channelId, const std::string& name)
+void MixerHandler::renameChannel(ID channelId, const std::string& name)
 {
 	model::get().getChannel(channelId).name = name;
 	model::swap(model::SwapType::HARD);
@@ -348,9 +240,9 @@ void renameChannel(ID channelId, const std::string& name)
 
 /* -------------------------------------------------------------------------- */
 
-void updateSoloCount()
+void MixerHandler::updateSoloCount()
 {
-	bool hasSolos = anyChannel_([](const channel::Data& ch) {
+	bool hasSolos = forAnyChannel([](const channel::Data& ch) {
 		return !ch.isInternal() && ch.solo;
 	});
 
@@ -360,7 +252,7 @@ void updateSoloCount()
 
 /* -------------------------------------------------------------------------- */
 
-void setInToOut(bool v)
+void MixerHandler::setInToOut(bool v)
 {
 	model::get().mixer.inToOut = v;
 	model::swap(model::SwapType::NONE);
@@ -368,66 +260,165 @@ void setInToOut(bool v)
 
 /* -------------------------------------------------------------------------- */
 
-float getInVol()
+float MixerHandler::getInVol() const
 {
 	return model::get().getChannel(Mixer::MASTER_IN_CHANNEL_ID).volume;
 }
 
-float getOutVol()
+float MixerHandler::getOutVol() const
 {
 	return model::get().getChannel(Mixer::MASTER_OUT_CHANNEL_ID).volume;
 }
 
-bool getInToOut()
+bool MixerHandler::getInToOut() const
 {
 	return model::get().mixer.inToOut;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void finalizeInputRec(Frame recordedFrames)
+void MixerHandler::finalizeInputRec(Frame recordedFrames)
 {
-	for (channel::Data* ch : getRecordableChannels_())
-		recordChannel_(*ch, recordedFrames);
-	for (channel::Data* ch : getOverdubbableChannels_())
-		overdubChannel_(*ch);
+	for (channel::Data* ch : getRecordableChannels())
+		recordChannel(*ch, recordedFrames);
+	for (channel::Data* ch : getOverdubbableChannels())
+		overdubChannel(*ch);
 
 	g_mixer.clearRecBuffer();
 }
 
 /* -------------------------------------------------------------------------- */
 
-bool hasInputRecordableChannels()
+bool MixerHandler::hasInputRecordableChannels() const
 {
-	return anyChannel_([](const channel::Data& ch) { return ch.canInputRec(); });
+	return forAnyChannel([](const channel::Data& ch) { return ch.canInputRec(); });
 }
 
-bool hasActionRecordableChannels()
+bool MixerHandler::hasActionRecordableChannels() const
 {
-	return anyChannel_([](const channel::Data& ch) { return ch.canActionRec(); });
+	return forAnyChannel([](const channel::Data& ch) { return ch.canActionRec(); });
 }
 
-bool hasLogicalSamples()
+bool MixerHandler::hasLogicalSamples() const
 {
-	return anyChannel_([](const channel::Data& ch) { return ch.samplePlayer && ch.samplePlayer->hasLogicalWave(); });
+	return forAnyChannel([](const channel::Data& ch) { return ch.samplePlayer && ch.samplePlayer->hasLogicalWave(); });
 }
 
-bool hasEditedSamples()
+bool MixerHandler::hasEditedSamples() const
 {
-	return anyChannel_([](const channel::Data& ch) {
+	return forAnyChannel([](const channel::Data& ch) {
 		return ch.samplePlayer && ch.samplePlayer->hasEditedWave();
 	});
 }
 
-bool hasActions()
+bool MixerHandler::hasActions() const
 {
-	return anyChannel_([](const channel::Data& ch) { return ch.hasActions; });
+	return forAnyChannel([](const channel::Data& ch) { return ch.hasActions; });
 }
 
-bool hasAudioData()
+bool MixerHandler::hasAudioData() const
 {
-	return anyChannel_([](const channel::Data& ch) {
+	return forAnyChannel([](const channel::Data& ch) {
 		return ch.samplePlayer && ch.samplePlayer->hasWave();
 	});
 }
-} // namespace giada::m::mh
+
+/* -------------------------------------------------------------------------- */
+
+channel::Data& MixerHandler::addChannelInternal(ChannelType type, ID columnId)
+{
+	model::get().channels.push_back(channelManager::create(/*id=*/0, type, columnId));
+	model::swap(model::SwapType::HARD);
+
+	return model::get().channels.back();
+}
+
+/* -------------------------------------------------------------------------- */
+
+waveManager::Result MixerHandler::createWave(const std::string& fname)
+{
+	return waveManager::createFromFile(fname, /*id=*/0, conf::conf.samplerate,
+	    conf::conf.rsmpQuality);
+}
+
+/* -------------------------------------------------------------------------- */
+
+bool MixerHandler::forAnyChannel(std::function<bool(const channel::Data&)> f) const
+{
+	return std::any_of(model::get().channels.begin(), model::get().channels.end(), f);
+}
+
+/* -------------------------------------------------------------------------- */
+
+std::vector<channel::Data*> MixerHandler::getChannelsIf(std::function<bool(const channel::Data&)> f)
+{
+	std::vector<channel::Data*> out;
+	for (channel::Data& ch : model::get().channels)
+		if (f(ch))
+			out.push_back(&ch);
+	return out;
+}
+
+std::vector<channel::Data*> MixerHandler::getRecordableChannels()
+{
+	return getChannelsIf([](const channel::Data& c) { return c.canInputRec() && !c.hasWave(); });
+}
+
+std::vector<channel::Data*> MixerHandler::getOverdubbableChannels()
+{
+	return getChannelsIf([](const channel::Data& c) { return c.canInputRec() && c.hasWave(); });
+}
+
+/* -------------------------------------------------------------------------- */
+
+void MixerHandler::setupChannelPostRecording(channel::Data& ch)
+{
+	/* Start sample channels in loop mode right away. */
+	if (ch.samplePlayer->isAnyLoopMode())
+		samplePlayer::kickIn(ch, g_clock.getCurrentFrame());
+	/* Disable 'arm' button if overdub protection is on. */
+	if (ch.audioReceiver->overdubProtection == true)
+		ch.armed = false;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void MixerHandler::recordChannel(channel::Data& ch, Frame recordedFrames)
+{
+	/* Create a new Wave with audio coming from Mixer's input buffer. */
+
+	std::string           filename = "TAKE-" + std::to_string(patch::patch.lastTakeId++) + ".wav";
+	std::unique_ptr<Wave> wave     = waveManager::createEmpty(recordedFrames, G_MAX_IO_CHANS,
+        conf::conf.samplerate, filename);
+
+	G_DEBUG("Created new Wave, size=" << wave->getBuffer().countFrames());
+
+	/* Copy up to wave.getSize() from the mixer's input buffer into wave's. */
+
+	wave->getBuffer().set(g_mixer.getRecBuffer(), wave->getBuffer().countFrames());
+
+	/* Update channel with the new Wave. */
+
+	model::add(std::move(wave));
+	samplePlayer::loadWave(ch, &model::back<Wave>());
+	setupChannelPostRecording(ch);
+
+	model::swap(model::SwapType::HARD);
+}
+
+/* -------------------------------------------------------------------------- */
+
+void MixerHandler::overdubChannel(channel::Data& ch)
+{
+	Wave* wave = ch.samplePlayer->getWave();
+
+	/* Need model::DataLock here, as data might be being read by the audio
+	thread at the same time. */
+
+	model::DataLock lock;
+	wave->getBuffer().sum(g_mixer.getRecBuffer(), /*gain=*/1.0f);
+	wave->setLogical(true);
+
+	setupChannelPostRecording(ch);
+}
+} // namespace giada::m

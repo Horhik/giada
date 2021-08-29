@@ -30,6 +30,8 @@
 #include "core/plugins/pluginManager.h"
 #include <cassert>
 
+extern giada::m::MixerHandler g_mixerHandler;
+
 namespace giada::m::channel
 {
 namespace
@@ -70,7 +72,7 @@ void react_(Data& d, const eventDispatcher::Event& e)
 
 	case eventDispatcher::EventType::CHANNEL_SOLO:
 		d.solo = !d.solo;
-		m::mh::updateSoloCount();
+		g_mixerHandler.updateSoloCount();
 		break;
 
 	default:

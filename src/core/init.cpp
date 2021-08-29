@@ -73,6 +73,7 @@ extern giada::m::KernelAudio   g_kernelAudio;
 extern giada::m::Clock         g_clock;
 extern giada::m::Sequencer     g_sequencer;
 extern giada::m::Mixer         g_mixer;
+extern giada::m::MixerHandler  g_mixerHandler;
 
 namespace giada::m::init
 {
@@ -110,7 +111,6 @@ void initAudio_()
 {
 	g_kernelAudio.openDevice(conf::conf);
 	sync::init(conf::conf.samplerate, conf::conf.midiTCfps);
-	mh::init();
 	recorder::init();
 	recorderHandler::init();
 
@@ -124,7 +124,7 @@ void initAudio_()
 	if (!g_kernelAudio.isReady())
 		return;
 
-	g_mixer.enable();
+	g_mixerHandler.startRendering();
 	g_kernelAudio.startStream();
 }
 
@@ -171,7 +171,7 @@ void shutdownAudio_()
 	{
 		g_kernelAudio.closeDevice();
 		u::log::print("[init] KernelAudio closed\n");
-		mh::close();
+		g_mixerHandler.stopRendering();
 		u::log::print("[init] Mixer closed\n");
 	}
 
@@ -255,7 +255,7 @@ void reset()
 	u::gui::closeAllSubwindows();
 	G_MainWin->clearKeyboard();
 
-	mh::close();
+	g_mixerHandler.stopRendering();
 #ifdef WITH_VST
 	pluginHost::close();
 #endif
@@ -264,13 +264,14 @@ void reset()
 	channelManager::init();
 	waveManager::init();
 	sync::init(conf::conf.samplerate, conf::conf.midiTCfps);
-	mh::init();
 	g_clock.reset();
+	g_mixerHandler.reset(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 	g_sequencer.reset();
 	recorder::init();
 #ifdef WITH_VST
 	pluginManager::init(conf::conf.samplerate, g_kernelAudio.getRealBufSize());
 #endif
+	g_mixerHandler.startRendering();
 
 	u::gui::updateMainWinLabel(G_DEFAULT_PATCH_NAME);
 	u::gui::updateStaticWidgets();

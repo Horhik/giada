@@ -58,12 +58,9 @@
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::Clock         g_clock;
 extern giada::m::Mixer         g_mixer;
+extern giada::m::MixerHandler  g_mixerHandler;
 
-namespace giada
-{
-namespace c
-{
-namespace storage
+namespace giada::c::storage
 {
 namespace
 {
@@ -168,7 +165,7 @@ void loadProject(void* data)
 	the current samplerate != patch samplerate. Clock needs to update frames
 	in sequencer. */
 
-	m::mh::updateSoloCount();
+	g_mixerHandler.updateSoloCount();
 	m::recorderHandler::updateSamplerate(m::conf::conf.samplerate, m::patch::patch.samplerate);
 	g_clock.recomputeFrames();
 	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop());
@@ -295,6 +292,4 @@ void saveSample(void* data)
 
 	browser->do_callback();
 }
-} // namespace storage
-} // namespace c
-} // namespace giada
+} // namespace giada::c::storage

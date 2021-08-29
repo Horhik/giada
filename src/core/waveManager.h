@@ -28,17 +28,15 @@
 #define G_WAVE_MANAGER_H
 
 #include "core/types.h"
+#include "core/wave.h"
 #include <memory>
 #include <string>
 
-namespace giada::m
-{
-class Wave;
-}
 namespace giada::m::patch
 {
 struct Wave;
 }
+
 namespace giada::m::waveManager
 {
 struct Result
@@ -46,6 +44,7 @@ struct Result
 	int                   status;
 	std::unique_ptr<Wave> wave = nullptr;
 };
+
 /* init
 Initializes internal data. */
 

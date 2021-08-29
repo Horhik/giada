@@ -41,9 +41,10 @@
 #include "utils/vector.h"
 
 /* TODO */
-extern giada::m::KernelAudio g_kernelAudio;
-extern giada::m::Clock       g_clock;
-extern giada::m::Mixer       g_mixer;
+extern giada::m::KernelAudio  g_kernelAudio;
+extern giada::m::Clock        g_clock;
+extern giada::m::Mixer        g_mixer;
+extern giada::m::MixerHandler g_mixerHandler;
 
 namespace giada::m
 {
@@ -78,10 +79,10 @@ int callback_(void* outBuf, void* inBuf, unsigned bufferSize, double /*streamTim
 	info.isClockRunning  = g_clock.isRunning();
 	info.canLineInRec    = recManager::isRecordingInput() && g_kernelAudio.isInputEnabled();
 	info.limitOutput     = conf::conf.limitOutput;
-	info.inToOut         = mh::getInToOut();
+	info.inToOut         = g_mixerHandler.getInToOut();
 	info.maxFramesToRec  = conf::conf.inputRecMode == InputRecMode::FREE ? g_clock.getMaxFramesInLoop() : g_clock.getFramesInLoop();
-	info.outVol          = mh::getOutVol();
-	info.inVol           = mh::getInVol();
+	info.outVol          = g_mixerHandler.getOutVol();
+	info.inVol           = g_mixerHandler.getInVol();
 	info.recTriggerLevel = conf::conf.recTriggerLevel;
 
 	return g_mixer.render(out, in, info);

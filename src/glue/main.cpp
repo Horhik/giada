@@ -56,6 +56,7 @@ extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::KernelAudio   g_kernelAudio;
 extern giada::m::Clock         g_clock;
 extern giada::m::Mixer         g_mixer;
+extern giada::m::MixerHandler  g_mixerHandler;
 
 namespace giada::c::main
 {
@@ -192,7 +193,7 @@ void clearAllSamples()
 		return;
 	G_MainWin->delSubWindow(WID_SAMPLE_EDITOR);
 	g_clock.setStatus(ClockStatus::STOPPED);
-	m::mh::freeAllChannels();
+	g_mixerHandler.freeAllChannels();
 	m::recorderHandler::clearAllActions();
 }
 
@@ -210,7 +211,7 @@ void clearAllActions()
 
 void setInToOut(bool v)
 {
-	m::mh::setInToOut(v);
+	g_mixerHandler.setInToOut(v);
 }
 
 /* -------------------------------------------------------------------------- */

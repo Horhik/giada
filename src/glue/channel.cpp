@@ -63,6 +63,7 @@
 #include <functional>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::MixerHandler  g_mixerHandler;
 
 namespace giada::c::channel
 {
@@ -173,7 +174,7 @@ int loadChannel(ID channelId, const std::string& fname)
 
 	m::conf::conf.samplePath = u::fs::dirname(fname);
 
-	int res = m::mh::loadChannel(channelId, fname);
+	int res = g_mixerHandler.loadChannel(channelId, fname);
 	if (res != G_RES_OK)
 		printLoadError_(res);
 
@@ -184,14 +185,14 @@ int loadChannel(ID channelId, const std::string& fname)
 
 void addChannel(ID columnId, ChannelType type)
 {
-	m::mh::addChannel(type, columnId);
+	g_mixerHandler.addChannel(type, columnId);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void addAndLoadChannel(ID columnId, const std::string& fpath)
 {
-	int res = m::mh::addAndLoadChannel(columnId, fpath);
+	int res = g_mixerHandler.addAndLoadChannel(columnId, fpath);
 	if (res != G_RES_OK)
 		printLoadError_(res);
 }
@@ -203,7 +204,7 @@ void addAndLoadChannels(ID columnId, const std::vector<std::string>& fpaths)
 
 	bool errors = false;
 	for (const std::string& f : fpaths)
-		if (m::mh::addAndLoadChannel(columnId, f) != G_RES_OK)
+		if (g_mixerHandler.addAndLoadChannel(columnId, f) != G_RES_OK)
 			errors = true;
 
 	if (errors)
@@ -218,7 +219,7 @@ void deleteChannel(ID channelId)
 		return;
 	u::gui::closeAllSubwindows();
 	m::recorder::clearChannel(channelId);
-	m::mh::deleteChannel(channelId);
+	g_mixerHandler.deleteChannel(channelId);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -229,7 +230,7 @@ void freeChannel(ID channelId)
 		return;
 	u::gui::closeAllSubwindows();
 	m::recorder::clearChannel(channelId);
-	m::mh::freeChannel(channelId);
+	g_mixerHandler.freeChannel(channelId);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -255,7 +256,7 @@ void setOverdubProtection(ID channelId, bool value)
 
 void cloneChannel(ID channelId)
 {
-	m::mh::cloneChannel(channelId);
+	g_mixerHandler.cloneChannel(channelId);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -279,6 +280,6 @@ void setHeight(ID channelId, Pixel p)
 
 void setName(ID channelId, const std::string& name)
 {
-	m::mh::renameChannel(channelId, name);
+	g_mixerHandler.renameChannel(channelId, name);
 }
 } // namespace giada::c::channel

@@ -52,6 +52,7 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::MixerHandler  g_mixerHandler;
 
 namespace giada::c::sampleEditor
 {
@@ -344,7 +345,7 @@ void cleanupPreview()
 void toNewChannel(ID channelId, Frame a, Frame b)
 {
 	ID columnId = G_MainWin->keyboard->getChannel(channelId)->getColumnId();
-	m::mh::addAndLoadChannel(columnId, m::waveManager::createFromWave(getWave_(channelId), a, b));
+	g_mixerHandler.addAndLoadChannel(columnId, m::waveManager::createFromWave(getWave_(channelId), a, b));
 }
 
 /* -------------------------------------------------------------------------- */

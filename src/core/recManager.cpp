@@ -38,10 +38,11 @@
 #include "core/types.h"
 #include "gui/dispatcher.h"
 
-extern giada::m::KernelAudio g_kernelAudio;
-extern giada::m::Clock       g_clock;
-extern giada::m::Sequencer   g_sequencer;
-extern giada::m::Mixer       g_mixer;
+extern giada::m::KernelAudio  g_kernelAudio;
+extern giada::m::Clock        g_clock;
+extern giada::m::Sequencer    g_sequencer;
+extern giada::m::Mixer        g_mixer;
+extern giada::m::MixerHandler g_mixerHandler;
 
 namespace giada::m::recManager
 {
@@ -177,7 +178,7 @@ void toggleActionRec(RecTriggerMode m)
 
 bool startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
 {
-	if (!canRec_() || !mh::hasInputRecordableChannels())
+	if (!canRec_() || !g_mixerHandler.hasInputRecordableChannels())
 		return false;
 
 	if (triggerMode == RecTriggerMode::SIGNAL || inputMode == InputRecMode::FREE)
@@ -233,7 +234,7 @@ void stopInputRec(InputRecMode recMode)
 
 	/* Finalize recordings. InputRecMode::FREE requires some adjustments. */
 
-	mh::finalizeInputRec(recordedFrames);
+	g_mixerHandler.finalizeInputRec(recordedFrames);
 
 	if (recMode == InputRecMode::FREE)
 	{
@@ -259,7 +260,7 @@ bool toggleInputRec(RecTriggerMode m, InputRecMode i)
 /* -------------------------------------------------------------------------- */
 
 bool canEnableRecOnSignal() { return !g_clock.isRunning(); }
-bool canEnableFreeInputRec() { return !mh::hasAudioData(); }
+bool canEnableFreeInputRec() { return !g_mixerHandler.hasAudioData(); }
 
 void refreshInputRecMode()
 {
