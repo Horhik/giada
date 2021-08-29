@@ -34,8 +34,9 @@
 #include "utils/log.h"
 #include <functional>
 
-extern giada::m::Sequencer g_sequencer;
-extern giada::m::Mixer     g_mixer;
+extern giada::m::Sequencer      g_sequencer;
+extern giada::m::Mixer          g_mixer;
+extern giada::m::MidiDispatcher g_midiDispatcher;
 
 namespace giada::m::eventDispatcher
 {
@@ -58,11 +59,11 @@ void processFuntions_()
 		switch (e.type)
 		{
 		case EventType::MIDI_DISPATCHER_LEARN:
-			midiDispatcher::learn(std::get<Action>(e.data).event);
+			g_midiDispatcher.learn(std::get<Action>(e.data).event);
 			break;
 
 		case EventType::MIDI_DISPATCHER_PROCESS:
-			midiDispatcher::process(std::get<Action>(e.data).event);
+			g_midiDispatcher.process(std::get<Action>(e.data).event);
 			break;
 
 		case EventType::MIXER_SIGNAL_CALLBACK:

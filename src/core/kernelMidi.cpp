@@ -30,6 +30,8 @@
 #include "midiMapConf.h"
 #include "utils/log.h"
 
+extern giada::m::MidiDispatcher g_midiDispatcher;
+
 namespace giada::m
 {
 namespace
@@ -50,7 +52,7 @@ static void callback_(double /*t*/, std::vector<unsigned char>* msg, void* /*dat
 		//u::log::print("\n");
 		return;
 	}
-	midiDispatcher::dispatch(msg->at(0), msg->at(1), msg->at(2));
+	g_midiDispatcher.dispatch(msg->at(0), msg->at(1), msg->at(2));
 }
 } // namespace
 

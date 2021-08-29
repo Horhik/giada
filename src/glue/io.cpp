@@ -53,7 +53,8 @@
 #include "utils/math.h"
 #include <FL/Fl.H>
 
-extern giada::v::gdMainWindow* G_MainWin;
+extern giada::v::gdMainWindow*  G_MainWin;
+extern giada::m::MidiDispatcher g_midiDispatcher;
 
 namespace giada::c::io
 {
@@ -221,19 +222,19 @@ void channel_setKey(ID channelId, int k)
 
 void channel_startMidiLearn(int param, ID channelId)
 {
-	m::midiDispatcher::startChannelLearn(param, channelId, rebuildMidiWindows_);
+	g_midiDispatcher.startChannelLearn(param, channelId, rebuildMidiWindows_);
 }
 
 void master_startMidiLearn(int param)
 {
-	m::midiDispatcher::startMasterLearn(param, rebuildMidiWindows_);
+	g_midiDispatcher.startMasterLearn(param, rebuildMidiWindows_);
 }
 
 #ifdef WITH_VST
 
 void plugin_startMidiLearn(int paramIndex, ID pluginId)
 {
-	m::midiDispatcher::startPluginLearn(paramIndex, pluginId, rebuildMidiWindows_);
+	g_midiDispatcher.startPluginLearn(paramIndex, pluginId, rebuildMidiWindows_);
 }
 
 #endif
@@ -242,7 +243,7 @@ void plugin_startMidiLearn(int paramIndex, ID pluginId)
 
 void stopMidiLearn()
 {
-	m::midiDispatcher::stopLearn();
+	g_midiDispatcher.stopLearn();
 	rebuildMidiWindows_();
 }
 
@@ -250,19 +251,19 @@ void stopMidiLearn()
 
 void channel_clearMidiLearn(int param, ID channelId)
 {
-	m::midiDispatcher::clearChannelLearn(param, channelId, rebuildMidiWindows_);
+	g_midiDispatcher.clearChannelLearn(param, channelId, rebuildMidiWindows_);
 }
 
 void master_clearMidiLearn(int param)
 {
-	m::midiDispatcher::clearMasterLearn(param, rebuildMidiWindows_);
+	g_midiDispatcher.clearMasterLearn(param, rebuildMidiWindows_);
 }
 
 #ifdef WITH_VST
 
 void plugin_clearMidiLearn(int param, ID pluginId)
 {
-	m::midiDispatcher::clearPluginLearn(param, pluginId, rebuildMidiWindows_);
+	g_midiDispatcher.clearPluginLearn(param, pluginId, rebuildMidiWindows_);
 }
 
 #endif

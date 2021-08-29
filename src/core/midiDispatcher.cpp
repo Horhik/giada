@@ -40,20 +40,113 @@
 #include <cassert>
 #include <vector>
 
-namespace giada::m::midiDispatcher
+namespace giada::m
 {
-namespace
+MidiDispatcher::MidiDispatcher()
+: m_signalCb(nullptr)
+, m_learnCb(nullptr)
 {
-/* cb_midiLearn, cb_data_
-Callback prepared by the gdMidiGrabber window and called by midiDispatcher. It 
-contains things to do once the midi message has been stored. */
-
-std::function<void()>          signalCb_ = nullptr;
-std::function<void(MidiEvent)> learnCb_  = nullptr;
+}
 
 /* -------------------------------------------------------------------------- */
 
-bool isMasterMidiInAllowed_(int c)
+void MidiDispatcher::startChannelLearn(int param, ID channelId, std::function<void()> f)
+{
+	m_learnCb = [=](m::MidiEvent e) { learnChannel(e, param, channelId, f); };
+}
+
+void MidiDispatcher::startMasterLearn(int param, std::function<void()> f)
+{
+	m_learnCb = [=](m::MidiEvent e) { learnMaster(e, param, f); };
+}
+
+#ifdef WITH_VST
+
+void MidiDispatcher::startPluginLearn(std::size_t paramIndex, ID pluginId, std::function<void()> f)
+{
+	m_learnCb = [=](m::MidiEvent e) { learnPlugin(e, paramIndex, pluginId, f); };
+}
+
+#endif
+
+void MidiDispatcher::stopLearn()
+{
+	m_learnCb = nullptr;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void MidiDispatcher::clearMasterLearn(int param, std::function<void()> f)
+{
+	learnMaster(MidiEvent(), param, f); // Empty event (0x0)
+}
+
+void MidiDispatcher::clearChannelLearn(int param, ID channelId, std::function<void()> f)
+{
+	learnChannel(MidiEvent(), param, channelId, f); // Empty event (0x0)
+}
+
+#ifdef WITH_VST
+
+void MidiDispatcher::clearPluginLearn(std::size_t paramIndex, ID pluginId, std::function<void()> f)
+{
+	learnPlugin(MidiEvent(), paramIndex, pluginId, f); // Empty event (0x0)
+}
+
+#endif
+
+/* -------------------------------------------------------------------------- */
+
+void MidiDispatcher::dispatch(int byte1, int byte2, int byte3)
+{
+	/* Here we want to catch two things: a) note on/note off from a MIDI keyboard 
+	and b) knob/wheel/slider movements from a MIDI controller. 
+	We must also fix the velocity zero issue for those devices that sends NOTE
+	OFF events as NOTE ON + velocity zero. Let's make it a real NOTE OFF event. */
+
+	MidiEvent midiEvent(byte1, byte2, byte3);
+	midiEvent.fixVelocityZero();
+
+	u::log::print("[midiDispatcher] MIDI received - 0x%X (chan %d)\n", midiEvent.getRaw(),
+	    midiEvent.getChannel());
+
+	/* Start dispatcher. Don't parse channels if MIDI learn is ON, just learn 
+	the incoming MIDI signal. The action is not invoked directly, but scheduled 
+	to be perfomed by the Event Dispatcher. */
+
+	Action action = {0, 0, 0, midiEvent};
+	auto   event  = m_learnCb != nullptr ? eventDispatcher::EventType::MIDI_DISPATCHER_LEARN : eventDispatcher::EventType::MIDI_DISPATCHER_PROCESS;
+
+	eventDispatcher::pumpMidiEvent({event, 0, 0, action});
+}
+
+/* -------------------------------------------------------------------------- */
+
+void MidiDispatcher::learn(const MidiEvent& e)
+{
+	assert(m_learnCb != nullptr);
+	m_learnCb(e);
+}
+
+/* -------------------------------------------------------------------------- */
+
+void MidiDispatcher::process(const MidiEvent& e)
+{
+	processMaster(e);
+	processChannels(e);
+	triggerSignalCb();
+}
+
+/* -------------------------------------------------------------------------- */
+
+void MidiDispatcher::setSignalCallback(std::function<void()> f)
+{
+	m_signalCb = f;
+}
+
+/* -------------------------------------------------------------------------- */
+
+bool MidiDispatcher::isMasterMidiInAllowed(int c)
 {
 	int  filter  = model::get().midiIn.filter;
 	bool enabled = model::get().midiIn.enabled;
@@ -62,7 +155,7 @@ bool isMasterMidiInAllowed_(int c)
 
 /* -------------------------------------------------------------------------- */
 
-bool isChannelMidiInAllowed_(ID channelId, int c)
+bool MidiDispatcher::isChannelMidiInAllowed(ID channelId, int c)
 {
 	return model::get().getChannel(channelId).midiLearner.isAllowed(c);
 }
@@ -71,7 +164,7 @@ bool isChannelMidiInAllowed_(ID channelId, int c)
 
 #ifdef WITH_VST
 
-void processPlugins_(const std::vector<Plugin*>& plugins, const MidiEvent& midiEvent)
+void MidiDispatcher::processPlugins(const std::vector<Plugin*>& plugins, const MidiEvent& midiEvent)
 {
 	uint32_t pure = midiEvent.getRawNoVelocity();
 	float    vf   = u::math::map(midiEvent.getVelocity(), G_MAX_VELOCITY, 1.0f);
@@ -98,7 +191,7 @@ void processPlugins_(const std::vector<Plugin*>& plugins, const MidiEvent& midiE
 
 /* -------------------------------------------------------------------------- */
 
-void processChannels_(const MidiEvent& midiEvent)
+void MidiDispatcher::processChannels(const MidiEvent& midiEvent)
 {
 	uint32_t pure = midiEvent.getRawNoVelocity();
 
@@ -162,7 +255,7 @@ void processChannels_(const MidiEvent& midiEvent)
 
 #ifdef WITH_VST
 		/* Process learned plugins parameters. */
-		processPlugins_(c.plugins, midiEvent);
+		processPlugins(c.plugins, midiEvent);
 #endif
 
 		/* Redirect raw MIDI message (pure + velocity) to plug-ins in armed
@@ -174,7 +267,7 @@ void processChannels_(const MidiEvent& midiEvent)
 
 /* -------------------------------------------------------------------------- */
 
-void processMaster_(const MidiEvent& midiEvent)
+void MidiDispatcher::processMaster(const MidiEvent& midiEvent)
 {
 	const uint32_t       pure   = midiEvent.getRawNoVelocity();
 	const model::MidiIn& midiIn = model::get().midiIn;
@@ -232,9 +325,9 @@ void processMaster_(const MidiEvent& midiEvent)
 
 /* -------------------------------------------------------------------------- */
 
-void learnChannel_(MidiEvent e, int param, ID channelId, std::function<void()> doneCb)
+void MidiDispatcher::learnChannel(MidiEvent e, int param, ID channelId, std::function<void()> doneCb)
 {
-	if (!isChannelMidiInAllowed_(channelId, e.getChannel()))
+	if (!isChannelMidiInAllowed(channelId, e.getChannel()))
 		return;
 
 	uint32_t raw = e.getRawNoVelocity();
@@ -287,9 +380,11 @@ void learnChannel_(MidiEvent e, int param, ID channelId, std::function<void()> d
 	doneCb();
 }
 
-void learnMaster_(MidiEvent e, int param, std::function<void()> doneCb)
+/* -------------------------------------------------------------------------- */
+
+void MidiDispatcher::learnMaster(MidiEvent e, int param, std::function<void()> doneCb)
 {
-	if (!isMasterMidiInAllowed_(e.getChannel()))
+	if (!isMasterMidiInAllowed(e.getChannel()))
 		return;
 
 	uint32_t raw = e.getRawNoVelocity();
@@ -331,9 +426,11 @@ void learnMaster_(MidiEvent e, int param, std::function<void()> doneCb)
 	doneCb();
 }
 
+/* -------------------------------------------------------------------------- */
+
 #ifdef WITH_VST
 
-void learnPlugin_(MidiEvent e, std::size_t paramIndex, ID pluginId, std::function<void()> doneCb)
+void MidiDispatcher::learnPlugin(MidiEvent e, std::size_t paramIndex, ID pluginId, std::function<void()> doneCb)
 {
 	model::DataLock lock(model::SwapType::NONE);
 
@@ -352,110 +449,11 @@ void learnPlugin_(MidiEvent e, std::size_t paramIndex, ID pluginId, std::functio
 
 /* -------------------------------------------------------------------------- */
 
-void triggerSignalCb_()
+void MidiDispatcher::triggerSignalCb()
 {
-	if (signalCb_ == nullptr)
+	if (m_signalCb == nullptr)
 		return;
-	signalCb_();
-	signalCb_ = nullptr;
+	m_signalCb();
+	m_signalCb = nullptr;
 }
-} // namespace
-
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-void startChannelLearn(int param, ID channelId, std::function<void()> f)
-{
-	learnCb_ = [=](m::MidiEvent e) { learnChannel_(e, param, channelId, f); };
-}
-
-void startMasterLearn(int param, std::function<void()> f)
-{
-	learnCb_ = [=](m::MidiEvent e) { learnMaster_(e, param, f); };
-}
-
-#ifdef WITH_VST
-
-void startPluginLearn(std::size_t paramIndex, ID pluginId, std::function<void()> f)
-{
-	learnCb_ = [=](m::MidiEvent e) { learnPlugin_(e, paramIndex, pluginId, f); };
-}
-
-#endif
-
-void stopLearn()
-{
-	learnCb_ = nullptr;
-}
-
-/* -------------------------------------------------------------------------- */
-
-void clearMasterLearn(int param, std::function<void()> f)
-{
-	learnMaster_(MidiEvent(), param, f); // Empty event (0x0)
-}
-
-void clearChannelLearn(int param, ID channelId, std::function<void()> f)
-{
-	learnChannel_(MidiEvent(), param, channelId, f); // Empty event (0x0)
-}
-
-#ifdef WITH_VST
-
-void clearPluginLearn(std::size_t paramIndex, ID pluginId, std::function<void()> f)
-{
-	learnPlugin_(MidiEvent(), paramIndex, pluginId, f); // Empty event (0x0)
-}
-
-#endif
-
-/* -------------------------------------------------------------------------- */
-
-void dispatch(int byte1, int byte2, int byte3)
-{
-	/* Here we want to catch two things: a) note on/note off from a MIDI keyboard 
-	and b) knob/wheel/slider movements from a MIDI controller. 
-	We must also fix the velocity zero issue for those devices that sends NOTE
-	OFF events as NOTE ON + velocity zero. Let's make it a real NOTE OFF event. */
-
-	MidiEvent midiEvent(byte1, byte2, byte3);
-	midiEvent.fixVelocityZero();
-
-	u::log::print("[midiDispatcher] MIDI received - 0x%X (chan %d)\n", midiEvent.getRaw(),
-	    midiEvent.getChannel());
-
-	/* Start dispatcher. Don't parse channels if MIDI learn is ON, just learn 
-	the incoming MIDI signal. The action is not invoked directly, but scheduled 
-	to be perfomed by the Event Dispatcher. */
-
-	Action                     action = {0, 0, 0, midiEvent};
-	eventDispatcher::EventType event  = learnCb_ != nullptr ? eventDispatcher::EventType::MIDI_DISPATCHER_LEARN : eventDispatcher::EventType::MIDI_DISPATCHER_PROCESS;
-
-	eventDispatcher::pumpMidiEvent({event, 0, 0, action});
-}
-
-/* -------------------------------------------------------------------------- */
-
-void learn(const MidiEvent& e)
-{
-	assert(learnCb_ != nullptr);
-	learnCb_(e);
-}
-
-/* -------------------------------------------------------------------------- */
-
-void process(const MidiEvent& e)
-{
-	processMaster_(e);
-	processChannels_(e);
-	triggerSignalCb_();
-}
-
-/* -------------------------------------------------------------------------- */
-
-void setSignalCallback(std::function<void()> f)
-{
-	signalCb_ = f;
-}
-} // namespace giada::m::midiDispatcher
+} // namespace giada::m

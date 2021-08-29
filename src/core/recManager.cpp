@@ -38,11 +38,12 @@
 #include "core/types.h"
 #include "gui/dispatcher.h"
 
-extern giada::m::KernelAudio  g_kernelAudio;
-extern giada::m::Clock        g_clock;
-extern giada::m::Sequencer    g_sequencer;
-extern giada::m::Mixer        g_mixer;
-extern giada::m::MixerHandler g_mixerHandler;
+extern giada::m::KernelAudio    g_kernelAudio;
+extern giada::m::Clock          g_clock;
+extern giada::m::Sequencer      g_sequencer;
+extern giada::m::Mixer          g_mixer;
+extern giada::m::MixerHandler   g_mixerHandler;
+extern giada::m::MidiDispatcher g_midiDispatcher;
 
 namespace giada::m::recManager
 {
@@ -128,7 +129,7 @@ void startActionRec(RecTriggerMode mode)
 	{ // RecTriggerMode::SIGNAL
 		g_clock.setStatus(ClockStatus::WAITING);
 		g_clock.rewind();
-		midiDispatcher::setSignalCallback(startActionRec_);
+		g_midiDispatcher.setSignalCallback(startActionRec_);
 		v::dispatcher::setSignalCallback(startActionRec_);
 		setRecordingAction_(true);
 	}
@@ -146,7 +147,7 @@ void stopActionRec()
 	if (g_clock.getStatus() == ClockStatus::WAITING)
 	{
 		g_clock.setStatus(ClockStatus::STOPPED);
-		midiDispatcher::setSignalCallback(nullptr);
+		g_midiDispatcher.setSignalCallback(nullptr);
 		v::dispatcher::setSignalCallback(nullptr);
 		return;
 	}
