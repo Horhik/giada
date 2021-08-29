@@ -55,10 +55,11 @@
 #include "utils/string.h"
 #include <cassert>
 
-extern giada::v::gdMainWindow* G_MainWin;
-extern giada::m::Clock         g_clock;
-extern giada::m::Mixer         g_mixer;
-extern giada::m::MixerHandler  g_mixerHandler;
+extern giada::v::gdMainWindow*         G_MainWin;
+extern giada::m::Clock                 g_clock;
+extern giada::m::Mixer                 g_mixer;
+extern giada::m::MixerHandler          g_mixerHandler;
+extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
 
 namespace giada::c::storage
 {
@@ -166,7 +167,7 @@ void loadProject(void* data)
 	in sequencer. */
 
 	g_mixerHandler.updateSoloCount();
-	m::recorderHandler::updateSamplerate(m::conf::conf.samplerate, m::patch::patch.samplerate);
+	g_actionRecorderHandler.updateSamplerate(m::conf::conf.samplerate, m::patch::patch.samplerate);
 	g_clock.recomputeFrames();
 	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop());
 

@@ -35,8 +35,9 @@
 #include "glue/recorder.h"
 #include <cassert>
 
-extern giada::m::Clock          g_clock;
-extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::Clock                 g_clock;
+extern giada::m::ActionRecorder        g_actionRecorder;
+extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
 
 namespace giada::c::actionEditor
 {
@@ -272,13 +273,11 @@ void recordEnvelopeAction(ID channelId, Frame f, int value)
 
 void deleteEnvelopeAction(ID channelId, const m::Action& a)
 {
-	namespace mrh = m::recorderHandler;
-
 	/* Deleting a boundary action wipes out everything. If is volume, remember 
 	to restore _i and _d members in channel. */
 	/* TODO - move this to c::*/
 	/* TODO - FIX*/
-	if (mrh::isBoundaryEnvelopeAction(a))
+	if (g_actionRecorderHandler.isBoundaryEnvelopeAction(a))
 	{
 		if (a.isVolumeEnvelope())
 		{
@@ -319,12 +318,10 @@ void deleteEnvelopeAction(ID channelId, const m::Action& a)
 
 void updateEnvelopeAction(ID channelId, const m::Action& a, Frame f, int value)
 {
-	namespace mrh = m::recorderHandler;
-
 	/* Update the action directly if it is a boundary one. Else, delete the
 	previous one and record a new action. */
 
-	if (mrh::isBoundaryEnvelopeAction(a))
+	if (g_actionRecorderHandler.isBoundaryEnvelopeAction(a))
 		g_actionRecorder.updateEvent(a.id, m::MidiEvent(m::MidiEvent::ENVELOPE, 0, value));
 	else
 	{

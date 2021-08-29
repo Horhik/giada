@@ -40,85 +40,25 @@
 
 extern giada::m::ActionRecorder g_actionRecorder;
 
-namespace giada::m::recorderHandler
+namespace giada::m
 {
 namespace
 {
 constexpr int MAX_LIVE_RECS_CHUNK = 128;
-
-std::vector<Action> recs_;
-
-/* -------------------------------------------------------------------------- */
-
-const Action* getActionPtrById_(int id, const ActionRecorder::ActionMap& source)
-{
-	for (const auto& [_, actions] : source)
-		for (const Action& action : actions)
-			if (action.id == id)
-				return &action;
-	return nullptr;
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* areComposite_
-Composite: NOTE_ON + NOTE_OFF on the same note. */
-
-bool areComposite_(const Action& a1, const Action& a2)
-{
-	return a1.event.getStatus() == MidiEvent::NOTE_ON &&
-	       a2.event.getStatus() == MidiEvent::NOTE_OFF &&
-	       a1.event.getNote() == a2.event.getNote() &&
-	       a1.channelId == a2.channelId;
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* consolidate_
-Given an action 'a1' tries to find the matching NOTE_OFF. This algorithm must
-start searching from the element next to 'a1': since live actions are recorded
-in linear sequence, the potential partner of 'a1' always lies beyond a1 itself. 
-Without this trick (i.e. if it loops from vector.begin() each time) the
-algorithm would end up matching wrong partners. */
-
-void consolidate_(const Action& a1, std::size_t i)
-{
-	for (auto it = recs_.begin() + i; it != recs_.end(); ++it)
-	{
-
-		const Action& a2 = *it;
-
-		if (!areComposite_(a1, a2))
-			continue;
-
-		const_cast<Action&>(a1).nextId = a2.id;
-		const_cast<Action&>(a2).prevId = a1.id;
-
-		break;
-	}
-}
-
-/* -------------------------------------------------------------------------- */
-
-void consolidate_()
-{
-	for (auto it = recs_.begin(); it != recs_.end(); ++it)
-		consolidate_(*it, it - recs_.begin()); // Pass current index
-}
 } // namespace
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void init()
+ActionRecorderHandler::ActionRecorderHandler()
 {
-	recs_.reserve(MAX_LIVE_RECS_CHUNK);
+	m_actions.reserve(MAX_LIVE_RECS_CHUNK);
 }
 
 /* -------------------------------------------------------------------------- */
 
-bool isBoundaryEnvelopeAction(const Action& a)
+bool ActionRecorderHandler::isBoundaryEnvelopeAction(const Action& a) const
 {
 	assert(a.prev != nullptr);
 	assert(a.next != nullptr);
@@ -127,7 +67,7 @@ bool isBoundaryEnvelopeAction(const Action& a)
 
 /* -------------------------------------------------------------------------- */
 
-void updateBpm(float ratio, int quantizerStep)
+void ActionRecorderHandler::updateBpm(float ratio, int quantizerStep)
 {
 	if (ratio == 1.0f)
 		return;
@@ -150,7 +90,7 @@ void updateBpm(float ratio, int quantizerStep)
 
 /* -------------------------------------------------------------------------- */
 
-void updateSamplerate(int systemRate, int patchRate)
+void ActionRecorderHandler::updateSamplerate(int systemRate, int patchRate)
 {
 	if (systemRate == patchRate)
 		return;
@@ -162,7 +102,7 @@ void updateSamplerate(int systemRate, int patchRate)
 
 /* -------------------------------------------------------------------------- */
 
-bool cloneActions(ID channelId, ID newChannelId)
+bool ActionRecorderHandler::cloneActions(ID channelId, ID newChannelId)
 {
 	bool                       cloned = false;
 	std::vector<Action>        actions;
@@ -201,35 +141,37 @@ bool cloneActions(ID channelId, ID newChannelId)
 
 /* -------------------------------------------------------------------------- */
 
-void liveRec(ID channelId, MidiEvent e, Frame globalFrame)
+void ActionRecorderHandler::liveRec(ID channelId, MidiEvent e, Frame globalFrame)
 {
 	assert(e.isNoteOnOff()); // Can't record any other kind of events for now
 
 	/* TODO - this might allocate on the MIDI thread */
-	if (recs_.size() >= recs_.capacity())
-		recs_.reserve(recs_.size() + MAX_LIVE_RECS_CHUNK);
+	if (m_actions.size() >= m_actions.capacity())
+		m_actions.reserve(m_actions.size() + MAX_LIVE_RECS_CHUNK);
 
-	recs_.push_back(g_actionRecorder.makeAction(g_actionRecorder.getNewActionId(), channelId, globalFrame, e));
+	m_actions.push_back(g_actionRecorder.makeAction(g_actionRecorder.getNewActionId(), channelId, globalFrame, e));
 }
 
 /* -------------------------------------------------------------------------- */
 
-std::unordered_set<ID> consolidate()
+std::unordered_set<ID> ActionRecorderHandler::consolidate()
 {
-	consolidate_();
-	g_actionRecorder.rec(recs_);
+	for (auto it = m_actions.begin(); it != m_actions.end(); ++it)
+		consolidate(*it, it - m_actions.begin()); // Pass current index
+
+	g_actionRecorder.rec(m_actions);
 
 	std::unordered_set<ID> out;
-	for (const Action& action : recs_)
+	for (const Action& action : m_actions)
 		out.insert(action.channelId);
 
-	recs_.clear();
+	m_actions.clear();
 	return out;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void clearAllActions()
+void ActionRecorderHandler::clearAllActions()
 {
 	for (channel::Data& ch : model::get().channels)
 		ch.hasActions = false;
@@ -241,7 +183,7 @@ void clearAllActions()
 
 /* -------------------------------------------------------------------------- */
 
-ActionRecorder::ActionMap deserializeActions(const std::vector<patch::Action>& pactions)
+ActionRecorder::ActionMap ActionRecorderHandler::deserializeActions(const std::vector<patch::Action>& pactions)
 {
 	ActionRecorder::ActionMap out;
 
@@ -258,16 +200,16 @@ ActionRecorder::ActionMap deserializeActions(const std::vector<patch::Action>& p
 	{
 		if (paction.nextId == 0 && paction.prevId == 0)
 			continue;
-		Action* curr = const_cast<Action*>(getActionPtrById_(paction.id, out));
+		Action* curr = const_cast<Action*>(getActionPtrById(paction.id, out));
 		assert(curr != nullptr);
 		if (paction.nextId != 0)
 		{
-			curr->next = getActionPtrById_(paction.nextId, out);
+			curr->next = getActionPtrById(paction.nextId, out);
 			assert(curr->next != nullptr);
 		}
 		if (paction.prevId != 0)
 		{
-			curr->prev = getActionPtrById_(paction.prevId, out);
+			curr->prev = getActionPtrById(paction.prevId, out);
 			assert(curr->prev != nullptr);
 		}
 	}
@@ -277,7 +219,7 @@ ActionRecorder::ActionMap deserializeActions(const std::vector<patch::Action>& p
 
 /* -------------------------------------------------------------------------- */
 
-std::vector<patch::Action> serializeActions(const ActionRecorder::ActionMap& actions)
+std::vector<patch::Action> ActionRecorderHandler::serializeActions(const ActionRecorder::ActionMap& actions)
 {
 	std::vector<patch::Action> out;
 	for (const auto& kv : actions)
@@ -296,4 +238,49 @@ std::vector<patch::Action> serializeActions(const ActionRecorder::ActionMap& act
 	}
 	return out;
 }
-} // namespace giada::m::recorderHandler
+
+/* -------------------------------------------------------------------------- */
+
+const Action* ActionRecorderHandler::getActionPtrById(int id, const ActionRecorder::ActionMap& source)
+{
+	for (const auto& [_, actions] : source)
+		for (const Action& action : actions)
+			if (action.id == id)
+				return &action;
+	return nullptr;
+}
+
+/* -------------------------------------------------------------------------- */
+
+bool ActionRecorderHandler::areComposite(const Action& a1, const Action& a2) const
+{
+	return a1.event.getStatus() == MidiEvent::NOTE_ON &&
+	       a2.event.getStatus() == MidiEvent::NOTE_OFF &&
+	       a1.event.getNote() == a2.event.getNote() &&
+	       a1.channelId == a2.channelId;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void ActionRecorderHandler::consolidate(const Action& a1, std::size_t i)
+{
+	/* This algorithm must start searching from the element next to 'a1': since 
+	live actions are recorded in linear sequence, the potential partner of 'a1' 
+	always lies beyond a1 itself. Without this trick (i.e. if it loops from 
+	vector.begin() each time) the algorithm would end up matching wrong partners. */
+
+	for (auto it = m_actions.begin() + i; it != m_actions.end(); ++it)
+	{
+
+		const Action& a2 = *it;
+
+		if (!areComposite(a1, a2))
+			continue;
+
+		const_cast<Action&>(a1).nextId = a2.id;
+		const_cast<Action&>(a2).prevId = a1.id;
+
+		break;
+	}
+}
+} // namespace giada::m

@@ -52,11 +52,12 @@
 #include <cassert>
 #include <cmath>
 
-extern giada::v::gdMainWindow* G_MainWin;
-extern giada::m::KernelAudio   g_kernelAudio;
-extern giada::m::Clock         g_clock;
-extern giada::m::Mixer         g_mixer;
-extern giada::m::MixerHandler  g_mixerHandler;
+extern giada::v::gdMainWindow*         G_MainWin;
+extern giada::m::KernelAudio           g_kernelAudio;
+extern giada::m::Clock                 g_clock;
+extern giada::m::Mixer                 g_mixer;
+extern giada::m::MixerHandler          g_mixerHandler;
+extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
 
 namespace giada::c::main
 {
@@ -194,7 +195,7 @@ void clearAllSamples()
 	G_MainWin->delSubWindow(WID_SAMPLE_EDITOR);
 	g_clock.setStatus(ClockStatus::STOPPED);
 	g_mixerHandler.freeAllChannels();
-	m::recorderHandler::clearAllActions();
+	g_actionRecorderHandler.clearAllActions();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -204,7 +205,7 @@ void clearAllActions()
 	if (!v::gdConfirmWin("Warning", "Clear all actions: are you sure?"))
 		return;
 	G_MainWin->delSubWindow(WID_ACTION_EDITOR);
-	m::recorderHandler::clearAllActions();
+	g_actionRecorderHandler.clearAllActions();
 }
 
 /* -------------------------------------------------------------------------- */

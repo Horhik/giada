@@ -39,6 +39,8 @@
 #include <atomic>
 #include <cassert>
 
+extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
+
 namespace giada::m
 {
 Clock::Clock(KernelAudio& k, Synchronizer& s)
@@ -283,7 +285,7 @@ void Clock::setBpmRaw(float v)
 	model::get().clock.bpm = v;
 	recomputeFrames(model::get().clock);
 
-	m::recorderHandler::updateBpm(ratio, m_quantizerStep);
+	g_actionRecorderHandler.updateBpm(ratio, m_quantizerStep);
 
 	model::swap(model::SwapType::HARD);
 

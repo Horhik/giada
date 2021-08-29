@@ -24,8 +24,8 @@
  *
  * -------------------------------------------------------------------------- */
 
-#ifndef G_RECORDER_HANDLER_H
-#define G_RECORDER_HANDLER_H
+#ifndef G_ACTION_RECORDER_HANDLER_H
+#define G_ACTION_RECORDER_HANDLER_H
 
 #include "core/actionRecorder.h"
 #include "core/midiEvent.h"
@@ -36,55 +36,77 @@ namespace giada::m::patch
 {
 struct Action;
 }
+
 namespace giada::m
 {
 struct Action;
 }
-namespace giada::m::recorderHandler
+
+namespace giada::m
 {
-void init();
+class ActionRecorderHandler
+{
+public:
+	ActionRecorderHandler();
 
-bool isBoundaryEnvelopeAction(const Action& a);
+	bool isBoundaryEnvelopeAction(const Action& a) const;
 
-/* updateBpm
-Changes actions position by calculating the new bpm value. */
+	/* updateBpm
+    Changes actions position by calculating the new bpm value. */
 
-void updateBpm(float ratio, int quantizerStep);
+	void updateBpm(float ratio, int quantizerStep);
 
-/* updateSamplerate
-Changes actions position by taking in account the new samplerate. If 
-f_system == f_patch nothing will change, otherwise the conversion is 
-mandatory. */
+	/* updateSamplerate
+    Changes actions position by taking in account the new samplerate. If 
+    f_system == f_patch nothing will change, otherwise the conversion is 
+    mandatory. */
 
-void updateSamplerate(int systemRate, int patchRate);
+	void updateSamplerate(int systemRate, int patchRate);
 
-/* cloneActions
-Clones actions in channel 'channelId', giving them a new channel ID. Returns
-whether any action has been cloned. */
+	/* cloneActions
+    Clones actions in channel 'channelId', giving them a new channel ID. Returns
+    whether any action has been cloned. */
 
-bool cloneActions(ID channelId, ID newChannelId);
+	bool cloneActions(ID channelId, ID newChannelId);
 
-/* liveRec
-Records a user-generated action. NOTE_ON or NOTE_OFF only for now. */
+	/* liveRec
+    Records a user-generated action. NOTE_ON or NOTE_OFF only for now. */
 
-void liveRec(ID channelId, MidiEvent e, Frame global);
+	void liveRec(ID channelId, MidiEvent e, Frame global);
 
-/* consolidate
-Records all live actions. Returns a set of channels IDs that have been 
-recorded. */
+	/* consolidate
+    Records all live actions. Returns a set of channels IDs that have been 
+    recorded. */
 
-std::unordered_set<ID> consolidate();
+	std::unordered_set<ID> consolidate();
 
-/* clearAllActions
-Deletes all recorded actions. */
+	/* clearAllActions
+    Deletes all recorded actions. */
 
-void clearAllActions();
+	void clearAllActions();
 
-/* (de)serializeActions
-Creates new Actions given the patch raw data and vice versa. */
+	/* (de)serializeActions
+    Creates new Actions given the patch raw data and vice versa. */
 
-ActionRecorder::ActionMap  deserializeActions(const std::vector<patch::Action>& as);
-std::vector<patch::Action> serializeActions(const ActionRecorder::ActionMap& as);
-} // namespace giada::m::recorderHandler
+	ActionRecorder::ActionMap  deserializeActions(const std::vector<patch::Action>& as);
+	std::vector<patch::Action> serializeActions(const ActionRecorder::ActionMap& as);
+
+private:
+	/* areComposite
+    Composite: NOTE_ON + NOTE_OFF on the same note. */
+
+	bool areComposite(const Action& a1, const Action& a2) const;
+
+	const Action* getActionPtrById(int id, const ActionRecorder::ActionMap& source);
+
+	/* consolidate
+    Given an action 'a1' tries to find the matching NOTE_OFF and updates the
+    action accordingly. */
+
+	void consolidate(const Action& a1, std::size_t i);
+
+	std::vector<Action> m_actions;
+};
+} // namespace giada::m
 
 #endif

@@ -38,12 +38,13 @@
 #include "core/types.h"
 #include "gui/dispatcher.h"
 
-extern giada::m::KernelAudio    g_kernelAudio;
-extern giada::m::Clock          g_clock;
-extern giada::m::Sequencer      g_sequencer;
-extern giada::m::Mixer          g_mixer;
-extern giada::m::MixerHandler   g_mixerHandler;
-extern giada::m::MidiDispatcher g_midiDispatcher;
+extern giada::m::KernelAudio           g_kernelAudio;
+extern giada::m::Clock                 g_clock;
+extern giada::m::Sequencer             g_sequencer;
+extern giada::m::Mixer                 g_mixer;
+extern giada::m::MixerHandler          g_mixerHandler;
+extern giada::m::MidiDispatcher        g_midiDispatcher;
+extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
 
 namespace giada::m::recManager
 {
@@ -152,7 +153,7 @@ void stopActionRec()
 		return;
 	}
 
-	std::unordered_set<ID> channels = recorderHandler::consolidate();
+	std::unordered_set<ID> channels = g_actionRecorderHandler.consolidate();
 
 	/* Enable reading actions for Channels that have just been filled with 
 	actions. Start reading right away, without checking whether 

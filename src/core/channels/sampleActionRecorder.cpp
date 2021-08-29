@@ -35,7 +35,8 @@
 #include "core/recorderHandler.h"
 #include <cassert>
 
-extern giada::m::Clock g_clock;
+extern giada::m::Clock                 g_clock;
+extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
 
 namespace giada::m::sampleActionRecorder
 {
@@ -78,7 +79,7 @@ void onKeyPress_(channel::Data& ch)
 
 void record_(channel::Data& ch, int note)
 {
-	recorderHandler::liveRec(ch.id, MidiEvent(note, 0, 0),
+	g_actionRecorderHandler.liveRec(ch.id, MidiEvent(note, 0, 0),
 	    g_clock.quantize(g_clock.getCurrentFrame()));
 
 	ch.hasActions = true;

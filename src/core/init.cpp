@@ -113,7 +113,6 @@ void initSystem_()
 void initAudio_()
 {
 	g_kernelAudio.openDevice(conf::conf);
-	recorderHandler::init();
 
 #ifdef WITH_VST
 	pluginManager::init(conf::conf.samplerate, g_kernelAudio.getRealBufSize());

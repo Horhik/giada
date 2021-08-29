@@ -54,10 +54,11 @@
 #include <cassert>
 #include <vector>
 
-extern giada::m::KernelAudio g_kernelAudio;
-extern giada::m::Clock       g_clock;
-extern giada::m::Mixer       g_mixer;
-extern giada::m::PluginHost  g_pluginHost;
+extern giada::m::KernelAudio           g_kernelAudio;
+extern giada::m::Clock                 g_clock;
+extern giada::m::Mixer                 g_mixer;
+extern giada::m::PluginHost            g_pluginHost;
+extern giada::m::ActionRecorderHandler g_actionRecorderHandler;
 
 namespace giada::m
 {
@@ -159,7 +160,7 @@ void MixerHandler::cloneChannel(ID channelId)
 #ifdef WITH_VST
 	newChannel.plugins = g_pluginHost.clonePlugins(oldChannel.plugins);
 #endif
-	recorderHandler::cloneActions(channelId, newChannel.id);
+	g_actionRecorderHandler.cloneActions(channelId, newChannel.id);
 
 	if (newChannel.samplePlayer && newChannel.samplePlayer->hasWave())
 	{
