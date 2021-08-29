@@ -54,7 +54,7 @@ Plugin::Plugin(ID id, std::unique_ptr<juce::AudioPluginInstance> plugin, double 
 , valid(true)
 , onEditorResize(nullptr)
 , m_plugin(std::move(plugin))
-, m_playHead(std::make_unique<pluginHost::Info>())
+, m_playHead(std::make_unique<PluginHost::Info>())
 , m_bypass(false)
 , m_hasEditor(m_plugin->hasEditor())
 {

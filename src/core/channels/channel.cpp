@@ -31,6 +31,7 @@
 #include <cassert>
 
 extern giada::m::MixerHandler g_mixerHandler;
+extern giada::m::PluginHost   g_pluginHost;
 
 namespace giada::m::channel
 {
@@ -87,7 +88,7 @@ void renderMasterOut_(const Data& d, mcl::AudioBuffer& out)
 	d.buffer->audio.set(out, /*gain=*/1.0f);
 #ifdef WITH_VST
 	if (d.plugins.size() > 0)
-		pluginHost::processStack(d.buffer->audio, d.plugins, nullptr);
+		g_pluginHost.processStack(d.buffer->audio, d.plugins, nullptr);
 #endif
 	out.set(d.buffer->audio, d.volume);
 }
@@ -98,7 +99,7 @@ void renderMasterIn_(const Data& d, mcl::AudioBuffer& in)
 {
 #ifdef WITH_VST
 	if (d.plugins.size() > 0)
-		pluginHost::processStack(in, d.plugins, nullptr);
+		g_pluginHost.processStack(in, d.plugins, nullptr);
 #endif
 }
 
@@ -121,7 +122,7 @@ void renderChannel_(const Data& d, mcl::AudioBuffer& out, mcl::AudioBuffer& in, 
 	if (d.midiReceiver)
 		midiReceiver::render(d);
 	else if (d.plugins.size() > 0)
-		pluginHost::processStack(d.buffer->audio, d.plugins, nullptr);
+		g_pluginHost.processStack(d.buffer->audio, d.plugins, nullptr);
 #endif
 
 	if (audible)

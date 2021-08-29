@@ -32,6 +32,8 @@
 #include "core/mixer.h"
 #include "core/plugins/pluginHost.h"
 
+extern giada::m::PluginHost g_pluginHost;
+
 namespace giada::m::midiReceiver
 {
 namespace
@@ -104,7 +106,7 @@ void render(const channel::Data& ch)
 		ch.buffer->midi.addEvent(message, e.getDelta());
 	}
 
-	pluginHost::processStack(ch.buffer->audio, ch.plugins, &ch.buffer->midi);
+	g_pluginHost.processStack(ch.buffer->audio, ch.plugins, &ch.buffer->midi);
 }
 } // namespace giada::m::midiReceiver
 

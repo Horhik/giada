@@ -57,6 +57,7 @@
 extern giada::m::KernelAudio g_kernelAudio;
 extern giada::m::Clock       g_clock;
 extern giada::m::Mixer       g_mixer;
+extern giada::m::PluginHost  g_pluginHost;
 
 namespace giada::m
 {
@@ -156,7 +157,7 @@ void MixerHandler::cloneChannel(ID channelId)
 	/* Clone plugins, actions and wave first in their own lists. */
 
 #ifdef WITH_VST
-	newChannel.plugins = pluginHost::clonePlugins(oldChannel.plugins);
+	newChannel.plugins = g_pluginHost.clonePlugins(oldChannel.plugins);
 #endif
 	recorderHandler::cloneActions(channelId, newChannel.id);
 
@@ -224,7 +225,7 @@ void MixerHandler::deleteChannel(ID channelId)
 		model::remove<Wave>(*wave);
 
 #ifdef WITH_VST
-	pluginHost::freePlugins(plugins);
+	g_pluginHost.freePlugins(plugins);
 #endif
 
 	recManager::refreshInputRecMode();

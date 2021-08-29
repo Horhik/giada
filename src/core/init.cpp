@@ -75,6 +75,7 @@ extern giada::m::Sequencer     g_sequencer;
 extern giada::m::Mixer         g_mixer;
 extern giada::m::MixerHandler  g_mixerHandler;
 extern giada::m::Synchronizer  g_synchronizer;
+extern giada::m::PluginHost    g_pluginHost;
 
 namespace giada::m::init
 {
@@ -115,10 +116,7 @@ void initAudio_()
 	recorderHandler::init();
 
 #ifdef WITH_VST
-
 	pluginManager::init(conf::conf.samplerate, g_kernelAudio.getRealBufSize());
-	pluginHost::init(g_kernelAudio.getRealBufSize());
-
 #endif
 
 	if (!g_kernelAudio.isReady())
@@ -174,16 +172,6 @@ void shutdownAudio_()
 		g_mixerHandler.stopRendering();
 		u::log::print("[init] Mixer closed\n");
 	}
-
-	/* TODO - why cleaning plug-ins and mixer memory? Just shutdown the audio
-	device and let the OS take care of the rest. */
-
-#ifdef WITH_VST
-
-	pluginHost::close();
-	u::log::print("[init] PluginHost cleaned up\n");
-
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -256,9 +244,6 @@ void reset()
 	G_MainWin->clearKeyboard();
 
 	g_mixerHandler.stopRendering();
-#ifdef WITH_VST
-	pluginHost::close();
-#endif
 
 	model::init();
 	channelManager::init();
@@ -269,6 +254,7 @@ void reset()
 	g_sequencer.reset();
 	recorder::init();
 #ifdef WITH_VST
+	g_pluginHost.reset(g_kernelAudio.getRealBufSize());
 	pluginManager::init(conf::conf.samplerate, g_kernelAudio.getRealBufSize());
 #endif
 	g_mixerHandler.startRendering();

@@ -58,6 +58,7 @@
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::Clock         g_clock;
 extern giada::m::Sequencer     g_sequencer;
+extern giada::m::PluginHost    g_pluginHost;
 
 namespace giada::c::events
 {
@@ -261,7 +262,7 @@ void toggleInputRecording()
 #ifdef WITH_VST
 void setPluginParameter(ID pluginId, int paramIndex, float value, bool gui)
 {
-	m::pluginHost::setPluginParameter(pluginId, paramIndex, value);
+	g_pluginHost.setPluginParameter(pluginId, paramIndex, value);
 	c::plugin::updateWindow(pluginId, gui);
 }
 #endif

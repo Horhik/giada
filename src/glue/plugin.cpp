@@ -45,6 +45,7 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::PluginHost    g_pluginHost;
 
 namespace giada::c::plugin
 {
@@ -163,28 +164,28 @@ void addPlugin(int pluginListIndex, ID channelId)
 		return;
 	std::unique_ptr<m::Plugin> p = m::pluginManager::makePlugin(pluginListIndex);
 	if (p != nullptr)
-		m::pluginHost::addPlugin(std::move(p), channelId);
+		g_pluginHost.addPlugin(std::move(p), channelId);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void swapPlugins(const m::Plugin& p1, const m::Plugin& p2, ID channelId)
 {
-	m::pluginHost::swapPlugin(p1, p2, channelId);
+	g_pluginHost.swapPlugin(p1, p2, channelId);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void freePlugin(const m::Plugin& plugin, ID channelId)
 {
-	m::pluginHost::freePlugin(plugin, channelId);
+	g_pluginHost.freePlugin(plugin, channelId);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void setProgram(ID pluginId, int programIndex)
 {
-	m::pluginHost::setPluginProgram(pluginId, programIndex);
+	g_pluginHost.setPluginProgram(pluginId, programIndex);
 	updateWindow(pluginId, /*gui=*/true);
 }
 
@@ -192,7 +193,7 @@ void setProgram(ID pluginId, int programIndex)
 
 void toggleBypass(ID pluginId)
 {
-	m::pluginHost::toggleBypass(pluginId);
+	g_pluginHost.toggleBypass(pluginId);
 }
 
 /* -------------------------------------------------------------------------- */

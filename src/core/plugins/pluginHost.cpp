@@ -40,54 +40,9 @@
 
 extern giada::m::Clock g_clock;
 
-namespace giada::m::pluginHost
+namespace giada::m
 {
-namespace
-{
-std::vector<Plugin*>     plugins_;
-juce::MessageManager*    messageManager_;
-juce::AudioBuffer<float> audioBuffer_;
-ID                       pluginId_;
-
-/* -------------------------------------------------------------------------- */
-
-void giadaToJuceTempBuf_(const mcl::AudioBuffer& outBuf)
-{
-	for (int i = 0; i < outBuf.countFrames(); i++)
-		for (int j = 0; j < outBuf.countChannels(); j++)
-			audioBuffer_.setSample(j, i, outBuf[i][j]);
-}
-
-/* juceToGiadaOutBuf_
-Converts buffer from Juce to Giada. A note for the future: if we overwrite (=) 
-(as we do now) it's SEND, if we add (+) it's INSERT. */
-
-void juceToGiadaOutBuf_(mcl::AudioBuffer& outBuf)
-{
-	for (int i = 0; i < outBuf.countFrames(); i++)
-		for (int j = 0; j < outBuf.countChannels(); j++)
-			outBuf[i][j] = audioBuffer_.getSample(j, i);
-}
-
-/* -------------------------------------------------------------------------- */
-
-void processPlugins_(const std::vector<Plugin*>& plugins, juce::MidiBuffer& events)
-{
-	for (Plugin* p : plugins)
-	{
-		if (!p->valid || p->isSuspended() || p->isBypassed())
-			continue;
-		p->process(audioBuffer_, events);
-	}
-	events.clear();
-}
-} // namespace
-
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-bool Info::getCurrentPosition(CurrentPositionInfo& result)
+bool PluginHost::Info::getCurrentPosition(CurrentPositionInfo& result)
 {
 	result.bpm           = g_clock.getBpm();
 	result.timeInSamples = g_clock.getCurrentFrame();
@@ -99,7 +54,7 @@ bool Info::getCurrentPosition(CurrentPositionInfo& result)
 
 /* -------------------------------------------------------------------------- */
 
-bool Info::canControlTransport()
+bool PluginHost::Info::canControlTransport()
 {
 	return false;
 }
@@ -108,27 +63,33 @@ bool Info::canControlTransport()
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void close()
+PluginHost::PluginHost(int bufferSize)
 {
-	messageManager_->deleteInstance();
+	m_messageManager = juce::MessageManager::getInstance();
+	reset(bufferSize);
+}
+
+/* -------------------------------------------------------------------------- */
+
+PluginHost::~PluginHost()
+{
+	m_messageManager->deleteInstance();
+}
+
+/* -------------------------------------------------------------------------- */
+
+void PluginHost::reset(int bufferSize)
+{
 	model::clear<model::PluginPtrs>();
+	m_audioBuffer.setSize(G_MAX_IO_CHANS, bufferSize);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void init(int buffersize)
-{
-	messageManager_ = juce::MessageManager::getInstance();
-	audioBuffer_.setSize(G_MAX_IO_CHANS, buffersize);
-	pluginId_ = 0;
-}
-
-/* -------------------------------------------------------------------------- */
-
-void processStack(mcl::AudioBuffer& outBuf, const std::vector<Plugin*>& plugins,
+void PluginHost::processStack(mcl::AudioBuffer& outBuf, const std::vector<Plugin*>& plugins,
     juce::MidiBuffer* events)
 {
-	assert(outBuf.countFrames() == audioBuffer_.getNumSamples());
+	assert(outBuf.countFrames() == m_audioBuffer.getNumSamples());
 
 	/* If events are null: Audio stack processing (master in, master out or
 	sample channels. No need for MIDI events. 
@@ -137,21 +98,21 @@ void processStack(mcl::AudioBuffer& outBuf, const std::vector<Plugin*>& plugins,
 
 	if (events == nullptr)
 	{
-		giadaToJuceTempBuf_(outBuf);
+		giadaToJuceTempBuf(outBuf);
 		juce::MidiBuffer dummyEvents; // empty
-		processPlugins_(plugins, dummyEvents);
+		processPlugins(plugins, dummyEvents);
 	}
 	else
 	{
-		audioBuffer_.clear();
-		processPlugins_(plugins, *events);
+		m_audioBuffer.clear();
+		processPlugins(plugins, *events);
 	}
-	juceToGiadaOutBuf_(outBuf);
+	juceToGiadaOutBuf(outBuf);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void addPlugin(std::unique_ptr<Plugin> p, ID channelId)
+void PluginHost::addPlugin(std::unique_ptr<Plugin> p, ID channelId)
 {
 	model::add(std::move(p));
 
@@ -166,7 +127,7 @@ void addPlugin(std::unique_ptr<Plugin> p, ID channelId)
 
 /* -------------------------------------------------------------------------- */
 
-void swapPlugin(const m::Plugin& p1, const m::Plugin& p2, ID channelId)
+void PluginHost::swapPlugin(const m::Plugin& p1, const m::Plugin& p2, ID channelId)
 {
 	std::vector<m::Plugin*>& pvec   = model::get().getChannel(channelId).plugins;
 	std::size_t              index1 = u::vector::indexOf(pvec, &p1);
@@ -178,14 +139,14 @@ void swapPlugin(const m::Plugin& p1, const m::Plugin& p2, ID channelId)
 
 /* -------------------------------------------------------------------------- */
 
-void freePlugin(const m::Plugin& plugin, ID channelId)
+void PluginHost::freePlugin(const m::Plugin& plugin, ID channelId)
 {
 	u::vector::remove(model::get().getChannel(channelId).plugins, &plugin);
 	model::swap(model::SwapType::HARD);
 	model::remove(plugin);
 }
 
-void freePlugins(const std::vector<Plugin*>& plugins)
+void PluginHost::freePlugins(const std::vector<Plugin*>& plugins)
 {
 	// TODO - channels???
 	for (const Plugin* p : plugins)
@@ -194,7 +155,7 @@ void freePlugins(const std::vector<Plugin*>& plugins)
 
 /* -------------------------------------------------------------------------- */
 
-std::vector<Plugin*> clonePlugins(const std::vector<Plugin*>& plugins)
+std::vector<Plugin*> PluginHost::clonePlugins(const std::vector<Plugin*>& plugins)
 {
 	std::vector<Plugin*> out;
 	for (const Plugin* p : plugins)
@@ -207,21 +168,21 @@ std::vector<Plugin*> clonePlugins(const std::vector<Plugin*>& plugins)
 
 /* -------------------------------------------------------------------------- */
 
-void setPluginParameter(ID pluginId, int paramIndex, float value)
+void PluginHost::setPluginParameter(ID pluginId, int paramIndex, float value)
 {
 	model::find<Plugin>(pluginId)->setParameter(paramIndex, value);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void setPluginProgram(ID pluginId, int programIndex)
+void PluginHost::setPluginProgram(ID pluginId, int programIndex)
 {
 	model::find<Plugin>(pluginId)->setCurrentProgram(programIndex);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void toggleBypass(ID pluginId)
+void PluginHost::toggleBypass(ID pluginId)
 {
 	Plugin& plugin = *model::find<Plugin>(pluginId);
 	plugin.setBypass(!plugin.isBypassed());
@@ -229,10 +190,43 @@ void toggleBypass(ID pluginId)
 
 /* -------------------------------------------------------------------------- */
 
-void runDispatchLoop()
+void PluginHost::runDispatchLoop()
 {
-	messageManager_->runDispatchLoopUntil(10);
+	m_messageManager->runDispatchLoopUntil(10);
 }
-} // namespace giada::m::pluginHost
+
+/* -------------------------------------------------------------------------- */
+
+void PluginHost::giadaToJuceTempBuf(const mcl::AudioBuffer& outBuf)
+{
+	for (int i = 0; i < outBuf.countFrames(); i++)
+		for (int j = 0; j < outBuf.countChannels(); j++)
+			m_audioBuffer.setSample(j, i, outBuf[i][j]);
+}
+
+/* juceToGiadaOutBuf
+Converts buffer from Juce to Giada. A note for the future: if we overwrite (=) 
+(as we do now) it's SEND, if we add (+) it's INSERT. */
+
+void PluginHost::juceToGiadaOutBuf(mcl::AudioBuffer& outBuf) const
+{
+	for (int i = 0; i < outBuf.countFrames(); i++)
+		for (int j = 0; j < outBuf.countChannels(); j++)
+			outBuf[i][j] = m_audioBuffer.getSample(j, i);
+}
+
+/* -------------------------------------------------------------------------- */
+
+void PluginHost::processPlugins(const std::vector<Plugin*>& plugins, juce::MidiBuffer& events)
+{
+	for (Plugin* p : plugins)
+	{
+		if (!p->valid || p->isSuspended() || p->isBypassed())
+			continue;
+		p->process(m_audioBuffer, events);
+	}
+	events.clear();
+}
+} // namespace giada::m
 
 #endif // #ifdef WITH_VST
