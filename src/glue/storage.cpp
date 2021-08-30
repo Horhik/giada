@@ -55,11 +55,12 @@
 #include "utils/string.h"
 #include <cassert>
 
-extern giada::v::gdMainWindow*         G_MainWin;
-extern giada::m::Clock                 g_clock;
-extern giada::m::Mixer                 g_mixer;
-extern giada::m::MixerHandler          g_mixerHandler;
-extern giada::m::ActionRecorder        g_actionRecorder;
+extern giada::v::gdMainWindow*  G_MainWin;
+extern giada::m::Clock          g_clock;
+extern giada::m::Mixer          g_mixer;
+extern giada::m::MixerHandler   g_mixerHandler;
+extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::conf::Conf     g_conf;
 
 namespace giada::c::storage
 {
@@ -106,7 +107,7 @@ bool savePatch_(const std::string& path, const std::string& name)
 		return false;
 
 	u::gui::updateMainWinLabel(name);
-	m::conf::conf.patchPath = u::fs::getUpDir(u::fs::getUpDir(path));
+	g_conf.patchPath = u::fs::getUpDir(u::fs::getUpDir(path));
 	u::log::print("[savePatch] patch saved as %s\n", path);
 
 	return true;
@@ -167,7 +168,7 @@ void loadProject(void* data)
 	in sequencer. */
 
 	g_mixerHandler.updateSoloCount();
-	g_actionRecorder.updateSamplerate(m::conf::conf.samplerate, m::patch::patch.samplerate);
+	g_actionRecorder.updateSamplerate(g_conf.samplerate, m::patch::patch.samplerate);
 	g_clock.recomputeFrames();
 	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop());
 
@@ -178,7 +179,7 @@ void loadProject(void* data)
 	/* Utilities and cosmetics. Save patchPath by taking the last dir of the 
 	broswer, in order to reuse it the next time. Also update UI. */
 
-	m::conf::conf.patchPath = u::fs::dirname(fullPath);
+	g_conf.patchPath = u::fs::dirname(fullPath);
 	u::gui::updateMainWinLabel(m::patch::patch.name);
 
 #ifdef WITH_VST
@@ -240,7 +241,7 @@ void loadSample(void* data)
 
 	if (res == G_RES_OK)
 	{
-		m::conf::conf.samplePath = u::fs::dirname(fullPath);
+		g_conf.samplePath = u::fs::dirname(fullPath);
 		browser->do_callback();
 		G_MainWin->delSubWindow(WID_SAMPLE_EDITOR); // if editor is open
 	}
@@ -281,7 +282,7 @@ void saveSample(void* data)
 
 	/* Update last used path in conf, so that it can be reused next time. */
 
-	m::conf::conf.samplePath = u::fs::dirname(filePath);
+	g_conf.samplePath = u::fs::dirname(filePath);
 
 	/* Update logical and edited states in Wave. */
 

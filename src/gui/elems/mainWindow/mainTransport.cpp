@@ -39,9 +39,10 @@
 #include "gui/elems/basics/button.h"
 #include "gui/elems/basics/statusButton.h"
 
-extern giada::m::Clock     g_clock;
-extern giada::m::Sequencer g_sequencer;
-extern giada::m::Recorder  g_recorder;
+extern giada::m::Clock      g_clock;
+extern giada::m::Sequencer  g_sequencer;
+extern giada::m::Recorder   g_recorder;
+extern giada::m::conf::Conf g_conf;
 
 namespace giada::v
 {
@@ -118,7 +119,7 @@ void geMainTransport::refresh()
 	m_recAction.setStatus(g_recorder.isRecordingAction());
 	m_recInput.setStatus(g_recorder.isRecordingInput());
 	m_metronome.setStatus(g_sequencer.isMetronomeOn());
-	m_recTriggerMode.setStatus(m::conf::conf.recTriggerMode == RecTriggerMode::SIGNAL);
-	m_inputRecMode.setStatus(m::conf::conf.inputRecMode == InputRecMode::FREE);
+	m_recTriggerMode.setStatus(g_conf.recTriggerMode == RecTriggerMode::SIGNAL);
+	m_inputRecMode.setStatus(g_conf.inputRecMode == InputRecMode::FREE);
 }
 } // namespace giada::v

@@ -45,6 +45,7 @@
 #include <cassert>
 
 extern giada::m::KernelAudio g_kernelAudio;
+extern giada::m::conf::Conf  g_conf;
 
 namespace giada::m::channelManager
 {
@@ -59,7 +60,7 @@ channel::State& makeState_(ChannelType type)
 	std::unique_ptr<channel::State> state = std::make_unique<channel::State>();
 
 	if (type == ChannelType::SAMPLE || type == ChannelType::PREVIEW)
-		state->resampler = Resampler(static_cast<Resampler::Quality>(conf::conf.rsmpQuality), G_MAX_IO_CHANS);
+		state->resampler = Resampler(static_cast<Resampler::Quality>(g_conf.rsmpQuality), G_MAX_IO_CHANS);
 
 	model::add(std::move(state));
 	return model::back<channel::State>();
@@ -91,7 +92,7 @@ channel::Data create(ID channelId, ChannelType type, ID columnId)
 	    columnId, makeState_(type), makeBuffer_());
 
 	if (out.audioReceiver)
-		out.audioReceiver->overdubProtection = conf::conf.overdubProtectionDefaultOn;
+		out.audioReceiver->overdubProtection = g_conf.overdubProtectionDefaultOn;
 
 	return out;
 }

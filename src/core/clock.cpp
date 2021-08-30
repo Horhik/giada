@@ -40,6 +40,7 @@
 #include <cassert>
 
 extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::conf::Conf     g_conf;
 
 namespace giada::m
 {
@@ -58,7 +59,7 @@ int         Clock::getBeats() const { return model::get().clock.beats; }
 int         Clock::getBars() const { return model::get().clock.bars; }
 int         Clock::getCurrentBeat() const { return model::get().clock.state->currentBeat.load(); }
 int         Clock::getCurrentFrame() const { return model::get().clock.state->currentFrame.load(); }
-float       Clock::getCurrentSecond() const { return getCurrentFrame() / static_cast<float>(conf::conf.samplerate); }
+float       Clock::getCurrentSecond() const { return getCurrentFrame() / static_cast<float>(g_conf.samplerate); }
 int         Clock::getFramesInBar() const { return model::get().clock.framesInBar; }
 int         Clock::getFramesInBeat() const { return model::get().clock.framesInBeat; }
 int         Clock::getFramesInLoop() const { return model::get().clock.framesInLoop; }
@@ -117,7 +118,7 @@ bool Clock::isOnFirstBeat() const
 
 Frame Clock::getMaxFramesInLoop() const
 {
-	return (conf::conf.samplerate * (60.0f / G_MIN_BPM)) * getBeats();
+	return (g_conf.samplerate * (60.0f / G_MIN_BPM)) * getBeats();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -141,7 +142,7 @@ bool Clock::canQuantize() const
 
 float Clock::calcBpmFromRec(Frame recordedFrames) const
 {
-	return (60.0f * getBeats()) / (recordedFrames / static_cast<float>(conf::conf.samplerate));
+	return (60.0f * getBeats()) / (recordedFrames / static_cast<float>(g_conf.samplerate));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -267,7 +268,7 @@ Frame Clock::quantize(Frame f)
 
 void Clock::recomputeFrames(model::Clock& c)
 {
-	c.framesInLoop = static_cast<int>((conf::conf.samplerate * (60.0f / c.bpm)) * c.beats);
+	c.framesInLoop = static_cast<int>((g_conf.samplerate * (60.0f / c.bpm)) * c.beats);
 	c.framesInBar  = static_cast<int>(c.framesInLoop / (float)c.bars);
 	c.framesInBeat = static_cast<int>(c.framesInLoop / (float)c.beats);
 	c.framesInSeq  = c.framesInBeat * G_MAX_BEATS;

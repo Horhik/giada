@@ -32,7 +32,8 @@
 #include "utils/math.h"
 #include <FL/Fl_Double_Window.H>
 
-extern giada::m::Clock g_clock;
+extern giada::m::Clock      g_clock;
+extern giada::m::conf::Conf g_conf;
 
 namespace giada::v
 {
@@ -53,8 +54,8 @@ geGridTool::geGridTool(Pixel x, Pixel y)
 
 	active = new geCheck(gridType->x() + gridType->w() + 4, y, 20, 20);
 
-	gridType->value(m::conf::conf.actionEditorGridVal);
-	active->value(m::conf::conf.actionEditorGridOn);
+	gridType->value(g_conf.actionEditorGridVal);
+	active->value(g_conf.actionEditorGridOn);
 
 	end();
 
@@ -66,8 +67,8 @@ geGridTool::geGridTool(Pixel x, Pixel y)
 
 geGridTool::~geGridTool()
 {
-	m::conf::conf.actionEditorGridVal = gridType->value();
-	m::conf::conf.actionEditorGridOn  = active->value();
+	g_conf.actionEditorGridVal = gridType->value();
+	g_conf.actionEditorGridOn  = active->value();
 }
 
 /* -------------------------------------------------------------------------- */

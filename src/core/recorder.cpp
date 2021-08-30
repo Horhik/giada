@@ -45,6 +45,7 @@ extern giada::m::Mixer          g_mixer;
 extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::MidiDispatcher g_midiDispatcher;
 extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::conf::Conf     g_conf;
 
 namespace giada::m
 {
@@ -148,7 +149,7 @@ bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
 	{
 		g_clock.setStatus(ClockStatus::WAITING);
 		g_mixer.setSignalCallback([this] {
-			    startInputRec();
+			startInputRec();
 			setRecordingInput(true);
 		});
 		G_DEBUG("Start input rec, SIGNAL mode");
@@ -218,7 +219,7 @@ bool Recorder::canEnableFreeInputRec() const { return !g_mixerHandler.hasAudioDa
 void Recorder::refreshInputRecMode()
 {
 	if (!canEnableFreeInputRec())
-		conf::conf.inputRecMode = InputRecMode::RIGID;
+		g_conf.inputRecMode = InputRecMode::RIGID;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -255,7 +256,7 @@ bool Recorder::startActionRec()
 {
 	g_clock.setStatus(ClockStatus::RUNNING);
 	g_sequencer.start();
-	conf::conf.recTriggerMode = RecTriggerMode::NORMAL;
+	g_conf.recTriggerMode = RecTriggerMode::NORMAL;
 	return true;
 }
 
@@ -266,6 +267,6 @@ void Recorder::startInputRec()
 	/* Start recording from the current frame, not the beginning. */
 	g_mixer.startInputRec(g_clock.getCurrentFrame());
 	g_sequencer.start();
-	conf::conf.recTriggerMode = RecTriggerMode::NORMAL;
+	g_conf.recTriggerMode = RecTriggerMode::NORMAL;
 }
 } // namespace giada::m

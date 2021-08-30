@@ -46,6 +46,7 @@
 
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::PluginHost    g_pluginHost;
+extern giada::m::conf::Conf    g_conf;
 
 namespace giada::c::plugin
 {
@@ -208,9 +209,9 @@ void setPluginPathCb(void* data)
 		return;
 	}
 
-	if (!m::conf::conf.pluginPath.empty() && m::conf::conf.pluginPath.back() != ';')
-		m::conf::conf.pluginPath += ";";
-	m::conf::conf.pluginPath += browser->getCurrentPath();
+	if (!g_conf.pluginPath.empty() && g_conf.pluginPath.back() != ';')
+		g_conf.pluginPath += ";";
+	g_conf.pluginPath += browser->getCurrentPath();
 
 	browser->do_callback();
 

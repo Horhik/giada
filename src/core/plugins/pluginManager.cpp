@@ -38,6 +38,8 @@
 #include "utils/string.h"
 #include <cassert>
 
+extern giada::m::conf::Conf g_conf;
+
 namespace giada::m::pluginManager
 {
 namespace
@@ -90,7 +92,7 @@ void init(int samplerate, int buffersize)
 	unknownPluginList_.clear();
 
 	loadList(u::fs::getHomePath() + G_SLASH + "plugins.xml");
-	sortPlugins(static_cast<pluginManager::SortMethod>(conf::conf.pluginSortMethod));
+	sortPlugins(static_cast<pluginManager::SortMethod>(g_conf.pluginSortMethod));
 }
 
 /* -------------------------------------------------------------------------- */

@@ -54,10 +54,9 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::conf::Conf    g_conf;
 
-namespace giada
-{
-namespace v
+namespace giada::v
 {
 namespace
 {
@@ -88,7 +87,7 @@ void menuCallback(Fl_Widget* w, void* v)
 	case Menu::__END_CLEAR_ACTION_SUBMENU__:
 		break;
 	case Menu::EDIT_ACTIONS:
-		u::gui::openSubWindow(G_MainWin, new v::gdMidiActionEditor(data.id, m::conf::conf), WID_ACTION_EDITOR);
+		u::gui::openSubWindow(G_MainWin, new v::gdMidiActionEditor(data.id, g_conf), WID_ACTION_EDITOR);
 		break;
 	case Menu::CLEAR_ACTIONS_ALL:
 		c::recorder::clearAllActions(data.id);
@@ -247,6 +246,4 @@ void geMidiChannel::resize(int X, int Y, int W, int H)
 
 	packWidgets();
 }
-
-} // namespace v
-} // namespace giada
+} // namespace giada::v

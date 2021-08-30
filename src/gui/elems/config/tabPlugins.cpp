@@ -46,10 +46,9 @@
 #include <functional>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::conf::Conf    g_conf;
 
-namespace giada
-{
-namespace v
+namespace giada::v
 {
 geTabPlugins::geTabPlugins(int X, int Y, int W, int H)
 : Fl_Group(X, Y, W, H, "Plugins")
@@ -67,7 +66,7 @@ geTabPlugins::geTabPlugins(int X, int Y, int W, int H)
 	m_info->label("Scan in progress. Please wait...");
 	m_info->hide();
 
-	m_folderPath->value(m::conf::conf.pluginPath.c_str());
+	m_folderPath->value(g_conf.pluginPath.c_str());
 	m_folderPath->label("Plugins folder");
 
 	m_browse->callback(cb_browse, (void*)this);
@@ -95,7 +94,7 @@ void geTabPlugins::cb_browse(Fl_Widget* /*w*/, void* p) { ((geTabPlugins*)p)->cb
 void geTabPlugins::cb_browse()
 {
 	v::gdBrowserDir* browser = new v::gdBrowserDir("Add plug-ins directory",
-	    m::conf::conf.patchPath, c::plugin::setPluginPathCb);
+	    g_conf.patchPath, c::plugin::setPluginPathCb);
 
 	static_cast<v::gdWindow*>(top_window())->addSubWindow(browser);
 }
@@ -121,17 +120,16 @@ void geTabPlugins::cb_scan()
 
 void geTabPlugins::save()
 {
-	m::conf::conf.pluginPath = m_folderPath->value();
+	g_conf.pluginPath = m_folderPath->value();
 }
 
 /* -------------------------------------------------------------------------- */
 
 void geTabPlugins::refreshVstPath()
 {
-	m_folderPath->value(m::conf::conf.pluginPath.c_str());
+	m_folderPath->value(g_conf.pluginPath.c_str());
 	m_folderPath->redraw();
 }
-} // namespace v
-} // namespace giada
+} // namespace giada::v
 
 #endif // WITH_VST

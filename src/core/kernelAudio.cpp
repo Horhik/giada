@@ -47,6 +47,7 @@ extern giada::m::Mixer        g_mixer;
 extern giada::m::MixerHandler g_mixerHandler;
 extern giada::m::Synchronizer g_synchronizer;
 extern giada::m::Recorder     g_recorder;
+extern giada::m::conf::Conf   g_conf;
 
 namespace giada::m
 {
@@ -58,7 +59,7 @@ int callback_(void* outBuf, void* inBuf, unsigned bufferSize, double /*streamTim
 	mcl::AudioBuffer out(static_cast<float*>(outBuf), bufferSize, G_MAX_IO_CHANS);
 	mcl::AudioBuffer in;
 	if (g_kernelAudio.isInputEnabled())
-		in = mcl::AudioBuffer(static_cast<float*>(inBuf), bufferSize, conf::conf.channelsInCount);
+		in = mcl::AudioBuffer(static_cast<float*>(inBuf), bufferSize, g_conf.channelsInCount);
 
 	/* Clean up output buffer before any rendering. Do this even if mixer is
 	disabled to avoid audio leftovers during a temporary suspension (e.g. when
@@ -80,12 +81,12 @@ int callback_(void* outBuf, void* inBuf, unsigned bufferSize, double /*streamTim
 	info.isClockActive   = g_clock.isActive();
 	info.isClockRunning  = g_clock.isRunning();
 	info.canLineInRec    = g_recorder.isRecordingInput() && g_kernelAudio.isInputEnabled();
-	info.limitOutput     = conf::conf.limitOutput;
+	info.limitOutput     = g_conf.limitOutput;
 	info.inToOut         = g_mixerHandler.getInToOut();
-	info.maxFramesToRec  = conf::conf.inputRecMode == InputRecMode::FREE ? g_clock.getMaxFramesInLoop() : g_clock.getFramesInLoop();
+	info.maxFramesToRec  = g_conf.inputRecMode == InputRecMode::FREE ? g_clock.getMaxFramesInLoop() : g_clock.getFramesInLoop();
 	info.outVol          = g_mixerHandler.getOutVol();
 	info.inVol           = g_mixerHandler.getInVol();
-	info.recTriggerLevel = conf::conf.recTriggerLevel;
+	info.recTriggerLevel = g_conf.recTriggerLevel;
 
 	return g_mixer.render(out, in, info);
 }

@@ -61,6 +61,7 @@ extern giada::m::Sequencer       g_sequencer;
 extern giada::m::PluginHost      g_pluginHost;
 extern giada::m::EventDispatcher g_eventDispatcher;
 extern giada::m::Recorder        g_recorder;
+extern giada::m::conf::Conf      g_conf;
 
 namespace giada::c::events
 {
@@ -229,7 +230,7 @@ void divideBeats()
 void startSequencer(Thread t)
 {
 	pushEvent_({m::EventDispatcher::EventType::SEQUENCER_START, 0, 0, {}}, t);
-	m::conf::conf.recTriggerMode = RecTriggerMode::NORMAL;
+	g_conf.recTriggerMode = RecTriggerMode::NORMAL;
 }
 
 void stopSequencer(Thread t)
@@ -251,12 +252,12 @@ void rewindSequencer(Thread t)
 
 void toggleActionRecording()
 {
-	g_recorder.toggleActionRec(m::conf::conf.recTriggerMode);
+	g_recorder.toggleActionRec(g_conf.recTriggerMode);
 }
 
 void toggleInputRecording()
 {
-	g_recorder.toggleInputRec(m::conf::conf.recTriggerMode, m::conf::conf.inputRecMode);
+	g_recorder.toggleInputRec(g_conf.recTriggerMode, g_conf.inputRecMode);
 }
 
 /* -------------------------------------------------------------------------- */

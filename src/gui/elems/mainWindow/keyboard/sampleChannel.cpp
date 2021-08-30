@@ -65,6 +65,7 @@
 
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::Recorder      g_recorder;
+extern giada::m::conf::Conf    g_conf;
 
 namespace giada::v
 {
@@ -114,14 +115,14 @@ void menuCallback(Fl_Widget* w, void* v)
 	case Menu::LOAD_SAMPLE:
 	{
 		gdWindow* w = new gdBrowserLoad("Browse sample",
-		    m::conf::conf.samplePath.c_str(), c::storage::loadSample, data.id);
+		    g_conf.samplePath.c_str(), c::storage::loadSample, data.id);
 		u::gui::openSubWindow(G_MainWin, w, WID_FILE_BROWSER);
 		break;
 	}
 	case Menu::EXPORT_SAMPLE:
 	{
 		gdWindow* w = new gdBrowserSave("Save sample",
-		    m::conf::conf.samplePath.c_str(), "", c::storage::saveSample, data.id);
+		    g_conf.samplePath.c_str(), "", c::storage::saveSample, data.id);
 		u::gui::openSubWindow(G_MainWin, w, WID_FILE_BROWSER);
 		break;
 	}
@@ -151,7 +152,7 @@ void menuCallback(Fl_Widget* w, void* v)
 	}
 	case Menu::EDIT_ACTIONS:
 	{
-		u::gui::openSubWindow(G_MainWin, new gdSampleActionEditor(data.id, m::conf::conf),
+		u::gui::openSubWindow(G_MainWin, new gdSampleActionEditor(data.id, g_conf),
 		    WID_ACTION_EDITOR);
 		break;
 	}

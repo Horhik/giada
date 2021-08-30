@@ -34,6 +34,7 @@
 extern giada::m::Sequencer  g_sequencer;
 extern giada::m::Clock      g_clock;
 extern giada::m::KernelMidi g_kernelMidi;
+extern giada::m::conf::Conf g_conf;
 
 namespace giada::m
 {
@@ -75,14 +76,14 @@ void Synchronizer::sendMIDIsync()
 
 	/* TODO - only Master (_M) is implemented so far. */
 
-	if (conf::conf.midiSync == MIDI_SYNC_CLOCK_M)
+	if (g_conf.midiSync == MIDI_SYNC_CLOCK_M)
 	{
 		if (currentFrame % (c.framesInBeat / 24) == 0)
 			g_kernelMidi.send(MIDI_CLOCK, -1, -1);
 		return;
 	}
 
-	if (conf::conf.midiSync == MIDI_SYNC_MTC_M)
+	if (g_conf.midiSync == MIDI_SYNC_MTC_M)
 	{
 
 		/* check if a new timecode frame has passed. If so, send MIDI TC
@@ -124,7 +125,7 @@ void Synchronizer::sendMIDIsync()
 		/* check if total timecode frames are greater than timecode fps:
 		 * if so, a second has passed */
 
-		if (m_midiTCframes > conf::conf.midiTCfps)
+		if (m_midiTCframes > g_conf.midiTCfps)
 		{
 			m_midiTCframes = 0;
 			m_midiTCseconds++;
@@ -156,14 +157,14 @@ void Synchronizer::sendMIDIrewind()
     are not used. Instead, an MTC Full Frame message should be sent. The Full 
     Frame is a SysEx message that encodes the entire SMPTE time in one message. */
 
-	if (conf::conf.midiSync == MIDI_SYNC_MTC_M)
+	if (g_conf.midiSync == MIDI_SYNC_MTC_M)
 	{
 		g_kernelMidi.send(MIDI_SYSEX, 0x7F, 0x00); // send msg on channel 0
 		g_kernelMidi.send(0x01, 0x01, 0x00);       // hours 0
 		g_kernelMidi.send(0x00, 0x00, 0x00);       // mins, secs, frames 0
 		g_kernelMidi.send(MIDI_EOX, -1, -1);       // end of sysex
 	}
-	else if (conf::conf.midiSync == MIDI_SYNC_CLOCK_M)
+	else if (g_conf.midiSync == MIDI_SYNC_CLOCK_M)
 		g_kernelMidi.send(MIDI_POSITION_PTR, 0, 0);
 }
 
@@ -171,7 +172,7 @@ void Synchronizer::sendMIDIrewind()
 
 void Synchronizer::sendMIDIstart()
 {
-	if (conf::conf.midiSync == MIDI_SYNC_CLOCK_M)
+	if (g_conf.midiSync == MIDI_SYNC_CLOCK_M)
 	{
 		g_kernelMidi.send(MIDI_START, -1, -1);
 		g_kernelMidi.send(MIDI_POSITION_PTR, 0, 0);
@@ -182,7 +183,7 @@ void Synchronizer::sendMIDIstart()
 
 void Synchronizer::sendMIDIstop()
 {
-	if (conf::conf.midiSync == MIDI_SYNC_CLOCK_M)
+	if (g_conf.midiSync == MIDI_SYNC_CLOCK_M)
 		g_kernelMidi.send(MIDI_STOP, -1, -1);
 }
 

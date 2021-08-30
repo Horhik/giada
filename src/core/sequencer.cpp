@@ -39,6 +39,7 @@ extern giada::m::KernelAudio g_kernelAudio;
 extern giada::m::Clock       g_clock;
 extern giada::m::Actions     g_actions;
 extern giada::m::Recorder    g_recorder;
+extern giada::m::conf::Conf  g_conf;
 
 namespace giada::m
 {
@@ -172,7 +173,7 @@ void Sequencer::rawStop()
 	if (g_recorder.isRecordingAction())
 		g_recorder.stopActionRec();
 	else if (g_recorder.isRecordingInput())
-		g_recorder.stopInputRec(conf::conf.inputRecMode);
+		g_recorder.stopInputRec(g_conf.inputRecMode);
 }
 
 /* -------------------------------------------------------------------------- */

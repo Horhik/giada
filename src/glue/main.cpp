@@ -59,6 +59,7 @@ extern giada::m::Mixer          g_mixer;
 extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::Recorder       g_recorder;
+extern giada::m::conf::Conf     g_conf;
 
 namespace giada::c::main
 {
@@ -132,7 +133,7 @@ Sequencer getSequencer()
 
 	m::Mixer::RecordInfo recInfo = g_mixer.getRecordInfo();
 
-	out.isFreeModeInputRec = g_recorder.isRecordingInput() && m::conf::conf.inputRecMode == InputRecMode::FREE;
+	out.isFreeModeInputRec = g_recorder.isRecordingInput() && g_conf.inputRecMode == InputRecMode::FREE;
 	out.shouldBlink        = u::gui::shouldBlink() && (g_clock.getStatus() == ClockStatus::WAITING || out.isFreeModeInputRec);
 	out.beats              = g_clock.getBeats();
 	out.bars               = g_clock.getBars();
@@ -222,10 +223,10 @@ void toggleRecOnSignal()
 {
 	if (!g_recorder.canEnableRecOnSignal())
 	{
-		m::conf::conf.recTriggerMode = RecTriggerMode::NORMAL;
+		g_conf.recTriggerMode = RecTriggerMode::NORMAL;
 		return;
 	}
-	m::conf::conf.recTriggerMode = m::conf::conf.recTriggerMode == RecTriggerMode::NORMAL ? RecTriggerMode::SIGNAL : RecTriggerMode::NORMAL;
+	g_conf.recTriggerMode = g_conf.recTriggerMode == RecTriggerMode::NORMAL ? RecTriggerMode::SIGNAL : RecTriggerMode::NORMAL;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -234,10 +235,10 @@ void toggleFreeInputRec()
 {
 	if (!g_recorder.canEnableFreeInputRec())
 	{
-		m::conf::conf.inputRecMode = InputRecMode::RIGID;
+		g_conf.inputRecMode = InputRecMode::RIGID;
 		return;
 	}
-	m::conf::conf.inputRecMode = m::conf::conf.inputRecMode == InputRecMode::FREE ? InputRecMode::RIGID : InputRecMode::FREE;
+	g_conf.inputRecMode = g_conf.inputRecMode == InputRecMode::FREE ? InputRecMode::RIGID : InputRecMode::FREE;
 }
 
 /* -------------------------------------------------------------------------- */

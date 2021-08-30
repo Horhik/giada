@@ -36,8 +36,9 @@
 #include "src/core/actions/actionRecorder.h"
 #include <cassert>
 
-extern giada::m::Sequencer             g_sequencer;
-extern giada::m::ActionRecorder        g_actionRecorder;
+extern giada::m::Sequencer      g_sequencer;
+extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::conf::Conf     g_conf;
 
 namespace giada::m::model
 {
@@ -45,7 +46,7 @@ namespace
 {
 void loadChannels_(const std::vector<patch::Channel>& channels, int samplerate)
 {
-	float samplerateRatio = conf::conf.samplerate / static_cast<float>(samplerate);
+	float samplerateRatio = g_conf.samplerate / static_cast<float>(samplerate);
 
 	for (const patch::Channel& pchannel : channels)
 		get().channels.push_back(channelManager::deserializeChannel(pchannel, samplerateRatio));
@@ -72,7 +73,7 @@ void store(patch::Patch& patch)
 	patch.bpm        = layout.clock.bpm;
 	patch.quantize   = layout.clock.quantize;
 	patch.metronome  = g_sequencer.isMetronomeOn(); // TODO - add bool metronome to Layout
-	patch.samplerate = conf::conf.samplerate;
+	patch.samplerate = g_conf.samplerate;
 
 #ifdef WITH_VST
 	for (const auto& p : getAll<PluginPtrs>())
@@ -130,8 +131,8 @@ void load(const patch::Patch& patch)
 	getAll<WavePtrs>().clear();
 	for (const patch::Wave& pwave : patch.waves)
 	{
-		std::unique_ptr<Wave> w = waveManager::deserializeWave(pwave, conf::conf.samplerate,
-		    conf::conf.rsmpQuality);
+		std::unique_ptr<Wave> w = waveManager::deserializeWave(pwave, g_conf.samplerate,
+		    g_conf.rsmpQuality);
 		if (w != nullptr)
 			getAll<WavePtrs>().push_back(std::move(w));
 	}

@@ -60,6 +60,7 @@ extern giada::m::Mixer          g_mixer;
 extern giada::m::PluginHost     g_pluginHost;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::Recorder       g_recorder;
+extern giada::m::conf::Conf     g_conf;
 
 namespace giada::m
 {
@@ -340,8 +341,8 @@ channel::Data& MixerHandler::addChannelInternal(ChannelType type, ID columnId)
 
 waveManager::Result MixerHandler::createWave(const std::string& fname)
 {
-	return waveManager::createFromFile(fname, /*id=*/0, conf::conf.samplerate,
-	    conf::conf.rsmpQuality);
+	return waveManager::createFromFile(fname, /*id=*/0, g_conf.samplerate,
+	    g_conf.rsmpQuality);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -392,7 +393,7 @@ void MixerHandler::recordChannel(channel::Data& ch, Frame recordedFrames)
 
 	std::string           filename = "TAKE-" + std::to_string(patch::patch.lastTakeId++) + ".wav";
 	std::unique_ptr<Wave> wave     = waveManager::createEmpty(recordedFrames, G_MAX_IO_CHANS,
-        conf::conf.samplerate, filename);
+        g_conf.samplerate, filename);
 
 	G_DEBUG("Created new Wave, size=" << wave->getBuffer().countFrames());
 

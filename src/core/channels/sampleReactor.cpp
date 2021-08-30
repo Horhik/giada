@@ -32,8 +32,9 @@
 #include "utils/math.h"
 #include <cassert>
 
-extern giada::m::Clock     g_clock;
-extern giada::m::Sequencer g_sequencer;
+extern giada::m::Clock      g_clock;
+extern giada::m::Sequencer  g_sequencer;
+extern giada::m::conf::Conf g_conf;
 
 namespace giada::m::sampleReactor
 {
@@ -131,7 +132,7 @@ void onStopBySeq_(channel::Data& ch)
 		break;
 
 	case ChannelStatus::PLAY:
-		if (conf::conf.chansStopOnSeqHalt && (isLoop || isReadingActions))
+		if (g_conf.chansStopOnSeqHalt && (isLoop || isReadingActions))
 			kill_(ch);
 		break;
 
@@ -188,7 +189,7 @@ ChannelStatus pressWhilePlay_(channel::Data& ch, SamplePlayerMode mode, bool isL
 
 void toggleReadActions_(channel::Data& ch)
 {
-	if (g_clock.isRunning() && ch.state->recStatus.load() == ChannelStatus::PLAY && !conf::conf.treatRecsAsLoops)
+	if (g_clock.isRunning() && ch.state->recStatus.load() == ChannelStatus::PLAY && !g_conf.treatRecsAsLoops)
 		kill_(ch);
 }
 

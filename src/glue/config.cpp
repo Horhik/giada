@@ -31,6 +31,7 @@
 #include "deps/rtaudio/RtAudio.h"
 
 extern giada::m::KernelAudio g_kernelAudio;
+extern giada::m::conf::Conf  g_conf;
 
 namespace giada::c::config
 {
@@ -142,18 +143,18 @@ AudioData getAudioData()
 			audioData.inputDevices.push_back(AudioDeviceData(DeviceType::INPUT, device, 1, 0));
 	}
 
-	audioData.api             = m::conf::conf.soundSystem;
-	audioData.bufferSize      = m::conf::conf.buffersize;
-	audioData.sampleRate      = m::conf::conf.samplerate;
-	audioData.limitOutput     = m::conf::conf.limitOutput;
-	audioData.recTriggerLevel = m::conf::conf.recTriggerLevel;
-	audioData.resampleQuality = m::conf::conf.rsmpQuality;
+	audioData.api             = g_conf.soundSystem;
+	audioData.bufferSize      = g_conf.buffersize;
+	audioData.sampleRate      = g_conf.samplerate;
+	audioData.limitOutput     = g_conf.limitOutput;
+	audioData.recTriggerLevel = g_conf.recTriggerLevel;
+	audioData.resampleQuality = g_conf.rsmpQuality;
 	audioData.outputDevice    = getAudioDeviceData_(DeviceType::OUTPUT,
-        m::conf::conf.soundDeviceOut, m::conf::conf.channelsOutCount,
-        m::conf::conf.channelsOutStart);
+        g_conf.soundDeviceOut, g_conf.channelsOutCount,
+        g_conf.channelsOutStart);
 	audioData.inputDevice     = getAudioDeviceData_(DeviceType::INPUT,
-        m::conf::conf.soundDeviceIn, m::conf::conf.channelsInCount,
-        m::conf::conf.channelsInStart);
+        g_conf.soundDeviceIn, g_conf.channelsInCount,
+        g_conf.channelsInStart);
 
 	return audioData;
 }
@@ -162,17 +163,17 @@ AudioData getAudioData()
 
 void save(const AudioData& data)
 {
-	m::conf::conf.soundSystem      = data.api;
-	m::conf::conf.soundDeviceOut   = data.outputDevice.index;
-	m::conf::conf.soundDeviceIn    = data.inputDevice.index;
-	m::conf::conf.channelsOutCount = data.outputDevice.channelsCount;
-	m::conf::conf.channelsOutStart = data.outputDevice.channelsStart;
-	m::conf::conf.channelsInCount  = data.inputDevice.channelsCount;
-	m::conf::conf.channelsInStart  = data.inputDevice.channelsStart;
-	m::conf::conf.limitOutput      = data.limitOutput;
-	m::conf::conf.rsmpQuality      = data.resampleQuality;
-	m::conf::conf.buffersize       = data.bufferSize;
-	m::conf::conf.recTriggerLevel  = data.recTriggerLevel;
-	m::conf::conf.samplerate       = data.sampleRate;
+	g_conf.soundSystem      = data.api;
+	g_conf.soundDeviceOut   = data.outputDevice.index;
+	g_conf.soundDeviceIn    = data.inputDevice.index;
+	g_conf.channelsOutCount = data.outputDevice.channelsCount;
+	g_conf.channelsOutStart = data.outputDevice.channelsStart;
+	g_conf.channelsInCount  = data.inputDevice.channelsCount;
+	g_conf.channelsInStart  = data.inputDevice.channelsStart;
+	g_conf.limitOutput      = data.limitOutput;
+	g_conf.rsmpQuality      = data.resampleQuality;
+	g_conf.buffersize       = data.bufferSize;
+	g_conf.recTriggerLevel  = data.recTriggerLevel;
+	g_conf.samplerate       = data.sampleRate;
 }
 } // namespace giada::c::config

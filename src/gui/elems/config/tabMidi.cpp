@@ -37,6 +37,7 @@
 #include <string>
 
 extern giada::m::KernelMidi g_kernelMidi;
+extern giada::m::conf::Conf g_conf;
 
 namespace giada::v
 {
@@ -65,11 +66,11 @@ geTabMidi::geTabMidi(int X, int Y, int W, int H)
 	sync->add("(disabled)");
 	sync->add("MIDI Clock (master)");
 	sync->add("MTC (master)");
-	if (m::conf::conf.midiSync == MIDI_SYNC_NONE)
+	if (g_conf.midiSync == MIDI_SYNC_NONE)
 		sync->value(0);
-	else if (m::conf::conf.midiSync == MIDI_SYNC_CLOCK_M)
+	else if (g_conf.midiSync == MIDI_SYNC_CLOCK_M)
 		sync->value(1);
-	else if (m::conf::conf.midiSync == MIDI_SYNC_MTC_M)
+	else if (g_conf.midiSync == MIDI_SYNC_MTC_M)
 		sync->value(2);
 
 	systemInitValue = system->value();
@@ -93,7 +94,7 @@ void geTabMidi::fetchOutPorts()
 		for (unsigned i = 0; i < g_kernelMidi.countOutPorts(); i++)
 			portOut->add(u::gui::removeFltkChars(g_kernelMidi.getOutPortName(i)).c_str());
 
-		portOut->value(m::conf::conf.midiPortOut + 1); // +1 because midiPortOut=-1 is '(disabled)'
+		portOut->value(g_conf.midiPortOut + 1); // +1 because midiPortOut=-1 is '(disabled)'
 	}
 }
 
@@ -115,7 +116,7 @@ void geTabMidi::fetchInPorts()
 		for (unsigned i = 0; i < g_kernelMidi.countInPorts(); i++)
 			portIn->add(u::gui::removeFltkChars(g_kernelMidi.getInPortName(i)).c_str());
 
-		portIn->value(m::conf::conf.midiPortIn + 1); // +1 because midiPortIn=-1 is '(disabled)'
+		portIn->value(g_conf.midiPortIn + 1); // +1 because midiPortIn=-1 is '(disabled)'
 	}
 }
 
@@ -135,7 +136,7 @@ void geTabMidi::fetchMidiMaps()
 	{
 		const char* imap = m::midimap::maps.at(i).c_str();
 		midiMap->add(imap);
-		if (m::conf::conf.midiMapPath == imap)
+		if (g_conf.midiMapPath == imap)
 			midiMap->value(i);
 	}
 
@@ -152,24 +153,24 @@ void geTabMidi::save()
 	std::string text = system->text(system->value());
 
 	if (text == "ALSA")
-		m::conf::conf.midiSystem = RtMidi::LINUX_ALSA;
+		g_conf.midiSystem = RtMidi::LINUX_ALSA;
 	else if (text == "Jack")
-		m::conf::conf.midiSystem = RtMidi::UNIX_JACK;
+		g_conf.midiSystem = RtMidi::UNIX_JACK;
 	else if (text == "Multimedia MIDI")
-		m::conf::conf.midiSystem = RtMidi::WINDOWS_MM;
+		g_conf.midiSystem = RtMidi::WINDOWS_MM;
 	else if (text == "OSX Core MIDI")
-		m::conf::conf.midiSystem = RtMidi::MACOSX_CORE;
+		g_conf.midiSystem = RtMidi::MACOSX_CORE;
 
-	m::conf::conf.midiPortOut = portOut->value() - 1; // -1 because midiPortOut=-1 is '(disabled)'
-	m::conf::conf.midiPortIn  = portIn->value() - 1;  // -1 because midiPortIn=-1 is '(disabled)'
-	m::conf::conf.midiMapPath = m::midimap::maps.size() == 0 ? "" : midiMap->text(midiMap->value());
+	g_conf.midiPortOut = portOut->value() - 1; // -1 because midiPortOut=-1 is '(disabled)'
+	g_conf.midiPortIn  = portIn->value() - 1;  // -1 because midiPortIn=-1 is '(disabled)'
+	g_conf.midiMapPath = m::midimap::maps.size() == 0 ? "" : midiMap->text(midiMap->value());
 
 	if (sync->value() == 0)
-		m::conf::conf.midiSync = MIDI_SYNC_NONE;
+		g_conf.midiSync = MIDI_SYNC_NONE;
 	else if (sync->value() == 1)
-		m::conf::conf.midiSync = MIDI_SYNC_CLOCK_M;
+		g_conf.midiSync = MIDI_SYNC_CLOCK_M;
 	else if (sync->value() == 2)
-		m::conf::conf.midiSync = MIDI_SYNC_MTC_M;
+		g_conf.midiSync = MIDI_SYNC_MTC_M;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -199,7 +200,7 @@ void geTabMidi::fetchSystems()
 
 #endif
 
-	switch (m::conf::conf.midiSystem)
+	switch (g_conf.midiSystem)
 	{
 	case RtMidi::LINUX_ALSA:
 		system->showItem("ALSA");

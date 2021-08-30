@@ -38,6 +38,7 @@
 extern giada::m::Clock          g_clock;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::Recorder       g_recorder;
+extern giada::m::conf::Conf     g_conf;
 
 namespace giada::m::sampleActionRecorder
 {
@@ -114,7 +115,7 @@ void toggleReadActions_(channel::Data& ch)
 
 void startReadActions_(channel::Data& ch)
 {
-	if (conf::conf.treatRecsAsLoops)
+	if (g_conf.treatRecsAsLoops)
 		ch.state->recStatus.store(ChannelStatus::WAIT);
 	else
 	{
@@ -131,7 +132,7 @@ void stopReadActions_(channel::Data& ch, ChannelStatus curRecStatus)
 	just stop and disable everything. Otherwise make sure a channel with actions
 	behave like a dynamic one. */
 
-	if (!g_clock.isRunning() || !conf::conf.treatRecsAsLoops)
+	if (!g_clock.isRunning() || !g_conf.treatRecsAsLoops)
 	{
 		ch.state->recStatus.store(ChannelStatus::OFF);
 		ch.state->readActions.store(false);
@@ -151,7 +152,7 @@ void killReadActions_(channel::Data& ch)
 	/* Killing Read Actions, i.e. shift + click on 'R' button is meaninful only 
 	when the conf::treatRecsAsLoops is true. */
 
-	if (!conf::conf.treatRecsAsLoops)
+	if (!g_conf.treatRecsAsLoops)
 		return;
 	ch.state->recStatus.store(ChannelStatus::OFF);
 	ch.state->readActions.store(false);

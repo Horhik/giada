@@ -66,6 +66,7 @@ extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::MixerHandler  g_mixerHandler;
 extern giada::m::Actions       g_actions;
 extern giada::m::Recorder      g_recorder;
+extern giada::m::conf::Conf    g_conf;
 
 namespace giada::c::channel
 {
@@ -174,7 +175,7 @@ int loadChannel(ID channelId, const std::string& fname)
 	/* Save the patch and take the last browser's dir in order to re-use it the 
 	next time. */
 
-	m::conf::conf.samplePath = u::fs::dirname(fname);
+	g_conf.samplePath = u::fs::dirname(fname);
 
 	int res = g_mixerHandler.loadChannel(channelId, fname);
 	if (res != G_RES_OK)
