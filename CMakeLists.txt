@@ -36,7 +36,7 @@ list(APPEND SOURCES
 	src/core/worker.cpp
 	src/core/eventDispatcher.cpp
 	src/core/midiDispatcher.cpp
-	src/core/midiMapConf.cpp
+        src/core/midiMap.cpp
 	src/core/midiEvent.cpp
 	src/core/quantizer.cpp
 	src/core/conf.cpp

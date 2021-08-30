@@ -40,7 +40,7 @@
 #include "core/eventDispatcher.h"
 #include "core/kernelAudio.h"
 #include "core/kernelMidi.h"
-#include "core/midiMapConf.h"
+#include "core/midiMap.h"
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
@@ -91,15 +91,15 @@ void initConf_()
 		u::log::print("[init] Can't read configuration file! Using default values\n");
 
 	patch::init();
-	midimap::init();
-	midimap::setDefault();
+	midiMap::init();
+	midiMap::setDefault();
 
 	model::load(g_conf);
 
 	if (!u::log::init(g_conf.logMode))
 		u::log::print("[init] log init failed! Using default stdout\n");
 
-	if (midimap::read(g_conf.midiMapPath) != MIDIMAP_READ_OK)
+	if (midiMap::read(g_conf.midiMapPath) != MIDIMAP_READ_OK)
 		u::log::print("[init] MIDI map read failed!\n");
 }
 

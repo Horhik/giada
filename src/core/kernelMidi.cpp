@@ -27,10 +27,11 @@
 #include "kernelMidi.h"
 #include "const.h"
 #include "midiDispatcher.h"
-#include "midiMapConf.h"
+#include "midiMap.h"
 #include "utils/log.h"
 
 extern giada::m::MidiDispatcher g_midiDispatcher;
+extern giada::m::midiMap::Data  g_midiMap;
 
 namespace giada::m
 {
@@ -244,13 +245,13 @@ void KernelMidi::send(int b1, int b2, int b3)
 
 /* -------------------------------------------------------------------------- */
 
-void KernelMidi::sendMidiLightning(uint32_t learnt, const midimap::Message& m)
+void KernelMidi::sendMidiLightning(uint32_t learnt, const midiMap::Message& m)
 {
 	// Skip lightning message if not defined in midi map
 
-	if (!midimap::isDefined(m))
+	if (!midiMap::isDefined(m))
 	{
-		u::log::print("[KM::sendMidiLightning] message skipped (not defined in midimap)");
+		u::log::print("[KM::sendMidiLightning] message skipped (not defined in midiMap)");
 		return;
 	}
 
@@ -258,7 +259,7 @@ void KernelMidi::sendMidiLightning(uint32_t learnt, const midimap::Message& m)
 	    learnt, m.channel, m.value, m.offset);
 
 	/* Isolate 'channel' from learnt message and offset it as requested by 'nn' in 
-	the midimap configuration file. */
+	the midiMap configuration file. */
 
 	uint32_t out = ((learnt & 0x00FF0000) >> 16) << m.offset;
 
@@ -279,7 +280,7 @@ bool     KernelMidi::getStatus() const { return m_status; }
 
 void KernelMidi::sendMidiLightningInitMsgs()
 {
-	for (const midimap::Message& m : midimap::midimap.initCommands)
+	for (const midiMap::Message& m : g_midiMap.midiMap.initCommands)
 	{
 		if (m.value != 0x0 && m.channel != -1)
 		{

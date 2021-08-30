@@ -28,7 +28,7 @@
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/kernelMidi.h"
-#include "core/midiMapConf.h"
+#include "core/midiMap.h"
 #include "gui/elems/basics/box.h"
 #include "gui/elems/basics/check.h"
 #include "gui/elems/basics/choice.h"
@@ -36,8 +36,9 @@
 #include <RtMidi.h>
 #include <string>
 
-extern giada::m::KernelMidi g_kernelMidi;
-extern giada::m::conf::Data g_conf;
+extern giada::m::KernelMidi    g_kernelMidi;
+extern giada::m::conf::Data    g_conf;
+extern giada::m::midiMap::Data g_midiMap;
 
 namespace giada::v
 {
@@ -124,7 +125,7 @@ void geTabMidi::fetchInPorts()
 
 void geTabMidi::fetchMidiMaps()
 {
-	if (m::midimap::maps.size() == 0)
+	if (g_midiMap.maps.size() == 0)
 	{
 		midiMap->add("(no MIDI maps available)");
 		midiMap->value(0);
@@ -132,17 +133,18 @@ void geTabMidi::fetchMidiMaps()
 		return;
 	}
 
-	for (unsigned i = 0; i < m::midimap::maps.size(); i++)
+	int i = 0;
+	for (const std::string& imap : g_midiMap.maps)
 	{
-		const char* imap = m::midimap::maps.at(i).c_str();
-		midiMap->add(imap);
+		midiMap->add(imap.c_str());
 		if (g_conf.midiMapPath == imap)
 			midiMap->value(i);
+		i++;
 	}
 
-	/* Preselect the 0 m::midimap if nothing is selected but midimaps exist. */
+	/* Preselect the 0-th midiMap if nothing is selected but midiMaps exist. */
 
-	if (midiMap->value() == -1 && m::midimap::maps.size() > 0)
+	if (midiMap->value() == -1 && g_midiMap.maps.size() > 0)
 		midiMap->value(0);
 }
 
@@ -163,7 +165,7 @@ void geTabMidi::save()
 
 	g_conf.midiPortOut = portOut->value() - 1; // -1 because midiPortOut=-1 is '(disabled)'
 	g_conf.midiPortIn  = portIn->value() - 1;  // -1 because midiPortIn=-1 is '(disabled)'
-	g_conf.midiMapPath = m::midimap::maps.size() == 0 ? "" : midiMap->text(midiMap->value());
+	g_conf.midiMapPath = g_midiMap.maps.size() == 0 ? "" : midiMap->text(midiMap->value());
 
 	if (sync->value() == 0)
 		g_conf.midiSync = MIDI_SYNC_NONE;

@@ -32,7 +32,7 @@
 #include "core/init.h"
 #include "core/kernelAudio.h"
 #include "core/kernelMidi.h"
-#include "core/midiMapConf.h"
+#include "core/midiMap.h"
 #include "core/mixer.h"
 #include "core/model/model.h"
 #include "core/patch.h"

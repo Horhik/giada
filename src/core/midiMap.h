@@ -24,17 +24,13 @@
  *
  * -------------------------------------------------------------------------- */
 
-#ifndef G_MIDIMAPCONF_H
-#define G_MIDIMAPCONF_H
+#ifndef G_MIDIMAP_H
+#define G_MIDIMAP_H
 
 #include <string>
 #include <vector>
 
-namespace giada
-{
-namespace m
-{
-namespace midimap
+namespace giada::m::midiMap
 {
 struct Message
 {
@@ -60,23 +56,24 @@ struct MidiMap
 	Message              playingInaudible;
 };
 
-/* -------------------------------------------------------------------------- */
+struct Data
+{
+	/* midimap
+	The actual MidiMap struct with data. */
 
-/* midimap
-The actual MidiMap struct with data. */
+	MidiMap midiMap;
 
-extern MidiMap midimap;
+	/* midimapsPath
+	Path to folder containing midimap files, different between OSes. */
 
-/* midimapsPath
-Path of midimap files, different between OSes. */
+	std::string midimapsPath;
 
-extern std::string midimapsPath;
+	/* maps
+	Maps are the available .giadamap files. Each element of the std::vector 
+	represents a .giadamap file found in the midimap folder. */
 
-/* maps
-Maps are the available .giadamap files. Each element of the std::vector 
-represents a .giadamap filename. */
-
-extern std::vector<std::string> maps;
+	std::vector<std::string> maps;
+};
 
 /* -------------------------------------------------------------------------- */
 
@@ -99,8 +96,6 @@ bool isDefined(const Message& msg);
 Reads a midi map from file 'file'. */
 
 int read(const std::string& file);
-} // namespace midimap
-} // namespace m
-} // namespace giada
+} // namespace giada::m::midiMap
 
 #endif

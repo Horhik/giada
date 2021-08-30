@@ -27,7 +27,7 @@
 #ifndef G_KERNELMIDI_H
 #define G_KERNELMIDI_H
 
-#include "midiMapConf.h"
+#include "midiMap.h"
 #include <RtMidi.h>
 #include <cstdint>
 #include <memory>
@@ -65,7 +65,7 @@ public:
 	/* sendMidiLightning
     Sends a MIDI lightning message defined by 'msg'. */
 
-	void sendMidiLightning(uint32_t learnt, const midimap::Message& msg);
+	void sendMidiLightning(uint32_t learnt, const midiMap::Message& msg);
 
 	/* setApi
     Sets the Api in use for both in & out messages. */

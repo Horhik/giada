@@ -31,6 +31,7 @@
 #include "core/kernelAudio.h"
 #include "core/kernelMidi.h"
 #include "core/midiDispatcher.h"
+#include "core/midiMap.h"
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/patch.h"
@@ -56,6 +57,7 @@
 
 giada::m::conf::Data      g_conf;
 giada::m::patch::Data     g_patch;
+giada::m::midiMap::Data   g_midiMap;
 giada::m::KernelAudio     g_kernelAudio;
 giada::m::KernelMidi      g_kernelMidi;
 giada::m::MidiDispatcher  g_midiDispatcher;
