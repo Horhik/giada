@@ -406,7 +406,7 @@ bool Version::operator<(const Version& o) const
 
 /* -------------------------------------------------------------------------- */
 
-void init()
+void reset()
 {
 	g_patch = Data();
 }

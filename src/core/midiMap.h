@@ -82,11 +82,6 @@ Parses the midi maps folders and find the available maps. */
 
 void init();
 
-/* setDefault
-Sets default values in case no maps are available/chosen. */
-
-void setDefault();
-
 /* isDefined
 Checks whether a specific message has been defined within midi map file. */
 

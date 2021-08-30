@@ -91,15 +91,12 @@ void initConf_()
 	if (!conf::read())
 		u::log::print("[init] Can't read configuration file! Using default values\n");
 
-	patch::init();
-	midiMap::init();
-	midiMap::setDefault();
-
 	model::load(g_conf);
 
 	if (!u::log::init(g_conf.logMode))
 		u::log::print("[init] log init failed! Using default stdout\n");
 
+	midiMap::init();
 	if (midiMap::read(g_conf.midiMapPath) != MIDIMAP_READ_OK)
 		u::log::print("[init] MIDI map read failed!\n");
 }

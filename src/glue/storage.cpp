@@ -100,7 +100,7 @@ std::string makeUniqueWavePath_(const std::string& base, const m::Wave& w)
 
 bool savePatch_(const std::string& path, const std::string& name)
 {
-	m::patch::init();
+	m::patch::reset();
 	g_patch.name = name;
 	m::model::store(g_patch);
 	v::model::store(g_patch);
@@ -145,7 +145,7 @@ void loadProject(void* data)
 
 	/* Read the patch from file. */
 
-	m::patch::init();
+	m::patch::reset();
 	int res = m::patch::read(fileToLoad, basePath);
 	if (res != G_PATCH_OK)
 	{

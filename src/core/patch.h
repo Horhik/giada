@@ -150,10 +150,10 @@ struct Data
 
 /* -------------------------------------------------------------------------- */
 
-/* init
+/* reset
 Initializes the patch with default values. */
 
-void init();
+void reset();
 
 /* read
 Reads patch from file. It takes 'basePath' as parameter for Wave reading. */
