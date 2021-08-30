@@ -127,7 +127,7 @@ struct Plugin
 };
 #endif
 
-struct Patch
+struct Data
 {
 	Version     version;
 	std::string name       = G_DEFAULT_PATCH_NAME;
@@ -147,10 +147,6 @@ struct Patch
 	std::vector<Plugin> plugins;
 #endif
 };
-
-/* -------------------------------------------------------------------------- */
-
-extern Patch patch;
 
 /* -------------------------------------------------------------------------- */
 

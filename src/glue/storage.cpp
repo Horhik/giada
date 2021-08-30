@@ -61,6 +61,7 @@ extern giada::m::Mixer          g_mixer;
 extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::conf::Data     g_conf;
+extern giada::m::patch::Data    g_patch;
 
 namespace giada::c::storage
 {
@@ -99,9 +100,9 @@ std::string makeUniqueWavePath_(const std::string& base, const m::Wave& w)
 bool savePatch_(const std::string& path, const std::string& name)
 {
 	m::patch::init();
-	m::patch::patch.name = name;
-	m::model::store(m::patch::patch);
-	v::model::store(m::patch::patch);
+	g_patch.name = name;
+	m::model::store(g_patch);
+	v::model::store(g_patch);
 
 	if (!m::patch::write(path))
 		return false;
@@ -160,15 +161,15 @@ void loadProject(void* data)
 	/* Then reset the system (it disables mixer) and fill the model. */
 
 	m::init::reset();
-	v::model::load(m::patch::patch);
-	m::model::load(m::patch::patch);
+	v::model::load(g_patch);
+	m::model::load(g_patch);
 
 	/* Prepare the engine. Recorder has to recompute the actions positions if 
 	the current samplerate != patch samplerate. Clock needs to update frames
 	in sequencer. */
 
 	g_mixerHandler.updateSoloCount();
-	g_actionRecorder.updateSamplerate(g_conf.samplerate, m::patch::patch.samplerate);
+	g_actionRecorder.updateSamplerate(g_conf.samplerate, g_patch.samplerate);
 	g_clock.recomputeFrames();
 	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop());
 
@@ -180,7 +181,7 @@ void loadProject(void* data)
 	broswer, in order to reuse it the next time. Also update UI. */
 
 	g_conf.patchPath = u::fs::dirname(fullPath);
-	u::gui::updateMainWinLabel(m::patch::patch.name);
+	u::gui::updateMainWinLabel(g_patch.name);
 
 #ifdef WITH_VST
 

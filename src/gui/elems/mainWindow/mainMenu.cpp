@@ -50,6 +50,7 @@
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::MixerHandler  g_mixerHandler;
 extern giada::m::conf::Data    g_conf;
+extern giada::m::patch::Data   g_patch;
 
 namespace giada::v
 {
@@ -120,7 +121,7 @@ void geMainMenu::cb_file()
 	else if (strcmp(m->label(), "Save project...") == 0)
 	{
 		gdWindow* childWin = new gdBrowserSave("Save project", g_conf.patchPath,
-		    patch::patch.name, c::storage::saveProject, 0);
+		    g_patch.name, c::storage::saveProject, 0);
 		u::gui::openSubWindow(G_MainWin, childWin, WID_FILE_BROWSER);
 	}
 	else if (strcmp(m->label(), "Close project") == 0)

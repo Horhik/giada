@@ -31,6 +31,8 @@
 #include "utils/math.h"
 #include <fstream>
 
+extern giada::m::patch::Data g_patch;
+
 namespace nl = nlohmann;
 
 namespace giada::m::patch
@@ -39,14 +41,14 @@ namespace
 {
 void readCommons_(const nl::json& j)
 {
-	patch.name       = j.value(PATCH_KEY_NAME, G_DEFAULT_PATCH_NAME);
-	patch.bars       = j.value(PATCH_KEY_BARS, G_DEFAULT_BARS);
-	patch.beats      = j.value(PATCH_KEY_BEATS, G_DEFAULT_BEATS);
-	patch.bpm        = j.value(PATCH_KEY_BPM, G_DEFAULT_BPM);
-	patch.quantize   = j.value(PATCH_KEY_QUANTIZE, G_DEFAULT_QUANTIZE);
-	patch.lastTakeId = j.value(PATCH_KEY_LAST_TAKE_ID, 0);
-	patch.samplerate = j.value(PATCH_KEY_SAMPLERATE, G_DEFAULT_SAMPLERATE);
-	patch.metronome  = j.value(PATCH_KEY_METRONOME, false);
+	g_patch.name       = j.value(PATCH_KEY_NAME, G_DEFAULT_PATCH_NAME);
+	g_patch.bars       = j.value(PATCH_KEY_BARS, G_DEFAULT_BARS);
+	g_patch.beats      = j.value(PATCH_KEY_BEATS, G_DEFAULT_BEATS);
+	g_patch.bpm        = j.value(PATCH_KEY_BPM, G_DEFAULT_BPM);
+	g_patch.quantize   = j.value(PATCH_KEY_QUANTIZE, G_DEFAULT_QUANTIZE);
+	g_patch.lastTakeId = j.value(PATCH_KEY_LAST_TAKE_ID, 0);
+	g_patch.samplerate = j.value(PATCH_KEY_SAMPLERATE, G_DEFAULT_SAMPLERATE);
+	g_patch.metronome  = j.value(PATCH_KEY_METRONOME, false);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -59,7 +61,7 @@ void readColumns_(const nl::json& j)
 		Column c;
 		c.id    = jcol.value(PATCH_KEY_COLUMN_ID, ++id);
 		c.width = jcol.value(PATCH_KEY_COLUMN_WIDTH, G_DEFAULT_COLUMN_WIDTH);
-		patch.columns.push_back(c);
+		g_patch.columns.push_back(c);
 	}
 }
 
@@ -80,7 +82,7 @@ void readPlugins_(const nl::json& j)
 		p.path   = jplugin.value(PATCH_KEY_PLUGIN_PATH, "");
 		p.bypass = jplugin.value(PATCH_KEY_PLUGIN_BYPASS, false);
 
-		if (patch.version < Version{0, 17, 0})
+		if (g_patch.version < Version{0, 17, 0})
 			for (const auto& jparam : jplugin[PATCH_KEY_PLUGIN_PARAMS])
 				p.params.push_back(jparam);
 		else
@@ -89,7 +91,7 @@ void readPlugins_(const nl::json& j)
 		for (const auto& jmidiParam : jplugin[PATCH_KEY_PLUGIN_MIDI_IN_PARAMS])
 			p.midiInParams.push_back(jmidiParam);
 
-		patch.plugins.push_back(p);
+		g_patch.plugins.push_back(p);
 	}
 }
 
@@ -108,7 +110,7 @@ void readWaves_(const nl::json& j, const std::string& basePath)
 		Wave w;
 		w.id   = jwave.value(PATCH_KEY_WAVE_ID, ++id);
 		w.path = basePath + jwave.value(PATCH_KEY_WAVE_PATH, "");
-		patch.waves.push_back(w);
+		g_patch.waves.push_back(w);
 	}
 }
 
@@ -129,7 +131,7 @@ void readActions_(const nl::json& j)
 		a.event     = jaction.value(G_PATCH_KEY_ACTION_EVENT, 0);
 		a.prevId    = jaction.value(G_PATCH_KEY_ACTION_PREV, 0);
 		a.nextId    = jaction.value(G_PATCH_KEY_ACTION_NEXT, 0);
-		patch.actions.push_back(a);
+		g_patch.actions.push_back(a);
 	}
 }
 
@@ -191,7 +193,7 @@ void readChannels_(const nl::json& j)
 				c.pluginIds.push_back(jplugin);
 #endif
 
-		patch.channels.push_back(c);
+		g_patch.channels.push_back(c);
 	}
 }
 
@@ -203,7 +205,7 @@ void writePlugins_(nl::json& j)
 {
 	j[PATCH_KEY_PLUGINS] = nl::json::array();
 
-	for (const Plugin& p : patch.plugins)
+	for (const Plugin& p : g_patch.plugins)
 	{
 
 		nl::json jplugin;
@@ -229,7 +231,7 @@ void writeColumns_(nl::json& j)
 {
 	j[PATCH_KEY_COLUMNS] = nl::json::array();
 
-	for (const Column& column : patch.columns)
+	for (const Column& column : g_patch.columns)
 	{
 		nl::json jcolumn;
 		jcolumn[PATCH_KEY_COLUMN_ID]    = column.id;
@@ -244,7 +246,7 @@ void writeActions_(nl::json& j)
 {
 	j[PATCH_KEY_ACTIONS] = nl::json::array();
 
-	for (const Action& a : patch.actions)
+	for (const Action& a : g_patch.actions)
 	{
 		nl::json jaction;
 		jaction[G_PATCH_KEY_ACTION_ID]      = a.id;
@@ -263,7 +265,7 @@ void writeWaves_(nl::json& j)
 {
 	j[PATCH_KEY_WAVES] = nl::json::array();
 
-	for (const Wave& w : patch.waves)
+	for (const Wave& w : g_patch.waves)
 	{
 		nl::json jwave;
 		jwave[PATCH_KEY_WAVE_ID]   = w.id;
@@ -281,14 +283,14 @@ void writeCommons_(nl::json& j)
 	j[PATCH_KEY_VERSION_MAJOR] = G_VERSION_MAJOR;
 	j[PATCH_KEY_VERSION_MINOR] = G_VERSION_MINOR;
 	j[PATCH_KEY_VERSION_PATCH] = G_VERSION_PATCH;
-	j[PATCH_KEY_NAME]          = patch.name;
-	j[PATCH_KEY_BARS]          = patch.bars;
-	j[PATCH_KEY_BEATS]         = patch.beats;
-	j[PATCH_KEY_BPM]           = patch.bpm;
-	j[PATCH_KEY_QUANTIZE]      = patch.quantize;
-	j[PATCH_KEY_LAST_TAKE_ID]  = patch.lastTakeId;
-	j[PATCH_KEY_SAMPLERATE]    = patch.samplerate;
-	j[PATCH_KEY_METRONOME]     = patch.metronome;
+	j[PATCH_KEY_NAME]          = g_patch.name;
+	j[PATCH_KEY_BARS]          = g_patch.bars;
+	j[PATCH_KEY_BEATS]         = g_patch.beats;
+	j[PATCH_KEY_BPM]           = g_patch.bpm;
+	j[PATCH_KEY_QUANTIZE]      = g_patch.quantize;
+	j[PATCH_KEY_LAST_TAKE_ID]  = g_patch.lastTakeId;
+	j[PATCH_KEY_SAMPLERATE]    = g_patch.samplerate;
+	j[PATCH_KEY_METRONOME]     = g_patch.metronome;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -297,7 +299,7 @@ void writeChannels_(nl::json& j)
 {
 	j[PATCH_KEY_CHANNELS] = nl::json::array();
 
-	for (const Channel& c : patch.channels)
+	for (const Channel& c : g_patch.channels)
 	{
 
 		nl::json jchannel;
@@ -356,7 +358,7 @@ void writeChannels_(nl::json& j)
 
 void modernize_()
 {
-	for (Channel& c : patch.channels)
+	for (Channel& c : g_patch.channels)
 	{
 		/* 0.16.3
 		Make sure that ChannelType is correct: ID 1, 2 are MASTER channels, ID 3 
@@ -386,10 +388,6 @@ void modernize_()
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-Patch patch;
-
-/* -------------------------------------------------------------------------- */
-
 bool Version::operator==(const Version& o) const
 {
 	return major == o.major && minor == o.minor && patch == o.patch;
@@ -410,7 +408,7 @@ bool Version::operator<(const Version& o) const
 
 void init()
 {
-	patch = Patch();
+	g_patch = Data();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -449,11 +447,11 @@ int read(const std::string& file, const std::string& basePath)
 	if (j[PATCH_KEY_HEADER] != "GIADAPTC")
 		return G_PATCH_INVALID;
 
-	patch.version = {
+	g_patch.version = {
 	    static_cast<int>(j[PATCH_KEY_VERSION_MAJOR]),
 	    static_cast<int>(j[PATCH_KEY_VERSION_MINOR]),
 	    static_cast<int>(j[PATCH_KEY_VERSION_PATCH])};
-	if (patch.version < Version{0, 16, 0})
+	if (g_patch.version < Version{0, 16, 0})
 		return G_PATCH_UNSUPPORTED;
 
 	try

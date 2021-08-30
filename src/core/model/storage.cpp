@@ -39,6 +39,7 @@
 extern giada::m::Sequencer      g_sequencer;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::conf::Data     g_conf;
+extern giada::m::patch::Data    g_patch;
 
 namespace giada::m::model
 {
@@ -64,7 +65,7 @@ void loadActions_(const std::vector<patch::Action>& pactions)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void store(patch::Patch& patch)
+void store(patch::Data& patch)
 {
 	const Layout& layout = get();
 
@@ -110,7 +111,7 @@ void store(conf::Data& conf)
 
 /* -------------------------------------------------------------------------- */
 
-void load(const patch::Patch& patch)
+void load(const patch::Data& patch)
 {
 	DataLock lock;
 
@@ -139,7 +140,7 @@ void load(const patch::Patch& patch)
 
 	/* Then load up channels, actions and global properties. */
 
-	loadChannels_(patch.channels, patch::patch.samplerate);
+	loadChannels_(patch.channels, g_patch.samplerate);
 	loadActions_(patch.actions);
 
 	get().clock.status   = ClockStatus::STOPPED;

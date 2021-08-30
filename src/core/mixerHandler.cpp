@@ -61,6 +61,7 @@ extern giada::m::PluginHost     g_pluginHost;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::Recorder       g_recorder;
 extern giada::m::conf::Data     g_conf;
+extern giada::m::patch::Data    g_patch;
 
 namespace giada::m
 {
@@ -391,7 +392,7 @@ void MixerHandler::recordChannel(channel::Data& ch, Frame recordedFrames)
 {
 	/* Create a new Wave with audio coming from Mixer's input buffer. */
 
-	std::string           filename = "TAKE-" + std::to_string(patch::patch.lastTakeId++) + ".wav";
+	std::string           filename = "TAKE-" + std::to_string(g_patch.lastTakeId++) + ".wav";
 	std::unique_ptr<Wave> wave     = waveManager::createEmpty(recordedFrames, G_MAX_IO_CHANS,
         g_conf.samplerate, filename);
 

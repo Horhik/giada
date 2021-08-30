@@ -33,6 +33,7 @@
 #include "core/midiDispatcher.h"
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
+#include "core/patch.h"
 #include "core/plugins/pluginHost.h"
 #include "core/recorder.h"
 #include "core/sequencer.h"
@@ -53,9 +54,8 @@
 #include <vector>
 #endif
 
-// TODO - patch
-
 giada::m::conf::Data      g_conf;
+giada::m::patch::Data     g_patch;
 giada::m::KernelAudio     g_kernelAudio;
 giada::m::KernelMidi      g_kernelMidi;
 giada::m::MidiDispatcher  g_midiDispatcher;

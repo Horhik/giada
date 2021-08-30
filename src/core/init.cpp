@@ -79,6 +79,7 @@ extern giada::m::PluginHost    g_pluginHost;
 extern giada::m::KernelMidi    g_kernelMidi;
 extern giada::m::Actions       g_actions;
 extern giada::m::conf::Data    g_conf;
+extern giada::m::patch::Data   g_patch;
 
 namespace giada::m::init
 {
@@ -151,7 +152,7 @@ void initGUI_(int argc, char** argv)
 	G_MainWin->resize(g_conf.mainWindowX, g_conf.mainWindowY, g_conf.mainWindowW,
 	    g_conf.mainWindowH);
 
-	u::gui::updateMainWinLabel(patch::patch.name == "" ? G_DEFAULT_PATCH_NAME : patch::patch.name);
+	u::gui::updateMainWinLabel(g_patch.name == "" ? G_DEFAULT_PATCH_NAME : g_patch.name);
 
 	if (!g_kernelAudio.isReady())
 		v::gdAlert("Your soundcard isn't configured correctly.\n"
