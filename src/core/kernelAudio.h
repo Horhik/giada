@@ -38,7 +38,7 @@
 
 namespace giada::m::conf
 {
-struct Conf;
+struct Data;
 }
 
 namespace giada::m
@@ -59,7 +59,7 @@ public:
 		std::vector<int> sampleRates       = {};
 	};
 
-	int  openDevice(const m::conf::Conf& conf);
+	int  openDevice(const m::conf::Data& conf);
 	void closeDevice();
 	int  startStream();
 	int  stopStream();

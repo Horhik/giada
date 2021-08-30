@@ -35,7 +35,7 @@ struct Data;
 }
 namespace giada::m::conf
 {
-struct Conf;
+struct Data;
 }
 namespace giada::m::patch
 {

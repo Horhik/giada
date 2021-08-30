@@ -36,7 +36,7 @@
 #include "utils/gui.h"
 #include <FL/Fl_Pack.H>
 
-extern giada::m::conf::Conf g_conf;
+extern giada::m::conf::Data g_conf;
 
 namespace giada::v
 {

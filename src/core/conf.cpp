@@ -35,7 +35,7 @@
 #include <fstream>
 #include <string>
 
-extern giada::m::conf::Conf g_conf;
+extern giada::m::conf::Data g_conf;
 
 namespace nl = nlohmann;
 
@@ -97,7 +97,7 @@ int createConfigFolder_()
 
 void init()
 {
-	g_conf = Conf();
+	g_conf = Data();
 
 	/* Initialize confFilePath_, i.e. the configuration file. In windows it is in
 	 * the same dir of the .exe, while in Linux and OS X in ~/.giada */

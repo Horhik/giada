@@ -47,7 +47,7 @@ extern giada::m::Mixer        g_mixer;
 extern giada::m::MixerHandler g_mixerHandler;
 extern giada::m::Synchronizer g_synchronizer;
 extern giada::m::Recorder     g_recorder;
-extern giada::m::conf::Conf   g_conf;
+extern giada::m::conf::Data   g_conf;
 
 namespace giada::m
 {
@@ -96,7 +96,7 @@ int callback_(void* outBuf, void* inBuf, unsigned bufferSize, double /*streamTim
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-int KernelAudio::openDevice(const conf::Conf& conf)
+int KernelAudio::openDevice(const conf::Data& conf)
 {
 	m_api = conf.soundSystem;
 	u::log::print("[KA] using system 0x%x\n", m_api);

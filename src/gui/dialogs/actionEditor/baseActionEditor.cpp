@@ -48,7 +48,7 @@ extern giada::m::Clock g_clock;
 
 namespace giada::v
 {
-gdBaseActionEditor::gdBaseActionEditor(ID channelId, m::conf::Conf& conf)
+gdBaseActionEditor::gdBaseActionEditor(ID channelId, m::conf::Data& conf)
 : gdWindow(conf.actionEditorX, conf.actionEditorY, conf.actionEditorW, conf.actionEditorH)
 , channelId(channelId)
 , gridTool(0, 0)

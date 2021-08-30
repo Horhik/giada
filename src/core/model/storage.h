@@ -33,14 +33,14 @@ struct Patch;
 }
 namespace giada::m::conf
 {
-struct Conf;
+struct Data;
 }
 namespace giada::m::model
 {
-void store(conf::Conf& c);
+void store(conf::Data& c);
 void store(patch::Patch& p);
 void load(const patch::Patch& p);
-void load(const conf::Conf& c);
+void load(const conf::Data& c);
 } // namespace giada::m::model
 
 #endif

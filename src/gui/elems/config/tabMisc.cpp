@@ -29,7 +29,7 @@
 #include "core/const.h"
 #include <FL/Fl_Tooltip.H>
 
-extern giada::m::conf::Conf g_conf;
+extern giada::m::conf::Data g_conf;
 
 namespace giada::v
 {

@@ -45,7 +45,7 @@
 #include <cassert>
 
 extern giada::m::KernelAudio g_kernelAudio;
-extern giada::m::conf::Conf  g_conf;
+extern giada::m::conf::Data  g_conf;
 
 namespace giada::m::channelManager
 {

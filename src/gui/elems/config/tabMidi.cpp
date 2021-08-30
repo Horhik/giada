@@ -37,7 +37,7 @@
 #include <string>
 
 extern giada::m::KernelMidi g_kernelMidi;
-extern giada::m::conf::Conf g_conf;
+extern giada::m::conf::Data g_conf;
 
 namespace giada::v
 {

@@ -54,7 +54,7 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow* G_MainWin;
-extern giada::m::conf::Conf    g_conf;
+extern giada::m::conf::Data    g_conf;
 
 namespace giada::v
 {

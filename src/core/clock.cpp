@@ -40,7 +40,7 @@
 #include <cassert>
 
 extern giada::m::ActionRecorder g_actionRecorder;
-extern giada::m::conf::Conf     g_conf;
+extern giada::m::conf::Data     g_conf;
 
 namespace giada::m
 {

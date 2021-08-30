@@ -34,7 +34,7 @@
 extern giada::m::Sequencer  g_sequencer;
 extern giada::m::Clock      g_clock;
 extern giada::m::KernelMidi g_kernelMidi;
-extern giada::m::conf::Conf g_conf;
+extern giada::m::conf::Data g_conf;
 
 namespace giada::m
 {

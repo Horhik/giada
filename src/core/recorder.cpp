@@ -45,7 +45,7 @@ extern giada::m::Mixer          g_mixer;
 extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::MidiDispatcher g_midiDispatcher;
 extern giada::m::ActionRecorder g_actionRecorder;
-extern giada::m::conf::Conf     g_conf;
+extern giada::m::conf::Data     g_conf;
 
 namespace giada::m
 {

@@ -34,7 +34,7 @@
 
 namespace giada::m::conf
 {
-struct Conf
+struct Data
 {
 	int  logMode          = LOG_MODE_MUTE;
 	bool showTooltips     = true;

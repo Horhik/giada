@@ -78,7 +78,7 @@ extern giada::m::Synchronizer  g_synchronizer;
 extern giada::m::PluginHost    g_pluginHost;
 extern giada::m::KernelMidi    g_kernelMidi;
 extern giada::m::Actions       g_actions;
-extern giada::m::conf::Conf    g_conf;
+extern giada::m::conf::Data    g_conf;
 
 namespace giada::m::init
 {

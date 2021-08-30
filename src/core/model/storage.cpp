@@ -38,7 +38,7 @@
 
 extern giada::m::Sequencer      g_sequencer;
 extern giada::m::ActionRecorder g_actionRecorder;
-extern giada::m::conf::Conf     g_conf;
+extern giada::m::conf::Data     g_conf;
 
 namespace giada::m::model
 {
@@ -91,7 +91,7 @@ void store(patch::Patch& patch)
 
 /* -------------------------------------------------------------------------- */
 
-void store(conf::Conf& conf)
+void store(conf::Data& conf)
 {
 	const Layout& layout = get();
 
@@ -151,7 +151,7 @@ void load(const patch::Patch& patch)
 
 /* -------------------------------------------------------------------------- */
 
-void load(const conf::Conf& c)
+void load(const conf::Data& c)
 {
 	get().midiIn.enabled    = c.midiInEnabled;
 	get().midiIn.filter     = c.midiInFilter;

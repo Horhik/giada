@@ -55,7 +55,7 @@
 
 // TODO - patch
 
-giada::m::conf::Conf      g_conf;
+giada::m::conf::Data      g_conf;
 giada::m::KernelAudio     g_kernelAudio;
 giada::m::KernelMidi      g_kernelMidi;
 giada::m::MidiDispatcher  g_midiDispatcher;

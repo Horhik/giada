@@ -38,7 +38,7 @@
 #include "utils/string.h"
 #include <cassert>
 
-extern giada::m::conf::Conf g_conf;
+extern giada::m::conf::Data g_conf;
 
 namespace giada::m::pluginManager
 {
