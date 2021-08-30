@@ -24,8 +24,8 @@
  *
  * -------------------------------------------------------------------------- */
 
-#ifndef G_ACTION_RECORDER_HANDLER_H
-#define G_ACTION_RECORDER_HANDLER_H
+#ifndef G_ACTION_RECORDER_H
+#define G_ACTION_RECORDER_H
 
 #include "actions.h"
 #include "core/midiEvent.h"
