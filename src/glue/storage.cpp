@@ -56,6 +56,7 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow*  G_MainWin;
+extern giada::m::model::Model   g_model;
 extern giada::m::Clock          g_clock;
 extern giada::m::Mixer          g_mixer;
 extern giada::m::MixerHandler   g_mixerHandler;
@@ -74,7 +75,7 @@ std::string makeWavePath_(const std::string& base, const m::Wave& w, int k)
 
 bool isWavePathUnique_(const m::Wave& skip, const std::string& path)
 {
-	for (const auto& w : m::model::getAll<m::model::WavePtrs>())
+	for (const auto& w : g_model.getAll<m::model::WavePtrs>())
 		if (w->id != skip.id && w->getPath() == path)
 			return false;
 	return true;
@@ -118,7 +119,7 @@ bool savePatch_(const std::string& path, const std::string& name)
 
 void saveWavesToProject_(const std::string& basePath)
 {
-	for (const std::unique_ptr<m::Wave>& w : m::model::getAll<m::model::WavePtrs>())
+	for (const std::unique_ptr<m::Wave>& w : g_model.getAll<m::model::WavePtrs>())
 	{
 		w->setPath(makeUniqueWavePath_(basePath, *w));
 		m::waveManager::save(*w, w->getPath()); // TODO - error checking
@@ -268,8 +269,8 @@ void saveSample(void* data)
 	if (u::fs::fileExists(filePath) && !v::gdConfirmWin("Warning", "File exists: overwrite?"))
 		return;
 
-	ID       waveId = m::model::get().getChannel(channelId).samplePlayer->getWaveId();
-	m::Wave* wave   = m::model::find<m::Wave>(waveId);
+	ID       waveId = g_model.get().getChannel(channelId).samplePlayer->getWaveId();
+	m::Wave* wave   = g_model.find<m::Wave>(waveId);
 
 	assert(wave != nullptr);
 
@@ -287,7 +288,7 @@ void saveSample(void* data)
 
 	/* Update logical and edited states in Wave. */
 
-	m::model::DataLock lock;
+	m::model::DataLock lock = g_model.lockData();
 	wave->setLogical(false);
 	wave->setEdited(false);
 

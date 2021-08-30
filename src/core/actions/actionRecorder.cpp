@@ -38,7 +38,8 @@
 #include <cmath>
 #include <unordered_map>
 
-extern giada::m::Actions g_actions;
+extern giada::m::Actions      g_actions;
+extern giada::m::model::Model g_model;
 
 namespace giada::m
 {
@@ -173,10 +174,10 @@ std::unordered_set<ID> ActionRecorder::consolidate()
 
 void ActionRecorder::clearAllActions()
 {
-	for (channel::Data& ch : model::get().channels)
+	for (channel::Data& ch : g_model.get().channels)
 		ch.hasActions = false;
 
-	model::swap(model::SwapType::HARD);
+	g_model.swap(model::SwapType::HARD);
 
 	g_actions.clearAll();
 }

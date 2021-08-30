@@ -48,6 +48,7 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::model::Model  g_model;
 extern giada::m::MixerHandler  g_mixerHandler;
 extern giada::m::conf::Data    g_conf;
 extern giada::m::patch::Data   g_patch;
@@ -131,7 +132,7 @@ void geMainMenu::cb_file()
 #ifndef NDEBUG
 	else if (strcmp(m->label(), "Debug stats") == 0)
 	{
-		m::model::debug();
+		g_model.debug();
 	}
 #endif
 	else if (strcmp(m->label(), "Quit Giada") == 0)

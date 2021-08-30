@@ -123,11 +123,11 @@ struct Layout
 	bool locked = false;
 };
 
-/* Lock
+/* LayoutLock
 Alias for a REALTIME scoped lock provided by the Swapper class. Use this in the
 real-time thread to lock the Layout. */
 
-using Lock = mcl::AtomicSwapper<Layout>::RtLock;
+using LayoutLock = mcl::AtomicSwapper<Layout>::RtLock;
 
 /* SwapType
 Type of Layout change. 
@@ -144,53 +144,6 @@ enum class SwapType
 	NONE
 };
 
-/* -------------------------------------------------------------------------- */
-
-class DataLock
-{
-public:
-	DataLock(SwapType t = SwapType::HARD);
-	~DataLock();
-
-private:
-	SwapType m_swapType;
-};
-
-/* -------------------------------------------------------------------------- */
-
-/* init
-Initializes the internal layout. */
-
-void init();
-
-/* get
-Returns a reference to the NON-REALTIME layout structure. */
-
-Layout& get();
-
-/* get_RT
-Returns a Lock object for REALTIME processing. Access layout by calling 
-Lock::get() method (returns ready-only Layout). */
-
-Lock get_RT();
-
-/* swap
-Swap non-rt layout with the rt one. See 'SwapType' notes above. */
-
-void swap(SwapType t);
-
-/* onSwap
-Registers an optional callback fired when the layout has been swapped. Useful 
-for listening to model changes. */
-
-void onSwap(std::function<void(SwapType)> f);
-
-bool isLocked();
-
-/* -------------------------------------------------------------------------- */
-
-/* Model utilities */
-
 #ifdef WITH_VST
 using PluginPtr = std::unique_ptr<Plugin>;
 #endif
@@ -205,33 +158,113 @@ using WavePtrs          = std::vector<WavePtr>;
 using ChannelBufferPtrs = std::vector<ChannelBufferPtr>;
 using ChannelStatePtrs  = std::vector<ChannelStatePtr>;
 
-// TODO - are ID-based objects still necessary?
+/* -------------------------------------------------------------------------- */
 
-template <typename T>
-T& getAll();
+class DataLock;
+class Model
+{
+public:
+	Model();
 
-/* find
-Finds something (Plugins or Waves) given an ID. Returns nullptr if the object is
-not found. */
+	bool isLocked() const;
 
-template <typename T>
-T* find(ID id);
+	/* lockData
+	Returns a scoped locker DataLock object. Use this when you want to lock
+	the model: a locked model won't be processed by Mixer. */
 
-template <typename T>
-void add(T);
+	[[nodiscard]] DataLock lockData(SwapType t = SwapType::HARD);
 
-template <typename T>
-void remove(const T&);
+	/* reset
+	Resets the internal layout to default. */
 
-template <typename T>
-T& back();
+	void reset();
 
-template <typename T>
-void clear();
+	/* get_RT
+	Returns a LayoutLock object for REALTIME processing. Access layout by 
+	calling LayoutLock::get() method (returns ready-only Layout). */
+
+	LayoutLock get_RT();
+
+	/* get
+	Returns a reference to the NON-REALTIME layout structure. */
+
+	Layout&       get();
+	const Layout& get() const;
+
+	/* swap
+	Swap non-rt layout with the rt one. See 'SwapType' notes above. */
+
+	void swap(SwapType t);
+
+	// TODO - are ID-based objects still necessary?
+
+	template <typename T>
+	T& getAll();
+
+	/* find
+	Finds something (Plugins or Waves) given an ID. Returns nullptr if the 
+	object is not found. */
+
+	template <typename T>
+	T* find(ID id);
+
+	template <typename T>
+	void add(T);
+
+	template <typename T>
+	void remove(const T&);
+
+	template <typename T>
+	T& back();
+
+	template <typename T>
+	void clear();
 
 #ifdef G_DEBUG_MODE
-void debug();
+	void debug();
 #endif
+
+	/* onSwap
+	Optional callback fired when the layout has been swapped. Useful for 
+	listening to model changes. */
+
+	std::function<void(SwapType)> onSwap = nullptr;
+
+private:
+	struct State
+	{
+		Clock::State                                 clock;
+		Mixer::State                                 mixer;
+		std::vector<std::unique_ptr<channel::State>> channels;
+	};
+
+	struct Data
+	{
+		std::vector<std::unique_ptr<channel::Buffer>> channels;
+		std::vector<std::unique_ptr<Wave>>            waves;
+		Actions::Map                                  actions;
+#ifdef WITH_VST
+		std::vector<std::unique_ptr<Plugin>> plugins;
+#endif
+	};
+
+	mcl::AtomicSwapper<Layout> m_layout;
+	State                      m_state;
+	Data                       m_data;
+};
+
+/* -------------------------------------------------------------------------- */
+
+class DataLock
+{
+public:
+	DataLock(Model&, SwapType t);
+	~DataLock();
+
+private:
+	Model&   m_model;
+	SwapType m_swapType;
+};
 } // namespace giada::m::model
 
 #endif

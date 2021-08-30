@@ -32,9 +32,10 @@
 #include "utils/math.h"
 #include <cassert>
 
-extern giada::m::Clock      g_clock;
-extern giada::m::Sequencer  g_sequencer;
-extern giada::m::conf::Data g_conf;
+extern giada::m::model::Model g_model;
+extern giada::m::Clock        g_clock;
+extern giada::m::Sequencer    g_sequencer;
+extern giada::m::conf::Data   g_conf;
 
 namespace giada::m::sampleReactor
 {
@@ -214,13 +215,13 @@ void rewind_(channel::Data& ch, Frame localFrame)
 Data::Data(ID channelId)
 {
 	g_sequencer.quantizer.schedule(Q_ACTION_PLAY + channelId, [channelId](Frame delta) {
-		channel::Data& ch = model::get().getChannel(channelId);
+		channel::Data& ch = g_model.get().getChannel(channelId);
 		ch.state->offset  = delta;
 		ch.state->playStatus.store(ChannelStatus::PLAY);
 	});
 
 	g_sequencer.quantizer.schedule(Q_ACTION_REWIND + channelId, [channelId](Frame delta) {
-		channel::Data& ch = model::get().getChannel(channelId);
+		channel::Data& ch = g_model.get().getChannel(channelId);
 		rewind_(ch, delta);
 	});
 }

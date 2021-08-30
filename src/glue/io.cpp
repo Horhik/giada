@@ -54,6 +54,7 @@
 #include <FL/Fl.H>
 
 extern giada::v::gdMainWindow*  G_MainWin;
+extern giada::m::model::Model   g_model;
 extern giada::m::MidiDispatcher g_midiDispatcher;
 
 namespace giada::c::io
@@ -144,29 +145,29 @@ Master_InputData::Master_InputData(const m::model::MidiIn& midiIn)
 
 Channel_InputData channel_getInputData(ID channelId)
 {
-	return Channel_InputData(m::model::get().getChannel(channelId));
+	return Channel_InputData(g_model.get().getChannel(channelId));
 }
 
 /* -------------------------------------------------------------------------- */
 
 Channel_OutputData channel_getOutputData(ID channelId)
 {
-	return Channel_OutputData(m::model::get().getChannel(channelId));
+	return Channel_OutputData(g_model.get().getChannel(channelId));
 }
 
 /* -------------------------------------------------------------------------- */
 
 Master_InputData master_getInputData()
 {
-	return Master_InputData(m::model::get().midiIn);
+	return Master_InputData(g_model.get().midiIn);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void channel_enableMidiLearn(ID channelId, bool v)
 {
-	m::model::get().getChannel(channelId).midiLearner.enabled = v;
-	m::model::swap(m::model::SwapType::NONE);
+	g_model.get().getChannel(channelId).midiLearner.enabled = v;
+	g_model.swap(m::model::SwapType::NONE);
 	rebuildMidiWindows_();
 }
 
@@ -174,8 +175,8 @@ void channel_enableMidiLearn(ID channelId, bool v)
 
 void channel_enableMidiLightning(ID channelId, bool v)
 {
-	m::model::get().getChannel(channelId).midiLighter.enabled = v;
-	m::model::swap(m::model::SwapType::NONE);
+	g_model.get().getChannel(channelId).midiLighter.enabled = v;
+	g_model.swap(m::model::SwapType::NONE);
 	rebuildMidiWindows_();
 }
 
@@ -183,8 +184,8 @@ void channel_enableMidiLightning(ID channelId, bool v)
 
 void channel_enableMidiOutput(ID channelId, bool v)
 {
-	m::model::get().getChannel(channelId).midiSender->enabled = v;
-	m::model::swap(m::model::SwapType::NONE);
+	g_model.get().getChannel(channelId).midiSender->enabled = v;
+	g_model.swap(m::model::SwapType::NONE);
 	rebuildMidiWindows_();
 }
 
@@ -192,30 +193,30 @@ void channel_enableMidiOutput(ID channelId, bool v)
 
 void channel_enableVelocityAsVol(ID channelId, bool v)
 {
-	m::model::get().getChannel(channelId).samplePlayer->velocityAsVol = v;
-	m::model::swap(m::model::SwapType::NONE);
+	g_model.get().getChannel(channelId).samplePlayer->velocityAsVol = v;
+	g_model.swap(m::model::SwapType::NONE);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void channel_setMidiInputFilter(ID channelId, int ch)
 {
-	m::model::get().getChannel(channelId).midiLearner.filter = ch;
-	m::model::swap(m::model::SwapType::NONE);
+	g_model.get().getChannel(channelId).midiLearner.filter = ch;
+	g_model.swap(m::model::SwapType::NONE);
 }
 
 void channel_setMidiOutputFilter(ID channelId, int ch)
 {
-	m::model::get().getChannel(channelId).midiSender->filter = ch;
-	m::model::swap(m::model::SwapType::NONE);
+	g_model.get().getChannel(channelId).midiSender->filter = ch;
+	g_model.swap(m::model::SwapType::NONE);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void channel_setKey(ID channelId, int k)
 {
-	m::model::get().getChannel(channelId).key = k;
-	m::model::swap(m::model::SwapType::HARD);
+	g_model.get().getChannel(channelId).key = k;
+	g_model.swap(m::model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -272,8 +273,8 @@ void plugin_clearMidiLearn(int param, ID pluginId)
 
 void master_enableMidiLearn(bool v)
 {
-	m::model::get().midiIn.enabled = v;
-	m::model::swap(m::model::SwapType::NONE);
+	g_model.get().midiIn.enabled = v;
+	g_model.swap(m::model::SwapType::NONE);
 	rebuildMidiWindows_();
 }
 
@@ -281,7 +282,7 @@ void master_enableMidiLearn(bool v)
 
 void master_setMidiFilter(int c)
 {
-	m::model::get().midiIn.filter = c;
-	m::model::swap(m::model::SwapType::NONE);
+	g_model.get().midiIn.filter = c;
+	g_model.swap(m::model::SwapType::NONE);
 }
 } // namespace giada::c::io

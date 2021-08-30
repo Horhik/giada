@@ -69,6 +69,7 @@
 #include <FL/Fl.H>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::model::Model  g_model;
 extern giada::m::KernelAudio   g_kernelAudio;
 extern giada::m::Clock         g_clock;
 extern giada::m::Sequencer     g_sequencer;
@@ -101,13 +102,6 @@ void initConf_()
 
 	if (midiMap::read(g_conf.midiMapPath) != MIDIMAP_READ_OK)
 		u::log::print("[init] MIDI map read failed!\n");
-}
-
-/* -------------------------------------------------------------------------- */
-
-void initSystem_()
-{
-	model::init();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -219,7 +213,6 @@ void startup(int argc, char** argv)
 	printBuildInfo_();
 
 	initConf_();
-	initSystem_();
 	initAudio_();
 	initMIDI_();
 	initGUI_(argc, argv);
@@ -246,7 +239,7 @@ void reset()
 
 	g_mixerHandler.stopRendering();
 
-	model::init();
+	g_model.reset();
 	channelManager::init();
 	waveManager::init();
 	g_synchronizer.reset(g_conf.samplerate, g_conf.midiTCfps);

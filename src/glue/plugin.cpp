@@ -45,6 +45,7 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::model::Model  g_model;
 extern giada::m::PluginHost    g_pluginHost;
 extern giada::m::conf::Data    g_conf;
 
@@ -116,7 +117,7 @@ Plugins::Plugins(const m::channel::Data& c)
 
 Plugins getPlugins(ID channelId)
 {
-	return Plugins(m::model::get().getChannel(channelId));
+	return Plugins(g_model.get().getChannel(channelId));
 }
 
 Plugin getPlugin(m::Plugin& plugin, ID channelId)
@@ -133,7 +134,7 @@ Param getParam(int index, const m::Plugin& plugin, ID channelId)
 
 void updateWindow(ID pluginId, bool gui)
 {
-	m::Plugin* p = m::model::find<m::Plugin>(pluginId);
+	m::Plugin* p = g_model.find<m::Plugin>(pluginId);
 
 	assert(p != nullptr);
 

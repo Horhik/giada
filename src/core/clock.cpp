@@ -39,6 +39,7 @@
 #include <atomic>
 #include <cassert>
 
+extern giada::m::model::Model   g_model;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::conf::Data     g_conf;
 
@@ -54,32 +55,32 @@ Clock::Clock(KernelAudio& k, Synchronizer& s)
 
 /* -------------------------------------------------------------------------- */
 
-float       Clock::getBpm() const { return model::get().clock.bpm; }
-int         Clock::getBeats() const { return model::get().clock.beats; }
-int         Clock::getBars() const { return model::get().clock.bars; }
-int         Clock::getCurrentBeat() const { return model::get().clock.state->currentBeat.load(); }
-int         Clock::getCurrentFrame() const { return model::get().clock.state->currentFrame.load(); }
+float       Clock::getBpm() const { return g_model.get().clock.bpm; }
+int         Clock::getBeats() const { return g_model.get().clock.beats; }
+int         Clock::getBars() const { return g_model.get().clock.bars; }
+int         Clock::getCurrentBeat() const { return g_model.get().clock.state->currentBeat.load(); }
+int         Clock::getCurrentFrame() const { return g_model.get().clock.state->currentFrame.load(); }
 float       Clock::getCurrentSecond() const { return getCurrentFrame() / static_cast<float>(g_conf.samplerate); }
-int         Clock::getFramesInBar() const { return model::get().clock.framesInBar; }
-int         Clock::getFramesInBeat() const { return model::get().clock.framesInBeat; }
-int         Clock::getFramesInLoop() const { return model::get().clock.framesInLoop; }
-int         Clock::getFramesInSeq() const { return model::get().clock.framesInSeq; }
-int         Clock::getQuantizerValue() const { return model::get().clock.quantize; }
+int         Clock::getFramesInBar() const { return g_model.get().clock.framesInBar; }
+int         Clock::getFramesInBeat() const { return g_model.get().clock.framesInBeat; }
+int         Clock::getFramesInLoop() const { return g_model.get().clock.framesInLoop; }
+int         Clock::getFramesInSeq() const { return g_model.get().clock.framesInSeq; }
+int         Clock::getQuantizerValue() const { return g_model.get().clock.quantize; }
 int         Clock::getQuantizerStep() const { return m_quantizerStep; }
-ClockStatus Clock::getStatus() const { return model::get().clock.status; }
+ClockStatus Clock::getStatus() const { return g_model.get().clock.status; }
 
 /* -------------------------------------------------------------------------- */
 
 bool Clock::isRunning() const
 {
-	return model::get().clock.status == ClockStatus::RUNNING;
+	return g_model.get().clock.status == ClockStatus::RUNNING;
 }
 
 /* -------------------------------------------------------------------------- */
 
 bool Clock::isActive() const
 {
-	const model::Clock& c = model::get().clock;
+	const model::Clock& c = g_model.get().clock;
 	return c.status == ClockStatus::RUNNING || c.status == ClockStatus::WAITING;
 }
 
@@ -87,7 +88,7 @@ bool Clock::isActive() const
 
 bool Clock::isOnBar() const
 {
-	const model::Clock& c = model::get().clock;
+	const model::Clock& c = g_model.get().clock;
 
 	int currentFrame = c.state->currentFrame.load();
 
@@ -100,7 +101,7 @@ bool Clock::isOnBar() const
 
 bool Clock::isOnBeat() const
 {
-	const model::Clock& c = model::get().clock;
+	const model::Clock& c = g_model.get().clock;
 
 	if (c.status == ClockStatus::WAITING)
 		return c.state->currentFrameWait.load() % c.framesInBeat == 0;
@@ -111,7 +112,7 @@ bool Clock::isOnBeat() const
 
 bool Clock::isOnFirstBeat() const
 {
-	return model::get().clock.state->currentFrame.load() == 0;
+	return g_model.get().clock.state->currentFrame.load() == 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -125,7 +126,7 @@ Frame Clock::getMaxFramesInLoop() const
 
 bool Clock::quantoHasPassed() const
 {
-	const model::Clock& c = model::get().clock;
+	const model::Clock& c = g_model.get().clock;
 	return getQuantizerValue() != 0 && c.state->currentFrame.load() % m_quantizerStep == 0;
 }
 
@@ -133,7 +134,7 @@ bool Clock::quantoHasPassed() const
 
 bool Clock::canQuantize() const
 {
-	const model::Clock& c = model::get().clock;
+	const model::Clock& c = g_model.get().clock;
 
 	return c.quantize > 0 && c.status == ClockStatus::RUNNING;
 }
@@ -149,8 +150,8 @@ float Clock::calcBpmFromRec(Frame recordedFrames) const
 
 void Clock::recomputeFrames()
 {
-	recomputeFrames(model::get().clock);
-	model::swap(model::SwapType::NONE);
+	recomputeFrames(g_model.get().clock);
+	g_model.swap(model::SwapType::NONE);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -179,29 +180,29 @@ void Clock::setBeats(int newBeats, int newBars)
 	newBeats = std::clamp(newBeats, 1, G_MAX_BEATS);
 	newBars  = std::clamp(newBars, 1, newBeats); // Bars cannot be greater than beats
 
-	model::get().clock.beats = newBeats;
-	model::get().clock.bars  = newBars;
-	recomputeFrames(model::get().clock);
+	g_model.get().clock.beats = newBeats;
+	g_model.get().clock.bars  = newBars;
+	recomputeFrames(g_model.get().clock);
 
-	model::swap(model::SwapType::HARD);
+	g_model.swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void Clock::setQuantize(int q)
 {
-	model::get().clock.quantize = q;
-	recomputeFrames(model::get().clock);
+	g_model.get().clock.quantize = q;
+	recomputeFrames(g_model.get().clock);
 
-	model::swap(model::SwapType::HARD);
+	g_model.swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void Clock::setStatus(ClockStatus s)
 {
-	model::get().clock.status = s;
-	model::swap(model::SwapType::SOFT);
+	g_model.get().clock.status = s;
+	g_model.swap(model::SwapType::SOFT);
 
 	if (s == ClockStatus::RUNNING)
 		m_synchronizer.sendMIDIstart();
@@ -213,20 +214,20 @@ void Clock::setStatus(ClockStatus s)
 
 void Clock::reset()
 {
-	model::get().clock.bars     = G_DEFAULT_BARS;
-	model::get().clock.beats    = G_DEFAULT_BEATS;
-	model::get().clock.bpm      = G_DEFAULT_BPM;
-	model::get().clock.quantize = G_DEFAULT_QUANTIZE;
-	recomputeFrames(model::get().clock);
+	g_model.get().clock.bars     = G_DEFAULT_BARS;
+	g_model.get().clock.beats    = G_DEFAULT_BEATS;
+	g_model.get().clock.bpm      = G_DEFAULT_BPM;
+	g_model.get().clock.quantize = G_DEFAULT_QUANTIZE;
+	recomputeFrames(g_model.get().clock);
 
-	model::swap(model::SwapType::NONE);
+	g_model.swap(model::SwapType::NONE);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void Clock::advance(Frame amount)
 {
-	const model::Clock& c = model::get().clock;
+	const model::Clock& c = g_model.get().clock;
 
 	if (c.status == ClockStatus::WAITING)
 	{
@@ -246,7 +247,7 @@ void Clock::advance(Frame amount)
 
 void Clock::rewind()
 {
-	const model::Clock& c = model::get().clock;
+	const model::Clock& c = g_model.get().clock;
 
 	c.state->currentFrame.store(0);
 	c.state->currentBeat.store(0);
@@ -281,14 +282,14 @@ void Clock::recomputeFrames(model::Clock& c)
 
 void Clock::setBpmRaw(float v)
 {
-	float ratio = model::get().clock.bpm / v;
+	float ratio = g_model.get().clock.bpm / v;
 
-	model::get().clock.bpm = v;
-	recomputeFrames(model::get().clock);
+	g_model.get().clock.bpm = v;
+	recomputeFrames(g_model.get().clock);
 
 	g_actionRecorder.updateBpm(ratio, m_quantizerStep);
 
-	model::swap(model::SwapType::HARD);
+	g_model.swap(model::SwapType::HARD);
 
 	u::log::print("[clock::setBpmRaw] Bpm changed to %f\n", v);
 }

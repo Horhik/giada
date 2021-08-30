@@ -31,10 +31,11 @@
 #include "core/kernelMidi.h"
 #include "core/model/model.h"
 
-extern giada::m::Sequencer  g_sequencer;
-extern giada::m::Clock      g_clock;
-extern giada::m::KernelMidi g_kernelMidi;
-extern giada::m::conf::Data g_conf;
+extern giada::m::model::Model g_model;
+extern giada::m::Sequencer    g_sequencer;
+extern giada::m::Clock        g_clock;
+extern giada::m::KernelMidi   g_kernelMidi;
+extern giada::m::conf::Data   g_conf;
 
 namespace giada::m
 {
@@ -65,7 +66,7 @@ void Synchronizer::reset(int sampleRate, float midiTCfps)
 
 void Synchronizer::sendMIDIsync()
 {
-	const model::Clock& c = model::get().clock;
+	const model::Clock& c = g_model.get().clock;
 
 	/* Sending MIDI sync while waiting is meaningless. */
 

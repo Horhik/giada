@@ -38,6 +38,7 @@
 #include "src/core/actions/actionRecorder.h"
 #include "src/core/actions/actions.h"
 
+extern giada::m::model::Model   g_model;
 extern giada::m::KernelAudio    g_kernelAudio;
 extern giada::m::Clock          g_clock;
 extern giada::m::Sequencer      g_sequencer;
@@ -56,12 +57,12 @@ bool Recorder::isRecording() const
 
 bool Recorder::isRecordingAction() const
 {
-	return model::get().recorder.isRecordingAction;
+	return g_model.get().recorder.isRecordingAction;
 }
 
 bool Recorder::isRecordingInput() const
 {
-	return model::get().recorder.isRecordingInput;
+	return g_model.get().recorder.isRecordingInput;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -111,12 +112,12 @@ void Recorder::stopActionRec()
 
 	for (ID id : channels)
 	{
-		channel::Data& ch = model::get().getChannel(id);
+		channel::Data& ch = g_model.get().getChannel(id);
 		ch.state->readActions.store(true);
 		if (ch.type == ChannelType::MIDI)
 			ch.state->playStatus.store(ChannelStatus::PLAY);
 	}
-	model::swap(model::SwapType::HARD);
+	g_model.swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -240,14 +241,14 @@ bool Recorder::canRec() const
 
 void Recorder::setRecordingAction(bool v)
 {
-	model::get().recorder.isRecordingAction = v;
-	model::swap(model::SwapType::NONE);
+	g_model.get().recorder.isRecordingAction = v;
+	g_model.swap(model::SwapType::NONE);
 }
 
 void Recorder::setRecordingInput(bool v)
 {
-	model::get().recorder.isRecordingInput = v;
-	model::swap(model::SwapType::NONE);
+	g_model.get().recorder.isRecordingInput = v;
+	g_model.swap(model::SwapType::NONE);
 }
 
 /* -------------------------------------------------------------------------- */

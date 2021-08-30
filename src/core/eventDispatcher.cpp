@@ -33,6 +33,7 @@
 #include "utils/log.h"
 #include <functional>
 
+extern giada::m::model::Model   g_model;
 extern giada::m::Sequencer      g_sequencer;
 extern giada::m::Mixer          g_mixer;
 extern giada::m::MidiDispatcher g_midiDispatcher;
@@ -83,9 +84,9 @@ void EventDispatcher::processFuntions()
 
 void EventDispatcher::processChannels()
 {
-	for (channel::Data& ch : model::get().channels)
+	for (channel::Data& ch : g_model.get().channels)
 		channel::react(ch, m_eventBuffer, g_mixer.isChannelAudible(ch));
-	model::swap(model::SwapType::SOFT);
+	g_model.swap(model::SwapType::SOFT);
 }
 
 /* -------------------------------------------------------------------------- */

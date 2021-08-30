@@ -38,7 +38,8 @@
 #include "utils/string.h"
 #include <cassert>
 
-extern giada::m::conf::Data g_conf;
+extern giada::m::model::Model g_model;
+extern giada::m::conf::Data   g_conf;
 
 namespace giada::m::pluginManager
 {
@@ -261,7 +262,7 @@ std::vector<Plugin*> hydratePlugins(std::vector<ID> pluginIds)
 	std::vector<Plugin*> out;
 	for (ID id : pluginIds)
 	{
-		Plugin* plugin = model::find<Plugin>(id);
+		Plugin* plugin = g_model.find<Plugin>(id);
 		if (plugin != nullptr)
 			out.push_back(plugin);
 	}

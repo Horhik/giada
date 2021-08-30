@@ -38,6 +38,8 @@
 #include <samplerate.h>
 #include <sndfile.h>
 
+extern giada::m::model::Model g_model;
+
 namespace giada::m::waveManager
 {
 namespace
@@ -177,7 +179,7 @@ const patch::Wave serializeWave(const Wave& w)
 
 Wave* hydrateWave(ID waveId)
 {
-	return model::find<Wave>(waveId);
+	return g_model.find<Wave>(waveId);
 }
 
 /* -------------------------------------------------------------------------- */

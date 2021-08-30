@@ -36,6 +36,7 @@
 #include "src/core/actions/actionRecorder.h"
 #include <cassert>
 
+extern giada::m::model::Model   g_model;
 extern giada::m::Sequencer      g_sequencer;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::conf::Data     g_conf;
@@ -50,14 +51,14 @@ void loadChannels_(const std::vector<patch::Channel>& channels, int samplerate)
 	float samplerateRatio = g_conf.samplerate / static_cast<float>(samplerate);
 
 	for (const patch::Channel& pchannel : channels)
-		get().channels.push_back(channelManager::deserializeChannel(pchannel, samplerateRatio));
+		g_model.get().channels.push_back(channelManager::deserializeChannel(pchannel, samplerateRatio));
 }
 
 /* -------------------------------------------------------------------------- */
 
 void loadActions_(const std::vector<patch::Action>& pactions)
 {
-	getAll<Actions::Map>() = std::move(g_actionRecorder.deserializeActions(pactions));
+	g_model.getAll<Actions::Map>() = std::move(g_actionRecorder.deserializeActions(pactions));
 }
 } // namespace
 
@@ -67,7 +68,7 @@ void loadActions_(const std::vector<patch::Action>& pactions)
 
 void store(patch::Data& patch)
 {
-	const Layout& layout = get();
+	const Layout& layout = g_model.get();
 
 	patch.bars       = layout.clock.bars;
 	patch.beats      = layout.clock.beats;
@@ -77,13 +78,13 @@ void store(patch::Data& patch)
 	patch.samplerate = g_conf.samplerate;
 
 #ifdef WITH_VST
-	for (const auto& p : getAll<PluginPtrs>())
+	for (const auto& p : g_model.getAll<PluginPtrs>())
 		patch.plugins.push_back(pluginManager::serializePlugin(*p));
 #endif
 
-	patch.actions = g_actionRecorder.serializeActions(getAll<Actions::Map>());
+	patch.actions = g_actionRecorder.serializeActions(g_model.getAll<Actions::Map>());
 
-	for (const auto& w : getAll<WavePtrs>())
+	for (const auto& w : g_model.getAll<WavePtrs>())
 		patch.waves.push_back(waveManager::serializeWave(*w));
 
 	for (const channel::Data& c : layout.channels)
@@ -94,7 +95,7 @@ void store(patch::Data& patch)
 
 void store(conf::Data& conf)
 {
-	const Layout& layout = get();
+	const Layout& layout = g_model.get();
 
 	conf.midiInEnabled    = layout.midiIn.enabled;
 	conf.midiInFilter     = layout.midiIn.filter;
@@ -113,29 +114,29 @@ void store(conf::Data& conf)
 
 void load(const patch::Data& patch)
 {
-	DataLock lock;
+	DataLock lock = g_model.lockData();
 
 	/* Clear and re-initialize channels first. */
 
-	get().channels = {};
-	getAll<ChannelBufferPtrs>().clear();
-	getAll<ChannelStatePtrs>().clear();
+	g_model.get().channels = {};
+	g_model.getAll<ChannelBufferPtrs>().clear();
+	g_model.getAll<ChannelStatePtrs>().clear();
 
 	/* Load external data first: plug-ins and waves. */
 
 #ifdef WITH_VST
-	getAll<PluginPtrs>().clear();
+	g_model.getAll<PluginPtrs>().clear();
 	for (const patch::Plugin& pplugin : patch.plugins)
-		getAll<PluginPtrs>().push_back(pluginManager::deserializePlugin(pplugin, patch.version));
+		g_model.getAll<PluginPtrs>().push_back(pluginManager::deserializePlugin(pplugin, patch.version));
 #endif
 
-	getAll<WavePtrs>().clear();
+	g_model.getAll<WavePtrs>().clear();
 	for (const patch::Wave& pwave : patch.waves)
 	{
 		std::unique_ptr<Wave> w = waveManager::deserializeWave(pwave, g_conf.samplerate,
 		    g_conf.rsmpQuality);
 		if (w != nullptr)
-			getAll<WavePtrs>().push_back(std::move(w));
+			g_model.getAll<WavePtrs>().push_back(std::move(w));
 	}
 
 	/* Then load up channels, actions and global properties. */
@@ -143,29 +144,29 @@ void load(const patch::Data& patch)
 	loadChannels_(patch.channels, g_patch.samplerate);
 	loadActions_(patch.actions);
 
-	get().clock.status   = ClockStatus::STOPPED;
-	get().clock.bars     = patch.bars;
-	get().clock.beats    = patch.beats;
-	get().clock.bpm      = patch.bpm;
-	get().clock.quantize = patch.quantize;
+	g_model.get().clock.status   = ClockStatus::STOPPED;
+	g_model.get().clock.bars     = patch.bars;
+	g_model.get().clock.beats    = patch.beats;
+	g_model.get().clock.bpm      = patch.bpm;
+	g_model.get().clock.quantize = patch.quantize;
 }
 
 /* -------------------------------------------------------------------------- */
 
 void load(const conf::Data& c)
 {
-	get().midiIn.enabled    = c.midiInEnabled;
-	get().midiIn.filter     = c.midiInFilter;
-	get().midiIn.rewind     = c.midiInRewind;
-	get().midiIn.startStop  = c.midiInStartStop;
-	get().midiIn.actionRec  = c.midiInActionRec;
-	get().midiIn.inputRec   = c.midiInInputRec;
-	get().midiIn.volumeIn   = c.midiInVolumeIn;
-	get().midiIn.volumeOut  = c.midiInVolumeOut;
-	get().midiIn.beatDouble = c.midiInBeatDouble;
-	get().midiIn.beatHalf   = c.midiInBeatHalf;
-	get().midiIn.metronome  = c.midiInMetronome;
+	g_model.get().midiIn.enabled    = c.midiInEnabled;
+	g_model.get().midiIn.filter     = c.midiInFilter;
+	g_model.get().midiIn.rewind     = c.midiInRewind;
+	g_model.get().midiIn.startStop  = c.midiInStartStop;
+	g_model.get().midiIn.actionRec  = c.midiInActionRec;
+	g_model.get().midiIn.inputRec   = c.midiInInputRec;
+	g_model.get().midiIn.volumeIn   = c.midiInVolumeIn;
+	g_model.get().midiIn.volumeOut  = c.midiInVolumeOut;
+	g_model.get().midiIn.beatDouble = c.midiInBeatDouble;
+	g_model.get().midiIn.beatHalf   = c.midiInBeatHalf;
+	g_model.get().midiIn.metronome  = c.midiInMetronome;
 
-	swap(SwapType::NONE);
+	g_model.swap(SwapType::NONE);
 }
 } // namespace giada::m::model

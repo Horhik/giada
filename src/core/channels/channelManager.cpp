@@ -44,8 +44,9 @@
 #include "utils/fs.h"
 #include <cassert>
 
-extern giada::m::KernelAudio g_kernelAudio;
-extern giada::m::conf::Data  g_conf;
+extern giada::m::model::Model g_model;
+extern giada::m::KernelAudio  g_kernelAudio;
+extern giada::m::conf::Data   g_conf;
 
 namespace giada::m::channelManager
 {
@@ -62,16 +63,16 @@ channel::State& makeState_(ChannelType type)
 	if (type == ChannelType::SAMPLE || type == ChannelType::PREVIEW)
 		state->resampler = Resampler(static_cast<Resampler::Quality>(g_conf.rsmpQuality), G_MAX_IO_CHANS);
 
-	model::add(std::move(state));
-	return model::back<channel::State>();
+	g_model.add(std::move(state));
+	return g_model.back<channel::State>();
 }
 
 /* -------------------------------------------------------------------------- */
 
 channel::Buffer& makeBuffer_()
 {
-	model::add(std::make_unique<channel::Buffer>(g_kernelAudio.getRealBufSize()));
-	return model::back<channel::Buffer>();
+	g_model.add(std::make_unique<channel::Buffer>(g_kernelAudio.getRealBufSize()));
+	return g_model.back<channel::Buffer>();
 }
 } // namespace
 

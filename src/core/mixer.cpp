@@ -31,6 +31,7 @@
 #include "utils/log.h"
 #include "utils/math.h"
 
+extern giada::m::model::Model    g_model;
 extern giada::m::Sequencer       g_sequencer;
 extern giada::m::EventDispatcher g_eventDispatcher;
 
@@ -76,14 +77,14 @@ void Mixer::reset(Frame maxFramesInLoop, Frame framesInBuffer)
 
 void Mixer::enable()
 {
-	model::get().mixer.state->active.store(true);
+	g_model.get().mixer.state->active.store(true);
 	u::log::print("[mixer::enable] enabled\n");
 }
 
 void Mixer::disable()
 {
-	model::get().mixer.state->active.store(false);
-	while (model::isLocked())
+	g_model.get().mixer.state->active.store(false);
+	while (g_model.isLocked())
 		;
 	u::log::print("[mixer::disable] disabled\n");
 }
@@ -109,8 +110,8 @@ const mcl::AudioBuffer& Mixer::getRecBuffer()
 
 int Mixer::render(mcl::AudioBuffer& out, const mcl::AudioBuffer& in, const RenderInfo& info)
 {
-	const model::Lock   rtLock = model::get_RT();
-	const model::Mixer& mixer  = rtLock.get().mixer;
+	const model::LayoutLock layoutLock = g_model.get_RT();
+	const model::Mixer&     mixer      = layoutLock.get().mixer;
 
 	m_inBuffer.clear();
 
@@ -126,7 +127,7 @@ int Mixer::render(mcl::AudioBuffer& out, const mcl::AudioBuffer& in, const Rende
 	if (info.hasInput)
 	{
 		processLineIn(mixer, in, info.inVol, info.recTriggerLevel);
-		renderMasterIn(rtLock.get(), m_inBuffer);
+		renderMasterIn(layoutLock.get(), m_inBuffer);
 	}
 
 	/* Record input audio and advance the sequencer only if clock is active:
@@ -137,19 +138,19 @@ int Mixer::render(mcl::AudioBuffer& out, const mcl::AudioBuffer& in, const Rende
 		if (info.canLineInRec)
 			lineInRec(in, info.maxFramesToRec, info.inVol);
 		if (info.isClockRunning)
-			processSequencer(rtLock.get(), out, m_inBuffer);
+			processSequencer(layoutLock.get(), out, m_inBuffer);
 	}
 
 	/* Channel processing. Don't do it if layout is locked: another thread is 
 	changing data (e.g. Plugins or Waves). */
 
-	if (!rtLock.get().locked)
-		processChannels(rtLock.get(), out, m_inBuffer);
+	if (!layoutLock.get().locked)
+		processChannels(layoutLock.get(), out, m_inBuffer);
 
 	/* Render remaining internal channels. */
 
-	renderMasterOut(rtLock.get(), out);
-	renderPreview(rtLock.get(), out);
+	renderMasterOut(layoutLock.get(), out);
+	renderPreview(layoutLock.get(), out);
 
 	/* Post processing. */
 
@@ -187,7 +188,7 @@ bool Mixer::isChannelAudible(const channel::Data& c) const
 		return true;
 	if (c.mute)
 		return false;
-	bool hasSolos = model::get().mixer.hasSolos;
+	bool hasSolos = g_model.get().mixer.hasSolos;
 	return !hasSolos || (hasSolos && c.solo);
 }
 
@@ -196,15 +197,15 @@ bool Mixer::isChannelAudible(const channel::Data& c) const
 Peak Mixer::getPeakOut() const
 {
 	return {
-	    m::model::get().mixer.state->peakOutL.load(),
-	    m::model::get().mixer.state->peakOutR.load()};
+	    g_model.get().mixer.state->peakOutL.load(),
+	    g_model.get().mixer.state->peakOutR.load()};
 }
 
 Peak Mixer::getPeakIn() const
 {
 	return {
-	    m::model::get().mixer.state->peakInL.load(),
-	    m::model::get().mixer.state->peakInR.load()};
+	    g_model.get().mixer.state->peakInL.load(),
+	    g_model.get().mixer.state->peakInR.load()};
 }
 
 /* -------------------------------------------------------------------------- */

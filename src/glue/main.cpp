@@ -53,6 +53,7 @@
 #include <cmath>
 
 extern giada::v::gdMainWindow*  G_MainWin;
+extern giada::m::model::Model   g_model;
 extern giada::m::KernelAudio    g_kernelAudio;
 extern giada::m::Clock          g_clock;
 extern giada::m::Mixer          g_mixer;
@@ -113,16 +114,16 @@ bool IO::isKernelReady()
 
 Timer getTimer()
 {
-	return Timer(m::model::get().clock);
+	return Timer(g_model.get().clock);
 }
 
 /* -------------------------------------------------------------------------- */
 
 IO getIO()
 {
-	return IO(m::model::get().getChannel(m::Mixer::MASTER_OUT_CHANNEL_ID),
-	    m::model::get().getChannel(m::Mixer::MASTER_IN_CHANNEL_ID),
-	    m::model::get().mixer);
+	return IO(g_model.get().getChannel(m::Mixer::MASTER_OUT_CHANNEL_ID),
+	    g_model.get().getChannel(m::Mixer::MASTER_IN_CHANNEL_ID),
+	    g_model.get().mixer);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -40,7 +40,7 @@
 #include "utils/log.h"
 #include "utils/vector.h"
 
-/* TODO */
+extern giada::m::model::Model g_model;
 extern giada::m::KernelAudio  g_kernelAudio;
 extern giada::m::Clock        g_clock;
 extern giada::m::Mixer        g_mixer;
@@ -76,7 +76,7 @@ int callback_(void* outBuf, void* inBuf, unsigned bufferSize, double /*streamTim
 #endif
 
 	Mixer::RenderInfo info;
-	info.isAudioReady    = model::get().kernel.audioReady;
+	info.isAudioReady    = g_model.get().kernel.audioReady;
 	info.hasInput        = g_kernelAudio.isInputEnabled();
 	info.isClockActive   = g_clock.isActive();
 	info.isClockRunning  = g_clock.isRunning();
@@ -213,8 +213,8 @@ int KernelAudio::openDevice(const conf::Data& conf)
 		m_jackTransport.emplace(*static_cast<jack_client_t*>(m_rtAudio->HACK__getJackClient()));
 #endif
 
-		model::get().kernel.audioReady = true;
-		model::swap(model::SwapType::NONE);
+		g_model.get().kernel.audioReady = true;
+		g_model.swap(model::SwapType::NONE);
 		return 1;
 	}
 	catch (RtAudioError& e)
@@ -273,7 +273,7 @@ void KernelAudio::closeDevice()
 
 bool KernelAudio::isReady() const
 {
-	return model::get().kernel.audioReady;
+	return g_model.get().kernel.audioReady;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -464,6 +464,6 @@ void KernelAudio::printDevices(const std::vector<m::KernelAudio::Device>& device
 
 bool KernelAudio::canRender() const
 {
-	return model::get().kernel.audioReady && model::get().mixer.state->active.load() == true;
+	return g_model.get().kernel.audioReady && g_model.get().mixer.state->active.load() == true;
 }
 } // namespace giada::m

@@ -38,7 +38,8 @@
 #include "utils/vector.h"
 #include <cassert>
 
-extern giada::m::Clock g_clock;
+extern giada::m::model::Model g_model;
+extern giada::m::Clock        g_clock;
 
 namespace giada::m
 {
@@ -80,7 +81,7 @@ PluginHost::~PluginHost()
 
 void PluginHost::reset(int bufferSize)
 {
-	model::clear<model::PluginPtrs>();
+	g_model.clear<model::PluginPtrs>();
 	m_audioBuffer.setSize(G_MAX_IO_CHANS, bufferSize);
 }
 
@@ -114,43 +115,43 @@ void PluginHost::processStack(mcl::AudioBuffer& outBuf, const std::vector<Plugin
 
 void PluginHost::addPlugin(std::unique_ptr<Plugin> p, ID channelId)
 {
-	model::add(std::move(p));
+	g_model.add(std::move(p));
 
-	const Plugin& pluginRef = model::back<Plugin>();
+	const Plugin& pluginRef = g_model.back<Plugin>();
 
 	/* TODO - unfortunately JUCE wants mutable plugin objects due to the
 	presence of the non-const processBlock() method. Why not const_casting
 	only in the Plugin class? */
-	model::get().getChannel(channelId).plugins.push_back(const_cast<Plugin*>(&pluginRef));
-	model::swap(model::SwapType::HARD);
+	g_model.get().getChannel(channelId).plugins.push_back(const_cast<Plugin*>(&pluginRef));
+	g_model.swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void PluginHost::swapPlugin(const m::Plugin& p1, const m::Plugin& p2, ID channelId)
 {
-	std::vector<m::Plugin*>& pvec   = model::get().getChannel(channelId).plugins;
+	std::vector<m::Plugin*>& pvec   = g_model.get().getChannel(channelId).plugins;
 	std::size_t              index1 = u::vector::indexOf(pvec, &p1);
 	std::size_t              index2 = u::vector::indexOf(pvec, &p2);
 	std::swap(pvec.at(index1), pvec.at(index2));
 
-	model::swap(model::SwapType::HARD);
+	g_model.swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void PluginHost::freePlugin(const m::Plugin& plugin, ID channelId)
 {
-	u::vector::remove(model::get().getChannel(channelId).plugins, &plugin);
-	model::swap(model::SwapType::HARD);
-	model::remove(plugin);
+	u::vector::remove(g_model.get().getChannel(channelId).plugins, &plugin);
+	g_model.swap(model::SwapType::HARD);
+	g_model.remove(plugin);
 }
 
 void PluginHost::freePlugins(const std::vector<Plugin*>& plugins)
 {
 	// TODO - channels???
 	for (const Plugin* p : plugins)
-		model::remove(*p);
+		g_model.remove(*p);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -160,8 +161,8 @@ std::vector<Plugin*> PluginHost::clonePlugins(const std::vector<Plugin*>& plugin
 	std::vector<Plugin*> out;
 	for (const Plugin* p : plugins)
 	{
-		model::add(pluginManager::makePlugin(*p));
-		out.push_back(&model::back<Plugin>());
+		g_model.add(pluginManager::makePlugin(*p));
+		out.push_back(&g_model.back<Plugin>());
 	}
 	return out;
 }
@@ -170,21 +171,21 @@ std::vector<Plugin*> PluginHost::clonePlugins(const std::vector<Plugin*>& plugin
 
 void PluginHost::setPluginParameter(ID pluginId, int paramIndex, float value)
 {
-	model::find<Plugin>(pluginId)->setParameter(paramIndex, value);
+	g_model.find<Plugin>(pluginId)->setParameter(paramIndex, value);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void PluginHost::setPluginProgram(ID pluginId, int programIndex)
 {
-	model::find<Plugin>(pluginId)->setCurrentProgram(programIndex);
+	g_model.find<Plugin>(pluginId)->setCurrentProgram(programIndex);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void PluginHost::toggleBypass(ID pluginId)
 {
-	Plugin& plugin = *model::find<Plugin>(pluginId);
+	Plugin& plugin = *g_model.find<Plugin>(pluginId);
 	plugin.setBypass(!plugin.isBypassed());
 }
 

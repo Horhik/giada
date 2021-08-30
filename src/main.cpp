@@ -34,6 +34,7 @@
 #include "core/midiMap.h"
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
+#include "core/model/model.h"
 #include "core/patch.h"
 #include "core/plugins/pluginHost.h"
 #include "core/recorder.h"
@@ -55,6 +56,7 @@
 #include <vector>
 #endif
 
+giada::m::model::Model    g_model;
 giada::m::conf::Data      g_conf;
 giada::m::patch::Data     g_patch;
 giada::m::midiMap::Data   g_midiMap;

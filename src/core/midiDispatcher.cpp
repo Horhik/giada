@@ -40,6 +40,7 @@
 #include <cassert>
 #include <vector>
 
+extern giada::m::model::Model    g_model;
 extern giada::m::EventDispatcher g_eventDispatcher;
 
 namespace giada::m
@@ -150,8 +151,8 @@ void MidiDispatcher::setSignalCallback(std::function<void()> f)
 
 bool MidiDispatcher::isMasterMidiInAllowed(int c)
 {
-	int  filter  = model::get().midiIn.filter;
-	bool enabled = model::get().midiIn.enabled;
+	int  filter  = g_model.get().midiIn.filter;
+	bool enabled = g_model.get().midiIn.enabled;
 	return enabled && (filter == -1 || filter == c);
 }
 
@@ -159,7 +160,7 @@ bool MidiDispatcher::isMasterMidiInAllowed(int c)
 
 bool MidiDispatcher::isChannelMidiInAllowed(ID channelId, int c)
 {
-	return model::get().getChannel(channelId).midiLearner.isAllowed(c);
+	return g_model.get().getChannel(channelId).midiLearner.isAllowed(c);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -197,7 +198,7 @@ void MidiDispatcher::processChannels(const MidiEvent& midiEvent)
 {
 	uint32_t pure = midiEvent.getRawNoVelocity();
 
-	for (const channel::Data& c : model::get().channels)
+	for (const channel::Data& c : g_model.get().channels)
 	{
 
 		/* Do nothing on this channel if MIDI in is disabled or filtered out for
@@ -272,7 +273,7 @@ void MidiDispatcher::processChannels(const MidiEvent& midiEvent)
 void MidiDispatcher::processMaster(const MidiEvent& midiEvent)
 {
 	const uint32_t       pure   = midiEvent.getRawNoVelocity();
-	const model::MidiIn& midiIn = model::get().midiIn;
+	const model::MidiIn& midiIn = g_model.get().midiIn;
 
 	if (pure == midiIn.rewind)
 	{
@@ -334,7 +335,7 @@ void MidiDispatcher::learnChannel(MidiEvent e, int param, ID channelId, std::fun
 
 	uint32_t raw = e.getRawNoVelocity();
 
-	channel::Data& ch = model::get().getChannel(channelId);
+	channel::Data& ch = g_model.get().getChannel(channelId);
 
 	switch (param)
 	{
@@ -376,7 +377,7 @@ void MidiDispatcher::learnChannel(MidiEvent e, int param, ID channelId, std::fun
 		break;
 	}
 
-	model::swap(model::SwapType::SOFT);
+	g_model.swap(model::SwapType::SOFT);
 
 	stopLearn();
 	doneCb();
@@ -394,35 +395,35 @@ void MidiDispatcher::learnMaster(MidiEvent e, int param, std::function<void()> d
 	switch (param)
 	{
 	case G_MIDI_IN_REWIND:
-		model::get().midiIn.rewind = raw;
+		g_model.get().midiIn.rewind = raw;
 		break;
 	case G_MIDI_IN_START_STOP:
-		model::get().midiIn.startStop = raw;
+		g_model.get().midiIn.startStop = raw;
 		break;
 	case G_MIDI_IN_ACTION_REC:
-		model::get().midiIn.actionRec = raw;
+		g_model.get().midiIn.actionRec = raw;
 		break;
 	case G_MIDI_IN_INPUT_REC:
-		model::get().midiIn.inputRec = raw;
+		g_model.get().midiIn.inputRec = raw;
 		break;
 	case G_MIDI_IN_METRONOME:
-		model::get().midiIn.metronome = raw;
+		g_model.get().midiIn.metronome = raw;
 		break;
 	case G_MIDI_IN_VOLUME_IN:
-		model::get().midiIn.volumeIn = raw;
+		g_model.get().midiIn.volumeIn = raw;
 		break;
 	case G_MIDI_IN_VOLUME_OUT:
-		model::get().midiIn.volumeOut = raw;
+		g_model.get().midiIn.volumeOut = raw;
 		break;
 	case G_MIDI_IN_BEAT_DOUBLE:
-		model::get().midiIn.beatDouble = raw;
+		g_model.get().midiIn.beatDouble = raw;
 		break;
 	case G_MIDI_IN_BEAT_HALF:
-		model::get().midiIn.beatHalf = raw;
+		g_model.get().midiIn.beatHalf = raw;
 		break;
 	}
 
-	model::swap(model::SwapType::SOFT);
+	g_model.swap(model::SwapType::SOFT);
 
 	stopLearn();
 	doneCb();
@@ -434,9 +435,8 @@ void MidiDispatcher::learnMaster(MidiEvent e, int param, std::function<void()> d
 
 void MidiDispatcher::learnPlugin(MidiEvent e, std::size_t paramIndex, ID pluginId, std::function<void()> doneCb)
 {
-	model::DataLock lock(model::SwapType::NONE);
-
-	Plugin* plugin = model::find<Plugin>(pluginId);
+	model::DataLock lock   = g_model.lockData(model::SwapType::NONE);
+	Plugin*         plugin = g_model.find<Plugin>(pluginId);
 
 	assert(plugin != nullptr);
 	assert(paramIndex < plugin->midiInParams.size());

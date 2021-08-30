@@ -33,6 +33,8 @@
 #include <cassert>
 #include <memory>
 
+extern giada::m::model::Model g_model;
+
 namespace giada::m
 {
 Actions::Actions()
@@ -52,8 +54,8 @@ void Actions::reset()
 
 void Actions::clearAll()
 {
-	model::DataLock lock;
-	model::getAll<Map>().clear();
+	model::DataLock lock = g_model.lockData();
+	g_model.getAll<Map>().clear();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -93,7 +95,7 @@ void Actions::updateKeyFrames(std::function<Frame(Frame old)> f)
 	/* Copy all existing actions in local map by cloning them, with just a
 	difference: they have a new frame value. */
 
-	for (const auto& [oldFrame, actions] : model::getAll<Map>())
+	for (const auto& [oldFrame, actions] : g_model.getAll<Map>())
 	{
 		Frame newFrame = f(oldFrame);
 		for (const Action& a : actions)
@@ -107,27 +109,28 @@ void Actions::updateKeyFrames(std::function<Frame(Frame old)> f)
 
 	updateMapPointers(temp);
 
-	model::DataLock lock;
-	model::getAll<Map>() = std::move(temp);
+	model::DataLock lock  = g_model.lockData();
+	g_model.getAll<Map>() = std::move(temp);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void Actions::updateEvent(ID id, MidiEvent e)
 {
-	model::DataLock lock;
-	findAction(model::getAll<Map>(), id)->event = e;
+	model::DataLock lock = g_model.lockData();
+
+	findAction(g_model.getAll<Map>(), id)->event = e;
 }
 
 /* -------------------------------------------------------------------------- */
 
 void Actions::updateSiblings(ID id, ID prevId, ID nextId)
 {
-	model::DataLock lock;
+	model::DataLock lock = g_model.lockData();
 
-	Action* pcurr = findAction(model::getAll<Map>(), id);
-	Action* pprev = findAction(model::getAll<Map>(), prevId);
-	Action* pnext = findAction(model::getAll<Map>(), nextId);
+	Action* pcurr = findAction(g_model.getAll<Map>(), id);
+	Action* pprev = findAction(g_model.getAll<Map>(), prevId);
+	Action* pnext = findAction(g_model.getAll<Map>(), nextId);
 
 	pcurr->prev   = pprev;
 	pcurr->prevId = pprev->id;
@@ -150,7 +153,7 @@ void Actions::updateSiblings(ID id, ID prevId, ID nextId)
 
 bool Actions::hasActions(ID channelId, int type) const
 {
-	for (const auto& [frame, actions] : model::getAll<Map>())
+	for (const auto& [frame, actions] : g_model.getAll<Map>())
 		for (const Action& a : actions)
 			if (a.channelId == channelId && (type == 0 || type == a.event.getStatus()))
 				return true;
@@ -187,10 +190,10 @@ Action Actions::rec(ID channelId, Frame frame, MidiEvent event)
 	/* If key frame doesn't exist yet, the [] operator in std::map is smart 
 	enough to insert a new item first. No plug-in data for now. */
 
-	model::DataLock lock;
+	model::DataLock lock = g_model.lockData();
 
-	model::getAll<Map>()[frame].push_back(a);
-	updateMapPointers(model::getAll<Map>());
+	g_model.getAll<Map>()[frame].push_back(a);
+	updateMapPointers(g_model.getAll<Map>());
 
 	return a;
 }
@@ -202,9 +205,9 @@ void Actions::rec(std::vector<Action>& actions)
 	if (actions.size() == 0)
 		return;
 
-	model::DataLock lock;
+	model::DataLock lock = g_model.lockData();
 
-	Map& map = model::getAll<Map>();
+	Map& map = g_model.getAll<Map>();
 
 	for (const Action& a : actions)
 		if (!exists(a.channelId, a.frame, a.event, map))
@@ -216,9 +219,9 @@ void Actions::rec(std::vector<Action>& actions)
 
 void Actions::rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2)
 {
-	model::DataLock lock;
+	model::DataLock lock = g_model.lockData();
 
-	Map& map = model::getAll<Map>();
+	Map& map = g_model.getAll<Map>();
 
 	map[f1].push_back(makeAction(0, channelId, f1, e1));
 	map[f2].push_back(makeAction(0, channelId, f2, e2));
@@ -235,9 +238,9 @@ void Actions::rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2)
 
 const std::vector<Action>* Actions::getActionsOnFrame(Frame frame) const
 {
-	if (model::getAll<Map>().count(frame) == 0)
+	if (g_model.getAll<Map>().count(frame) == 0)
 		return nullptr;
-	return &model::getAll<Map>().at(frame);
+	return &g_model.getAll<Map>().at(frame);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -270,7 +273,7 @@ std::vector<Action> Actions::getActionsOnChannel(ID channelId) const
 
 void Actions::forEachAction(std::function<void(const Action&)> f) const
 {
-	for (auto& [_, actions] : model::getAll<Map>())
+	for (auto& [_, actions] : g_model.getAll<Map>())
 		for (const Action& action : actions)
 			f(action);
 }
@@ -322,9 +325,9 @@ void Actions::optimize(Map& map)
 
 void Actions::removeIf(std::function<bool(const Action&)> f)
 {
-	model::DataLock lock;
+	model::DataLock lock = g_model.lockData();
 
-	Map& map = model::getAll<Map>();
+	Map& map = g_model.getAll<Map>();
 	for (auto& [frame, actions] : map)
 		actions.erase(std::remove_if(actions.begin(), actions.end(), f), actions.end());
 	optimize(map);
@@ -346,6 +349,6 @@ bool Actions::exists(ID channelId, Frame frame, const MidiEvent& event, const Ma
 
 bool Actions::exists(ID channelId, Frame frame, const MidiEvent& event) const
 {
-	return exists(channelId, frame, event, model::getAll<Map>());
+	return exists(channelId, frame, event, g_model.getAll<Map>());
 }
 } // namespace giada::m

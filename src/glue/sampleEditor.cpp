@@ -52,6 +52,7 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::model::Model  g_model;
 extern giada::m::MixerHandler  g_mixerHandler;
 
 namespace giada::c::sampleEditor
@@ -60,7 +61,7 @@ namespace
 {
 m::channel::Data& getChannel_(ID channelId)
 {
-	return m::model::get().getChannel(channelId);
+	return g_model.get().getChannel(channelId);
 }
 
 m::samplePlayer::Data& getSamplePlayer_(ID channelId)
@@ -141,7 +142,7 @@ Data getData(ID channelId)
 {
 	/* Prepare the preview channel first, then return Data object. */
 	m::samplePlayer::loadWave(getChannel_(m::Mixer::PREVIEW_CHANNEL_ID), &getWave_(channelId));
-	m::model::swap(m::model::SwapType::SOFT);
+	g_model.swap(m::model::SwapType::SOFT);
 
 	return Data(getChannel_(channelId));
 }
@@ -185,7 +186,7 @@ void setBeginEnd(ID channelId, Frame b, Frame e)
 
 	getSamplePlayer_(channelId).begin = b;
 	getSamplePlayer_(channelId).end   = e;
-	m::model::swap(m::model::SwapType::SOFT);
+	g_model.swap(m::model::SwapType::SOFT);
 
 	/* TODO waveform widget is dumb and wants a rebuild. Refactoring needed! */
 	getSampleEditorWindow()->rebuild();
@@ -196,7 +197,7 @@ void setBeginEnd(ID channelId, Frame b, Frame e)
 void cut(ID channelId, Frame a, Frame b)
 {
 	copy(channelId, a, b);
-	m::model::DataLock lock;
+	m::model::DataLock lock = g_model.lockData();
 	m::wfx::cut(getWave_(channelId), a, b);
 	resetBeginEnd_(channelId);
 }
@@ -225,7 +226,7 @@ void paste(ID channelId, Frame a)
 	/* Temporary disable wave reading in channel. From now on, the audio thread
 	won't be reading any wave, so editing it is safe.  */
 
-	m::model::DataLock lock;
+	m::model::DataLock lock = g_model.lockData();
 
 	/* Paste copied data to destination wave. */
 
@@ -253,7 +254,7 @@ void paste(ID channelId, Frame a)
 
 void silence(ID channelId, int a, int b)
 {
-	m::model::DataLock lock;
+	m::model::DataLock lock = g_model.lockData();
 	m::wfx::silence(getWave_(channelId), a, b);
 }
 
@@ -261,7 +262,7 @@ void silence(ID channelId, int a, int b)
 
 void fade(ID channelId, int a, int b, m::wfx::Fade type)
 {
-	m::model::DataLock lock;
+	m::model::DataLock lock = g_model.lockData();
 	m::wfx::fade(getWave_(channelId), a, b, type);
 }
 
@@ -269,7 +270,7 @@ void fade(ID channelId, int a, int b, m::wfx::Fade type)
 
 void smoothEdges(ID channelId, int a, int b)
 {
-	m::model::DataLock lock;
+	m::model::DataLock lock = g_model.lockData();
 	m::wfx::smooth(getWave_(channelId), a, b);
 }
 
@@ -277,7 +278,7 @@ void smoothEdges(ID channelId, int a, int b)
 
 void reverse(ID channelId, Frame a, Frame b)
 {
-	m::model::DataLock lock;
+	m::model::DataLock lock = g_model.lockData();
 	m::wfx::reverse(getWave_(channelId), a, b);
 }
 
@@ -285,7 +286,7 @@ void reverse(ID channelId, Frame a, Frame b)
 
 void normalize(ID channelId, int a, int b)
 {
-	m::model::DataLock lock;
+	m::model::DataLock lock = g_model.lockData();
 	m::wfx::normalize(getWave_(channelId), a, b);
 }
 
@@ -293,7 +294,7 @@ void normalize(ID channelId, int a, int b)
 
 void trim(ID channelId, int a, int b)
 {
-	m::model::DataLock lock;
+	m::model::DataLock lock = g_model.lockData();
 	m::wfx::trim(getWave_(channelId), a, b);
 	resetBeginEnd_(channelId);
 }
@@ -322,10 +323,8 @@ void stopPreview()
 
 void setPreviewTracker(Frame f)
 {
-	namespace mm = m::model;
-
-	mm::get().getChannel(m::Mixer::PREVIEW_CHANNEL_ID).state->tracker.store(f);
-	mm::swap(mm::SwapType::SOFT);
+	g_model.get().getChannel(m::Mixer::PREVIEW_CHANNEL_ID).state->tracker.store(f);
+	g_model.swap(m::model::SwapType::SOFT);
 
 	previewTracker_ = f;
 
@@ -334,10 +333,8 @@ void setPreviewTracker(Frame f)
 
 void cleanupPreview()
 {
-	namespace mm = m::model;
-
-	m::samplePlayer::loadWave(mm::get().getChannel(m::Mixer::PREVIEW_CHANNEL_ID), nullptr);
-	mm::swap(mm::SwapType::SOFT);
+	m::samplePlayer::loadWave(g_model.get().getChannel(m::Mixer::PREVIEW_CHANNEL_ID), nullptr);
+	g_model.swap(m::model::SwapType::SOFT);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -375,11 +372,10 @@ void reload(ID channelId)
 
 void shift(ID channelId, Frame offset)
 {
-	namespace mm = m::model;
-
 	Frame shift = getSamplePlayer_(channelId).shift;
 
-	mm::DataLock lock();
+	m::model::DataLock lock = g_model.lockData();
+
 	m::wfx::shift(getWave_(channelId), offset - shift);
 	getSamplePlayer_(channelId).shift = offset;
 

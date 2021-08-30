@@ -63,6 +63,7 @@
 #include <functional>
 
 extern giada::v::gdMainWindow* G_MainWin;
+extern giada::m::model::Model  g_model;
 extern giada::m::MixerHandler  g_mixerHandler;
 extern giada::m::Actions       g_actions;
 extern giada::m::Recorder      g_recorder;
@@ -156,13 +157,13 @@ bool Data::isArmed() const { return m_channel.armed; }
 
 Data getData(ID channelId)
 {
-	return Data(m::model::get().getChannel(channelId));
+	return Data(g_model.get().getChannel(channelId));
 }
 
 std::vector<Data> getChannels()
 {
 	std::vector<Data> out;
-	for (const m::channel::Data& ch : m::model::get().channels)
+	for (const m::channel::Data& ch : g_model.get().channels)
 		if (!ch.isInternal())
 			out.push_back(Data(ch));
 	return out;
@@ -240,19 +241,19 @@ void freeChannel(ID channelId)
 
 void setInputMonitor(ID channelId, bool value)
 {
-	m::model::get().getChannel(channelId).audioReceiver->inputMonitor = value;
-	m::model::swap(m::model::SwapType::SOFT);
+	g_model.get().getChannel(channelId).audioReceiver->inputMonitor = value;
+	g_model.swap(m::model::SwapType::SOFT);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void setOverdubProtection(ID channelId, bool value)
 {
-	m::channel::Data& ch                = m::model::get().getChannel(channelId);
+	m::channel::Data& ch                = g_model.get().getChannel(channelId);
 	ch.audioReceiver->overdubProtection = value;
 	if (value == true && ch.armed)
 		ch.armed = false;
-	m::model::swap(m::model::SwapType::SOFT);
+	g_model.swap(m::model::SwapType::SOFT);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -266,8 +267,8 @@ void cloneChannel(ID channelId)
 
 void setSamplePlayerMode(ID channelId, SamplePlayerMode mode)
 {
-	m::model::get().getChannel(channelId).samplePlayer->mode = mode;
-	m::model::swap(m::model::SwapType::HARD); // TODO - SOFT should be enough, fix geChannel refresh method
+	g_model.get().getChannel(channelId).samplePlayer->mode = mode;
+	g_model.swap(m::model::SwapType::HARD); // TODO - SOFT should be enough, fix geChannel refresh method
 	u::gui::refreshActionEditor();
 }
 
@@ -275,8 +276,8 @@ void setSamplePlayerMode(ID channelId, SamplePlayerMode mode)
 
 void setHeight(ID channelId, Pixel p)
 {
-	m::model::get().getChannel(channelId).height = p;
-	m::model::swap(m::model::SwapType::SOFT);
+	g_model.get().getChannel(channelId).height = p;
+	g_model.swap(m::model::SwapType::SOFT);
 }
 
 /* -------------------------------------------------------------------------- */

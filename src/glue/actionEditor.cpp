@@ -35,9 +35,10 @@
 #include "src/core/actions/actions.h"
 #include <cassert>
 
-extern giada::m::Clock                 g_clock;
-extern giada::m::Actions               g_actions;
-extern giada::m::ActionRecorder        g_actionRecorder;
+extern giada::m::Clock          g_clock;
+extern giada::m::model::Model   g_model;
+extern giada::m::Actions        g_actions;
+extern giada::m::ActionRecorder g_actionRecorder;
 
 namespace giada::c::actionEditor
 {
@@ -103,7 +104,7 @@ void recordNonFirstEnvelopeAction_(ID channelId, Frame frame, int value)
 bool isSinglePressMode_(ID channelId)
 {
 	/* TODO - use m::model getChannel utils (to be added) */
-	return m::model::get().getChannel(channelId).samplePlayer->mode == SamplePlayerMode::SINGLE_PRESS;
+	return g_model.get().getChannel(channelId).samplePlayer->mode == SamplePlayerMode::SINGLE_PRESS;
 }
 } // namespace
 
@@ -132,14 +133,14 @@ Data::Data(const m::channel::Data& c)
 
 Frame Data::getCurrentFrame() const
 {
-	return m::model::get().clock.state->currentFrame.load();
+	return g_model.get().clock.state->currentFrame.load();
 }
 
 /* -------------------------------------------------------------------------- */
 
 bool Data::isChannelPlaying() const
 {
-	return m::model::get().getChannel(channelId).isPlaying();
+	return g_model.get().getChannel(channelId).isPlaying();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -148,7 +149,7 @@ bool Data::isChannelPlaying() const
 
 Data getData(ID channelId)
 {
-	return Data(m::model::get().getChannel(channelId));
+	return Data(g_model.get().getChannel(channelId));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -282,7 +283,7 @@ void deleteEnvelopeAction(ID channelId, const m::Action& a)
 		if (a.isVolumeEnvelope())
 		{
 			/*
-			m::model::onSwap(m::model::channels, channelId, [&](m::Channel& c)
+			g_model.onSwap(m::model::channels, channelId, [&](m::Channel& c)
 			{
 				c.volume_i = 1.0;
 				c.volume_d = 0.0;

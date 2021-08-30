@@ -41,7 +41,8 @@
 #include "utils/log.h"
 #include <cassert>
 
-extern giada::m::Actions g_actions;
+extern giada::m::model::Model g_model;
+extern giada::m::Actions      g_actions;
 
 namespace giada::c::recorder
 {
@@ -80,8 +81,8 @@ void clearStartStopActions(ID channelId)
 void updateChannel(ID channelId, bool updateActionEditor)
 {
 	/* TODO - move somewhere else in the core area */
-	m::model::get().getChannel(channelId).hasActions = g_actions.hasActions(channelId);
-	m::model::swap(m::model::SwapType::HARD);
+	g_model.get().getChannel(channelId).hasActions = g_actions.hasActions(channelId);
+	g_model.swap(m::model::SwapType::HARD);
 
 	if (updateActionEditor)
 		u::gui::refreshActionEditor();
