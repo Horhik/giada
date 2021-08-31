@@ -53,7 +53,7 @@ public:
 	/* dispatch
     Main callback invoked by kernelMidi whenever a new MIDI data comes in. */
 
-	void dispatch(int byte1, int byte2, int byte3);
+	void dispatch(uint32_t msg);
 
 	/* learn
     Learns event 'e'. Called by the Event Dispatcher. */

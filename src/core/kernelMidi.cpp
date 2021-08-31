@@ -30,30 +30,25 @@
 #include "midiMap.h"
 #include "utils/log.h"
 
-extern giada::m::MidiDispatcher g_midiDispatcher;
-extern giada::m::midiMap::Data  g_midiMap;
+extern giada::m::midiMap::Data g_midiMap;
 
 namespace giada::m
 {
 namespace
 {
-int getB1_(uint32_t iValue) { return (iValue >> 24) & 0xFF; }
-int getB2_(uint32_t iValue) { return (iValue >> 16) & 0xFF; }
-int getB3_(uint32_t iValue) { return (iValue >> 8) & 0xFF; }
+std::vector<unsigned char> split_(uint32_t iValue)
+{
+	return {
+	    static_cast<unsigned char>((iValue >> 24) & 0xFF),
+	    static_cast<unsigned char>((iValue >> 16) & 0xFF),
+	    static_cast<unsigned char>((iValue >> 8) & 0xFF)};
+}
 
 /* -------------------------------------------------------------------------- */
 
-static void callback_(double /*t*/, std::vector<unsigned char>* msg, void* /*data*/)
+uint32_t join_(int b1, int b2, int b3)
 {
-	if (msg->size() < 3)
-	{
-		//u::log::print("[KM] MIDI received - unknown signal - size=%d, value=0x", (int) msg->size());
-		//for (unsigned i=0; i<msg->size(); i++)
-		//	u::log::print("%X", (int) msg->at(i));
-		//u::log::print("\n");
-		return;
-	}
-	g_midiDispatcher.dispatch(msg->at(0), msg->at(1), msg->at(2));
+	return (b1 << 24) | (b2 << 16) | (b3 << 8) | (0x00);
 }
 } // namespace
 
@@ -62,7 +57,8 @@ static void callback_(double /*t*/, std::vector<unsigned char>* msg, void* /*dat
 /* -------------------------------------------------------------------------- */
 
 KernelMidi::KernelMidi()
-: m_status(false)
+: onMidiReceived(nullptr)
+, m_status(false)
 , m_api(0)
 , m_numOutPorts(0)
 , m_numInPorts(0)
@@ -158,7 +154,7 @@ int KernelMidi::openInDevice(int port)
 			m_midiIn->openPort(port, getInPortName(port));
 			m_midiIn->ignoreTypes(true, false, true); // ignore all system/time msgs, for now
 			u::log::print("[KM] MIDI in port %d open\n", port);
-			m_midiIn->setCallback(&callback_);
+			m_midiIn->setCallback(&callback);
 			return 1;
 		}
 		catch (RtMidiError& error)
@@ -217,9 +213,7 @@ void KernelMidi::send(uint32_t data)
 	if (!m_status)
 		return;
 
-	std::vector<unsigned char> msg(1, getB1_(data));
-	msg.push_back(getB2_(data));
-	msg.push_back(getB3_(data));
+	std::vector<unsigned char> msg = split_(data);
 
 	m_midiOut->sendMessage(&msg);
 	u::log::print("[KM::send] send msg=0x%X (%X %X %X)\n", data, msg[0], msg[1], msg[2]);
@@ -290,5 +284,27 @@ void KernelMidi::sendMidiLightningInitMsgs()
 			send(e.getRaw());
 		}
 	}
+}
+
+/* -------------------------------------------------------------------------- */
+
+void KernelMidi::callback(double /*t*/, std::vector<unsigned char>* msg, void* data)
+{
+	static_cast<KernelMidi*>(data)->callback(msg);
+}
+
+/* -------------------------------------------------------------------------- */
+
+void KernelMidi::callback(std::vector<unsigned char>* msg)
+{
+	assert(onMidiReceived != nullptr);
+
+	if (msg->size() < 3)
+	{
+		G_DEBUG("Received unknown MIDI signal - bytes=" << msg->size());
+		return;
+	}
+
+	onMidiReceived(join_(msg->at(0), msg->at(1), msg->at(2)));
 }
 } // namespace giada::m

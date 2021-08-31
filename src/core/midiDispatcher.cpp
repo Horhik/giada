@@ -26,6 +26,7 @@
 
 #include "core/midiDispatcher.h"
 #include "core/conf.h"
+#include "core/kernelMidi.h"
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
@@ -42,6 +43,7 @@
 
 extern giada::m::model::Model    g_model;
 extern giada::m::EventDispatcher g_eventDispatcher;
+extern giada::m::KernelMidi      g_kernelMidi;
 
 namespace giada::m
 {
@@ -49,6 +51,7 @@ MidiDispatcher::MidiDispatcher()
 : m_signalCb(nullptr)
 , m_learnCb(nullptr)
 {
+	g_kernelMidi.onMidiReceived = [this](uint32_t msg) { dispatch(msg); };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -100,14 +103,14 @@ void MidiDispatcher::clearPluginLearn(std::size_t paramIndex, ID pluginId, std::
 
 /* -------------------------------------------------------------------------- */
 
-void MidiDispatcher::dispatch(int byte1, int byte2, int byte3)
+void MidiDispatcher::dispatch(uint32_t msg)
 {
 	/* Here we want to catch two things: a) note on/note off from a MIDI keyboard 
 	and b) knob/wheel/slider movements from a MIDI controller. 
 	We must also fix the velocity zero issue for those devices that sends NOTE
 	OFF events as NOTE ON + velocity zero. Let's make it a real NOTE OFF event. */
 
-	MidiEvent midiEvent(byte1, byte2, byte3);
+	MidiEvent midiEvent(msg);
 	midiEvent.fixVelocityZero();
 
 	u::log::print("[midiDispatcher] MIDI received - 0x%X (chan %d)\n", midiEvent.getRaw(),

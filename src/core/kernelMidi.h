@@ -30,6 +30,7 @@
 #include "midiMap.h"
 #include <RtMidi.h>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -79,7 +80,12 @@ public:
 	int closeInDevice();
 	int closeOutDevice();
 
+	std::function<void(uint32_t)> onMidiReceived;
+
 private:
+	static void callback(double, std::vector<unsigned char>*, void*);
+	void        callback(std::vector<unsigned char>*);
+
 	void sendMidiLightningInitMsgs();
 
 	std::unique_ptr<RtMidiOut> m_midiOut;
