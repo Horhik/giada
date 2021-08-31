@@ -48,6 +48,7 @@ extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::model::Model  g_model;
 extern giada::m::PluginHost    g_pluginHost;
 extern giada::m::conf::Data    g_conf;
+extern giada::m::PluginManager g_pluginManager;
 
 namespace giada::c::plugin
 {
@@ -162,9 +163,9 @@ void updateWindow(ID pluginId, bool gui)
 
 void addPlugin(int pluginListIndex, ID channelId)
 {
-	if (pluginListIndex >= m::pluginManager::countAvailablePlugins())
+	if (pluginListIndex >= g_pluginManager.countAvailablePlugins())
 		return;
-	std::unique_ptr<m::Plugin> p = m::pluginManager::makePlugin(pluginListIndex);
+	std::unique_ptr<m::Plugin> p = g_pluginManager.makePlugin(pluginListIndex);
 	if (p != nullptr)
 		g_pluginHost.addPlugin(std::move(p), channelId);
 }

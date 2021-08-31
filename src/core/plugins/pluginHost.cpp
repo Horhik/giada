@@ -38,8 +38,9 @@
 #include "utils/vector.h"
 #include <cassert>
 
-extern giada::m::model::Model g_model;
-extern giada::m::Clock        g_clock;
+extern giada::m::model::Model  g_model;
+extern giada::m::Clock         g_clock;
+extern giada::m::PluginManager g_pluginManager;
 
 namespace giada::m
 {
@@ -161,7 +162,7 @@ std::vector<Plugin*> PluginHost::clonePlugins(const std::vector<Plugin*>& plugin
 	std::vector<Plugin*> out;
 	for (const Plugin* p : plugins)
 	{
-		g_model.add(pluginManager::makePlugin(*p));
+		g_model.add(g_pluginManager.makePlugin(*p));
 		out.push_back(&g_model.back<Plugin>());
 	}
 	return out;

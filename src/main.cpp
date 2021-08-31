@@ -37,6 +37,7 @@
 #include "core/model/model.h"
 #include "core/patch.h"
 #include "core/plugins/pluginHost.h"
+#include "core/plugins/pluginManager.h"
 #include "core/recorder.h"
 #include "core/sequencer.h"
 #include "core/sync.h"
@@ -73,8 +74,8 @@ giada::m::Sequencer       g_sequencer(g_kernelAudio, g_clock);
 giada::m::Mixer           g_mixer(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 giada::m::MixerHandler    g_mixerHandler(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 giada::m::PluginHost      g_pluginHost(g_kernelAudio.getRealBufSize());
-
-class giada::v::gdMainWindow* G_MainWin = nullptr;
+giada::m::PluginManager   g_pluginManager;
+giada::v::gdMainWindow*   G_MainWin = nullptr;
 
 int main(int argc, char** argv)
 {

@@ -77,6 +77,7 @@ extern giada::m::Mixer         g_mixer;
 extern giada::m::MixerHandler  g_mixerHandler;
 extern giada::m::Synchronizer  g_synchronizer;
 extern giada::m::PluginHost    g_pluginHost;
+extern giada::m::PluginManager g_pluginManager;
 extern giada::m::KernelMidi    g_kernelMidi;
 extern giada::m::Actions       g_actions;
 extern giada::m::conf::Data    g_conf;
@@ -106,14 +107,8 @@ void initConf_()
 void initAudio_()
 {
 	g_kernelAudio.openDevice(g_conf);
-
-#ifdef WITH_VST
-	pluginManager::init(g_conf.samplerate, g_kernelAudio.getRealBufSize());
-#endif
-
 	if (!g_kernelAudio.isReady())
 		return;
-
 	g_mixerHandler.startRendering();
 	g_kernelAudio.startStream();
 }
@@ -246,7 +241,7 @@ void reset()
 	g_actions.reset();
 #ifdef WITH_VST
 	g_pluginHost.reset(g_kernelAudio.getRealBufSize());
-	pluginManager::init(g_conf.samplerate, g_kernelAudio.getRealBufSize());
+	g_pluginManager.reset();
 #endif
 	g_mixerHandler.startRendering();
 

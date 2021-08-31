@@ -34,6 +34,8 @@
 #include <FL/Fl.H>
 #include <cassert>
 
+extern giada::m::PluginManager g_pluginManager;
+
 namespace giada::m
 {
 Plugin::Plugin(ID id, const std::string& UID)
@@ -95,7 +97,7 @@ Plugin::Plugin(const Plugin& o)
 , midiInParams(o.midiInParams)
 , valid(o.valid)
 , onEditorResize(o.onEditorResize)
-, m_plugin(std::move(pluginManager::makePlugin(o)->m_plugin))
+, m_plugin(std::move(g_pluginManager.makePlugin(o)->m_plugin))
 , m_bypass(o.m_bypass.load())
 {
 }

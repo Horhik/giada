@@ -41,6 +41,7 @@ extern giada::m::Sequencer      g_sequencer;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
+extern giada::m::PluginManager  g_pluginManager;
 
 namespace giada::m::model
 {
@@ -79,7 +80,7 @@ void store(patch::Data& patch)
 
 #ifdef WITH_VST
 	for (const auto& p : g_model.getAll<PluginPtrs>())
-		patch.plugins.push_back(pluginManager::serializePlugin(*p));
+		patch.plugins.push_back(g_pluginManager.serializePlugin(*p));
 #endif
 
 	patch.actions = g_actionRecorder.serializeActions(g_model.getAll<Actions::Map>());
@@ -127,7 +128,7 @@ void load(const patch::Data& patch)
 #ifdef WITH_VST
 	g_model.getAll<PluginPtrs>().clear();
 	for (const patch::Plugin& pplugin : patch.plugins)
-		g_model.getAll<PluginPtrs>().push_back(pluginManager::deserializePlugin(pplugin, patch.version));
+		g_model.getAll<PluginPtrs>().push_back(g_pluginManager.deserializePlugin(pplugin, patch.version));
 #endif
 
 	g_model.getAll<WavePtrs>().clear();

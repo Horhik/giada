@@ -47,6 +47,7 @@
 
 extern giada::v::gdMainWindow* G_MainWin;
 extern giada::m::conf::Data    g_conf;
+extern giada::m::PluginManager g_pluginManager;
 
 namespace giada::v
 {
@@ -80,7 +81,7 @@ geTabPlugins::geTabPlugins(int X, int Y, int W, int H)
 
 void geTabPlugins::refreshCount()
 {
-	std::string scanLabel = "Scan (" + std::to_string(m::pluginManager::countAvailablePlugins()) + " found)";
+	std::string scanLabel = "Scan (" + std::to_string(g_pluginManager.countAvailablePlugins()) + " found)";
 	m_scanButton->copy_label(scanLabel.c_str());
 }
 
@@ -110,8 +111,8 @@ void geTabPlugins::cb_scan()
 	};
 
 	m_info->show();
-	m::pluginManager::scanDirs(m_folderPath->value(), callback);
-	m::pluginManager::saveList(u::fs::getHomePath() + G_SLASH + "plugins.xml");
+	g_pluginManager.scanDirs(m_folderPath->value(), callback);
+	g_pluginManager.saveList(u::fs::getHomePath() + G_SLASH + "plugins.xml");
 	m_info->hide();
 	refreshCount();
 }

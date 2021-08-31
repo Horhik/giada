@@ -37,7 +37,8 @@
 #include "gui/elems/plugin/pluginBrowser.h"
 #include "utils/gui.h"
 
-extern giada::m::conf::Data g_conf;
+extern giada::m::conf::Data    g_conf;
+extern giada::m::PluginManager g_pluginManager;
 
 namespace giada::v
 {
@@ -108,7 +109,7 @@ void gdPluginChooser::cb_close()
 
 void gdPluginChooser::cb_sort()
 {
-	m::pluginManager::sortPlugins(static_cast<m::pluginManager::SortMethod>(sortMethod->value()));
+	g_pluginManager.sortPlugins(static_cast<m::PluginManager::SortMethod>(sortMethod->value()));
 	browser->refresh();
 }
 

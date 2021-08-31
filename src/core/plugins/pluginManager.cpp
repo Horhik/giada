@@ -29,7 +29,7 @@
 #include "pluginManager.h"
 #include "core/conf.h"
 #include "core/const.h"
-#include "core/idManager.h"
+#include "core/kernelAudio.h"
 #include "core/model/model.h"
 #include "core/patch.h"
 #include "core/plugins/plugin.h"
@@ -40,65 +40,32 @@
 
 extern giada::m::model::Model g_model;
 extern giada::m::conf::Data   g_conf;
+extern giada::m::KernelAudio  g_kernelAudio;
 
-namespace giada::m::pluginManager
+namespace giada::m
 {
-namespace
+PluginManager::PluginManager()
 {
-IdManager pluginId_;
-
-int samplerate_;
-int buffersize_;
-
-/* formatManager
-Plugin format manager. */
-
-juce::AudioPluginFormatManager formatManager_;
-
-/* knownPuginList
-List of known (i.e. scanned) plugins. */
-
-juce::KnownPluginList knownPluginList_;
-
-/* unknownPluginList
-List of unrecognized plugins found in a patch. */
-
-std::vector<std::string> unknownPluginList_;
-
-/* missingPlugins
-If some plugins from any stack are missing. */
-
-bool missingPlugins_;
-
-std::unique_ptr<Plugin> makeInvalidPlugin_(const std::string& pid, ID id)
-{
-	missingPlugins_ = true;
-	unknownPluginList_.push_back(pid);
-	return std::make_unique<Plugin>(pluginId_.generate(id), pid); // Invalid plug-in
+	formatManager_.addDefaultFormats();
+	reset();
 }
-} // namespace
 
 /* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
 
-void init(int samplerate, int buffersize)
+void PluginManager::reset()
 {
 	pluginId_       = IdManager();
-	samplerate_     = samplerate;
-	buffersize_     = buffersize;
 	missingPlugins_ = false;
 
-	formatManager_.addDefaultFormats();
 	unknownPluginList_.clear();
 
 	loadList(u::fs::getHomePath() + G_SLASH + "plugins.xml");
-	sortPlugins(static_cast<pluginManager::SortMethod>(g_conf.pluginSortMethod));
+	sortPlugins(static_cast<SortMethod>(g_conf.pluginSortMethod));
 }
 
 /* -------------------------------------------------------------------------- */
 
-int scanDirs(const std::string& dirs, const std::function<void(float)>& cb)
+int PluginManager::scanDirs(const std::string& dirs, const std::function<void(float)>& cb)
 {
 	u::log::print("[pluginManager::scanDir] requested directories: '%s'\n", dirs);
 	u::log::print("[pluginManager::scanDir] current plugins: %d\n", knownPluginList_.getNumTypes());
@@ -131,7 +98,7 @@ int scanDirs(const std::string& dirs, const std::function<void(float)>& cb)
 
 /* -------------------------------------------------------------------------- */
 
-bool saveList(const std::string& filepath)
+bool PluginManager::saveList(const std::string& filepath)
 {
 	bool out = knownPluginList_.createXml()->writeTo(juce::File(filepath));
 	if (!out)
@@ -141,7 +108,7 @@ bool saveList(const std::string& filepath)
 
 /* -------------------------------------------------------------------------- */
 
-bool loadList(const std::string& filepath)
+bool PluginManager::loadList(const std::string& filepath)
 {
 	std::unique_ptr<juce::XmlElement> elem(juce::XmlDocument::parse(juce::File(filepath)));
 	if (elem == nullptr)
@@ -152,7 +119,7 @@ bool loadList(const std::string& filepath)
 
 /* -------------------------------------------------------------------------- */
 
-std::unique_ptr<Plugin> makePlugin(const std::string& pid, ID id)
+std::unique_ptr<Plugin> PluginManager::makePlugin(const std::string& pid, ID id)
 {
 	/* Plug-in ID generator is updated anyway, as we store Plugin objects also
 	if they are in an invalid state. */
@@ -166,8 +133,11 @@ std::unique_ptr<Plugin> makePlugin(const std::string& pid, ID id)
 		return makeInvalidPlugin_(pid, id);
 	}
 
+	const int sampleRate = g_conf.samplerate;
+	const int bufferSize = g_kernelAudio.getRealBufSize();
+
 	juce::String                               error;
-	std::unique_ptr<juce::AudioPluginInstance> pi = formatManager_.createPluginInstance(*pd, samplerate_, buffersize_, error);
+	std::unique_ptr<juce::AudioPluginInstance> pi = formatManager_.createPluginInstance(*pd, sampleRate, bufferSize, error);
 	if (pi == nullptr)
 	{
 		u::log::print("[pluginManager::makePlugin] unable to create instance with pid=%s! Error: %s\n",
@@ -177,12 +147,12 @@ std::unique_ptr<Plugin> makePlugin(const std::string& pid, ID id)
 
 	u::log::print("[pluginManager::makePlugin] plugin instance with pid=%s created\n", pid);
 
-	return std::make_unique<Plugin>(pluginId_.generate(id), std::move(pi), samplerate_, buffersize_);
+	return std::make_unique<Plugin>(pluginId_.generate(id), std::move(pi), sampleRate, bufferSize);
 }
 
 /* -------------------------------------------------------------------------- */
 
-std::unique_ptr<Plugin> makePlugin(int index)
+std::unique_ptr<Plugin> PluginManager::makePlugin(int index)
 {
 	juce::PluginDescription pd = knownPluginList_.getTypes()[index];
 
@@ -197,7 +167,7 @@ std::unique_ptr<Plugin> makePlugin(int index)
 
 /* -------------------------------------------------------------------------- */
 
-std::unique_ptr<Plugin> makePlugin(const Plugin& src)
+std::unique_ptr<Plugin> PluginManager::makePlugin(const Plugin& src)
 {
 	std::unique_ptr<Plugin> p = makePlugin(src.getUniqueId());
 
@@ -209,7 +179,7 @@ std::unique_ptr<Plugin> makePlugin(const Plugin& src)
 
 /* -------------------------------------------------------------------------- */
 
-const patch::Plugin serializePlugin(const Plugin& p)
+const patch::Plugin PluginManager::serializePlugin(const Plugin& p)
 {
 	patch::Plugin pp;
 	pp.id     = p.id;
@@ -225,7 +195,7 @@ const patch::Plugin serializePlugin(const Plugin& p)
 
 /* -------------------------------------------------------------------------- */
 
-std::unique_ptr<Plugin> deserializePlugin(const patch::Plugin& p, patch::Version version)
+std::unique_ptr<Plugin> PluginManager::deserializePlugin(const patch::Plugin& p, patch::Version version)
 {
 	std::unique_ptr<Plugin> plugin = makePlugin(p.path, p.id);
 	if (!plugin->valid)
@@ -257,7 +227,7 @@ std::unique_ptr<Plugin> deserializePlugin(const patch::Plugin& p, patch::Version
 
 /* -------------------------------------------------------------------------- */
 
-std::vector<Plugin*> hydratePlugins(std::vector<ID> pluginIds)
+std::vector<Plugin*> PluginManager::hydratePlugins(std::vector<ID> pluginIds)
 {
 	std::vector<Plugin*> out;
 	for (ID id : pluginIds)
@@ -271,21 +241,21 @@ std::vector<Plugin*> hydratePlugins(std::vector<ID> pluginIds)
 
 /* -------------------------------------------------------------------------- */
 
-int countAvailablePlugins()
+int PluginManager::countAvailablePlugins()
 {
 	return knownPluginList_.getNumTypes();
 }
 
 /* -------------------------------------------------------------------------- */
 
-int countUnknownPlugins()
+int PluginManager::countUnknownPlugins()
 {
 	return unknownPluginList_.size();
 }
 
 /* -------------------------------------------------------------------------- */
 
-PluginInfo getAvailablePluginInfo(int i)
+PluginManager::PluginInfo PluginManager::getAvailablePluginInfo(int i)
 {
 	juce::PluginDescription pd = knownPluginList_.getTypes()[i];
 	PluginInfo              pi;
@@ -300,28 +270,28 @@ PluginInfo getAvailablePluginInfo(int i)
 
 /* -------------------------------------------------------------------------- */
 
-bool hasMissingPlugins()
+bool PluginManager::hasMissingPlugins()
 {
 	return missingPlugins_;
 }
 
 /* -------------------------------------------------------------------------- */
 
-std::string getUnknownPluginInfo(int i)
+std::string PluginManager::getUnknownPluginInfo(int i)
 {
 	return unknownPluginList_.at(i);
 }
 
 /* -------------------------------------------------------------------------- */
 
-bool doesPluginExist(const std::string& pid)
+bool PluginManager::doesPluginExist(const std::string& pid)
 {
 	return formatManager_.doesPluginStillExist(*knownPluginList_.getTypeForFile(pid));
 }
 
 /* -------------------------------------------------------------------------- */
 
-void sortPlugins(SortMethod method)
+void PluginManager::sortPlugins(SortMethod method)
 {
 	switch (method)
 	{
@@ -339,6 +309,15 @@ void sortPlugins(SortMethod method)
 		break;
 	}
 }
-} // namespace giada::m::pluginManager
+
+/* -------------------------------------------------------------------------- */
+
+std::unique_ptr<Plugin> PluginManager::makeInvalidPlugin_(const std::string& pid, ID id)
+{
+	missingPlugins_ = true;
+	unknownPluginList_.push_back(pid);
+	return std::make_unique<Plugin>(pluginId_.generate(id), pid); // Invalid plug-in
+}
+} // namespace giada::m
 
 #endif // #ifdef WITH_VST

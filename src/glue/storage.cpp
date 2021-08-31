@@ -63,6 +63,7 @@ extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
+extern giada::m::PluginManager  g_pluginManager;
 
 namespace giada::c::storage
 {
@@ -186,7 +187,7 @@ void loadProject(void* data)
 
 #ifdef WITH_VST
 
-	if (m::pluginManager::hasMissingPlugins())
+	if (g_pluginManager.hasMissingPlugins())
 		v::gdAlert("Some plugins were not loaded successfully.\nCheck the plugin browser to know more.");
 
 #endif
