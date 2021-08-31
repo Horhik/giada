@@ -30,6 +30,11 @@
 #include <string>
 #include <vector>
 
+namespace giada::m
+{
+class KernelMidi;
+}
+
 namespace giada::m::midiMap
 {
 struct Message
@@ -95,12 +100,12 @@ int read(Data& midiMap, const std::string& file);
 /* sendInitMessages
 Sends initialization messages to the connected MIDI devices. */
 
-void sendInitMessages(const Data& midiMap);
+void sendInitMessages(KernelMidi&, const Data& midiMap);
 
 /* sendMidiLightning
 Sends a MIDI lightning message defined by 'msg'. */
 
-void sendMidiLightning(uint32_t learnt, const midiMap::Message& msg);
+void sendMidiLightning(KernelMidi&, uint32_t learnt, const midiMap::Message& msg);
 } // namespace giada::m::midiMap
 
 #endif

@@ -30,6 +30,7 @@
 #include "core/midiMap.h"
 #include "core/mixer.h"
 
+extern giada::m::KernelMidi    g_kernelMidi;
 extern giada::m::midiMap::Data g_midiMap;
 
 namespace giada::m::midiLighter
@@ -39,9 +40,9 @@ namespace
 void sendMute_(channel::Data& ch, uint32_t l_mute)
 {
 	if (ch.mute)
-		midiMap::sendMidiLightning(l_mute, g_midiMap.midiMap.muteOn);
+		midiMap::sendMidiLightning(g_kernelMidi, l_mute, g_midiMap.midiMap.muteOn);
 	else
-		midiMap::sendMidiLightning(l_mute, g_midiMap.midiMap.muteOff);
+		midiMap::sendMidiLightning(g_kernelMidi, l_mute, g_midiMap.midiMap.muteOff);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -49,9 +50,9 @@ void sendMute_(channel::Data& ch, uint32_t l_mute)
 void sendSolo_(channel::Data& ch, uint32_t l_solo)
 {
 	if (ch.solo)
-		midiMap::sendMidiLightning(l_solo, g_midiMap.midiMap.soloOn);
+		midiMap::sendMidiLightning(g_kernelMidi, l_solo, g_midiMap.midiMap.soloOn);
 	else
-		midiMap::sendMidiLightning(l_solo, g_midiMap.midiMap.soloOff);
+		midiMap::sendMidiLightning(g_kernelMidi, l_solo, g_midiMap.midiMap.soloOff);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -62,19 +63,19 @@ void sendStatus_(channel::Data& ch, uint32_t l_playing, bool audible)
 	{
 
 	case ChannelStatus::OFF:
-		midiMap::sendMidiLightning(l_playing, g_midiMap.midiMap.stopped);
+		midiMap::sendMidiLightning(g_kernelMidi, l_playing, g_midiMap.midiMap.stopped);
 		break;
 
 	case ChannelStatus::WAIT:
-		midiMap::sendMidiLightning(l_playing, g_midiMap.midiMap.waiting);
+		midiMap::sendMidiLightning(g_kernelMidi, l_playing, g_midiMap.midiMap.waiting);
 		break;
 
 	case ChannelStatus::ENDING:
-		midiMap::sendMidiLightning(l_playing, g_midiMap.midiMap.stopping);
+		midiMap::sendMidiLightning(g_kernelMidi, l_playing, g_midiMap.midiMap.stopping);
 		break;
 
 	case ChannelStatus::PLAY:
-		midiMap::sendMidiLightning(l_playing, audible ? g_midiMap.midiMap.playing : g_midiMap.midiMap.playingInaudible);
+		midiMap::sendMidiLightning(g_kernelMidi, l_playing, audible ? g_midiMap.midiMap.playing : g_midiMap.midiMap.playingInaudible);
 		break;
 
 	default:

@@ -38,8 +38,6 @@
 #include <string>
 #include <vector>
 
-extern giada::m::KernelMidi g_kernelMidi;
-
 namespace nl = nlohmann;
 
 namespace giada::m::midiMap
@@ -202,7 +200,7 @@ int read(Data& midiMap, const std::string& file)
 
 /* -------------------------------------------------------------------------- */
 
-void sendInitMessages(const Data& midiMap)
+void sendInitMessages(KernelMidi& kernelMidi, const Data& midiMap)
 {
 	for (const midiMap::Message& m : midiMap.midiMap.initCommands)
 	{
@@ -211,13 +209,13 @@ void sendInitMessages(const Data& midiMap)
 		u::log::print("[KM] MIDI send (init) - Channel %x - Event 0x%X\n", m.channel, m.value);
 		MidiEvent e(m.value);
 		e.setChannel(m.channel);
-		g_kernelMidi.send(e.getRaw());
+		kernelMidi.send(e.getRaw());
 	}
 }
 
 /* -------------------------------------------------------------------------- */
 
-void sendMidiLightning(uint32_t learnt, const midiMap::Message& m)
+void sendMidiLightning(KernelMidi& kernelMidi, uint32_t learnt, const midiMap::Message& m)
 {
 	// Skip lightning message if not defined in midi map
 
@@ -239,6 +237,6 @@ void sendMidiLightning(uint32_t learnt, const midiMap::Message& m)
 	it. */
 
 	out |= m.value | (m.channel << 24);
-	g_kernelMidi.send(out);
+	kernelMidi.send(out);
 }
 } // namespace giada::m::midiMap

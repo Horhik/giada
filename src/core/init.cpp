@@ -123,7 +123,7 @@ void initMIDI_()
 	g_kernelMidi.setApi(g_conf.midiSystem);
 	g_kernelMidi.openOutDevice(g_conf.midiPortOut);
 	g_kernelMidi.openInDevice(g_conf.midiPortIn);
-	midiMap::sendInitMessages(g_midiMap);
+	midiMap::sendInitMessages(g_kernelMidi, g_midiMap);
 }
 
 /* -------------------------------------------------------------------------- */
