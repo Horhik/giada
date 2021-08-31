@@ -91,7 +91,7 @@ namespace
 {
 void initConf_()
 {
-	if (!conf::read())
+	if (!conf::read(g_conf))
 		u::log::print("[init] Can't read configuration file! Using default values\n");
 
 	model::load(g_conf);
@@ -260,7 +260,7 @@ void shutdown()
 
 	model::store(g_conf);
 
-	if (!conf::write())
+	if (!conf::write(g_conf))
 		u::log::print("[init] error while saving configuration file!\n");
 	else
 		u::log::print("[init] configuration saved\n");

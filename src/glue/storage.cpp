@@ -102,12 +102,12 @@ std::string makeUniqueWavePath_(const std::string& base, const m::Wave& w)
 
 bool savePatch_(const std::string& path, const std::string& name)
 {
-	m::patch::reset();
+	m::patch::reset(g_patch);
 	g_patch.name = name;
 	m::model::store(g_patch);
 	v::model::store(g_patch);
 
-	if (!m::patch::write(path))
+	if (!m::patch::write(g_patch, path))
 		return false;
 
 	u::gui::updateMainWinLabel(name);
@@ -147,8 +147,8 @@ void loadProject(void* data)
 
 	/* Read the patch from file. */
 
-	m::patch::reset();
-	int res = m::patch::read(fileToLoad, basePath);
+	m::patch::reset(g_patch);
+	int res = m::patch::read(g_patch, fileToLoad, basePath);
 	if (res != G_PATCH_OK)
 	{
 		if (res == G_PATCH_UNREADABLE)

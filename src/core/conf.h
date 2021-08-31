@@ -134,9 +134,9 @@ struct Data
 
 /* -------------------------------------------------------------------------- */
 
-void init();
-bool read();
-bool write();
+void init(Data& conf);
+bool read(Data& conf);
+bool write(const Data& conf);
 } // namespace giada::m::conf
 
 #endif

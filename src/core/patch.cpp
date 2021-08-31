@@ -31,29 +31,27 @@
 #include "utils/math.h"
 #include <fstream>
 
-extern giada::m::patch::Data g_patch;
-
 namespace nl = nlohmann;
 
 namespace giada::m::patch
 {
 namespace
 {
-void readCommons_(const nl::json& j)
+void readCommons_(Data& patch, const nl::json& j)
 {
-	g_patch.name       = j.value(PATCH_KEY_NAME, G_DEFAULT_PATCH_NAME);
-	g_patch.bars       = j.value(PATCH_KEY_BARS, G_DEFAULT_BARS);
-	g_patch.beats      = j.value(PATCH_KEY_BEATS, G_DEFAULT_BEATS);
-	g_patch.bpm        = j.value(PATCH_KEY_BPM, G_DEFAULT_BPM);
-	g_patch.quantize   = j.value(PATCH_KEY_QUANTIZE, G_DEFAULT_QUANTIZE);
-	g_patch.lastTakeId = j.value(PATCH_KEY_LAST_TAKE_ID, 0);
-	g_patch.samplerate = j.value(PATCH_KEY_SAMPLERATE, G_DEFAULT_SAMPLERATE);
-	g_patch.metronome  = j.value(PATCH_KEY_METRONOME, false);
+	patch.name       = j.value(PATCH_KEY_NAME, G_DEFAULT_PATCH_NAME);
+	patch.bars       = j.value(PATCH_KEY_BARS, G_DEFAULT_BARS);
+	patch.beats      = j.value(PATCH_KEY_BEATS, G_DEFAULT_BEATS);
+	patch.bpm        = j.value(PATCH_KEY_BPM, G_DEFAULT_BPM);
+	patch.quantize   = j.value(PATCH_KEY_QUANTIZE, G_DEFAULT_QUANTIZE);
+	patch.lastTakeId = j.value(PATCH_KEY_LAST_TAKE_ID, 0);
+	patch.samplerate = j.value(PATCH_KEY_SAMPLERATE, G_DEFAULT_SAMPLERATE);
+	patch.metronome  = j.value(PATCH_KEY_METRONOME, false);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void readColumns_(const nl::json& j)
+void readColumns_(Data& patch, const nl::json& j)
 {
 	ID id = 0;
 	for (const auto& jcol : j[PATCH_KEY_COLUMNS])
@@ -61,7 +59,7 @@ void readColumns_(const nl::json& j)
 		Column c;
 		c.id    = jcol.value(PATCH_KEY_COLUMN_ID, ++id);
 		c.width = jcol.value(PATCH_KEY_COLUMN_WIDTH, G_DEFAULT_COLUMN_WIDTH);
-		g_patch.columns.push_back(c);
+		patch.columns.push_back(c);
 	}
 }
 
@@ -69,7 +67,7 @@ void readColumns_(const nl::json& j)
 
 #ifdef WITH_VST
 
-void readPlugins_(const nl::json& j)
+void readPlugins_(Data& patch, const nl::json& j)
 {
 	if (!j.contains(PATCH_KEY_PLUGINS))
 		return;
@@ -82,7 +80,7 @@ void readPlugins_(const nl::json& j)
 		p.path   = jplugin.value(PATCH_KEY_PLUGIN_PATH, "");
 		p.bypass = jplugin.value(PATCH_KEY_PLUGIN_BYPASS, false);
 
-		if (g_patch.version < Version{0, 17, 0})
+		if (patch.version < Version{0, 17, 0})
 			for (const auto& jparam : jplugin[PATCH_KEY_PLUGIN_PARAMS])
 				p.params.push_back(jparam);
 		else
@@ -91,7 +89,7 @@ void readPlugins_(const nl::json& j)
 		for (const auto& jmidiParam : jplugin[PATCH_KEY_PLUGIN_MIDI_IN_PARAMS])
 			p.midiInParams.push_back(jmidiParam);
 
-		g_patch.plugins.push_back(p);
+		patch.plugins.push_back(p);
 	}
 }
 
@@ -99,7 +97,7 @@ void readPlugins_(const nl::json& j)
 
 /* -------------------------------------------------------------------------- */
 
-void readWaves_(const nl::json& j, const std::string& basePath)
+void readWaves_(Data& patch, const nl::json& j, const std::string& basePath)
 {
 	if (!j.contains(PATCH_KEY_WAVES))
 		return;
@@ -110,13 +108,13 @@ void readWaves_(const nl::json& j, const std::string& basePath)
 		Wave w;
 		w.id   = jwave.value(PATCH_KEY_WAVE_ID, ++id);
 		w.path = basePath + jwave.value(PATCH_KEY_WAVE_PATH, "");
-		g_patch.waves.push_back(w);
+		patch.waves.push_back(w);
 	}
 }
 
 /* -------------------------------------------------------------------------- */
 
-void readActions_(const nl::json& j)
+void readActions_(Data& patch, const nl::json& j)
 {
 	if (!j.contains(PATCH_KEY_ACTIONS))
 		return;
@@ -131,13 +129,13 @@ void readActions_(const nl::json& j)
 		a.event     = jaction.value(G_PATCH_KEY_ACTION_EVENT, 0);
 		a.prevId    = jaction.value(G_PATCH_KEY_ACTION_PREV, 0);
 		a.nextId    = jaction.value(G_PATCH_KEY_ACTION_NEXT, 0);
-		g_patch.actions.push_back(a);
+		patch.actions.push_back(a);
 	}
 }
 
 /* -------------------------------------------------------------------------- */
 
-void readChannels_(const nl::json& j)
+void readChannels_(Data& patch, const nl::json& j)
 {
 	if (!j.contains(PATCH_KEY_CHANNELS))
 		return;
@@ -193,7 +191,7 @@ void readChannels_(const nl::json& j)
 				c.pluginIds.push_back(jplugin);
 #endif
 
-		g_patch.channels.push_back(c);
+		patch.channels.push_back(c);
 	}
 }
 
@@ -201,11 +199,11 @@ void readChannels_(const nl::json& j)
 
 #ifdef WITH_VST
 
-void writePlugins_(nl::json& j)
+void writePlugins_(const Data& patch, nl::json& j)
 {
 	j[PATCH_KEY_PLUGINS] = nl::json::array();
 
-	for (const Plugin& p : g_patch.plugins)
+	for (const Plugin& p : patch.plugins)
 	{
 
 		nl::json jplugin;
@@ -227,11 +225,11 @@ void writePlugins_(nl::json& j)
 
 /* -------------------------------------------------------------------------- */
 
-void writeColumns_(nl::json& j)
+void writeColumns_(const Data& patch, nl::json& j)
 {
 	j[PATCH_KEY_COLUMNS] = nl::json::array();
 
-	for (const Column& column : g_patch.columns)
+	for (const Column& column : patch.columns)
 	{
 		nl::json jcolumn;
 		jcolumn[PATCH_KEY_COLUMN_ID]    = column.id;
@@ -242,11 +240,11 @@ void writeColumns_(nl::json& j)
 
 /* -------------------------------------------------------------------------- */
 
-void writeActions_(nl::json& j)
+void writeActions_(const Data& patch, nl::json& j)
 {
 	j[PATCH_KEY_ACTIONS] = nl::json::array();
 
-	for (const Action& a : g_patch.actions)
+	for (const Action& a : patch.actions)
 	{
 		nl::json jaction;
 		jaction[G_PATCH_KEY_ACTION_ID]      = a.id;
@@ -261,11 +259,11 @@ void writeActions_(nl::json& j)
 
 /* -------------------------------------------------------------------------- */
 
-void writeWaves_(nl::json& j)
+void writeWaves_(const Data& patch, nl::json& j)
 {
 	j[PATCH_KEY_WAVES] = nl::json::array();
 
-	for (const Wave& w : g_patch.waves)
+	for (const Wave& w : patch.waves)
 	{
 		nl::json jwave;
 		jwave[PATCH_KEY_WAVE_ID]   = w.id;
@@ -277,29 +275,29 @@ void writeWaves_(nl::json& j)
 
 /* -------------------------------------------------------------------------- */
 
-void writeCommons_(nl::json& j)
+void writeCommons_(const Data& patch, nl::json& j)
 {
 	j[PATCH_KEY_HEADER]        = "GIADAPTC";
 	j[PATCH_KEY_VERSION_MAJOR] = G_VERSION_MAJOR;
 	j[PATCH_KEY_VERSION_MINOR] = G_VERSION_MINOR;
 	j[PATCH_KEY_VERSION_PATCH] = G_VERSION_PATCH;
-	j[PATCH_KEY_NAME]          = g_patch.name;
-	j[PATCH_KEY_BARS]          = g_patch.bars;
-	j[PATCH_KEY_BEATS]         = g_patch.beats;
-	j[PATCH_KEY_BPM]           = g_patch.bpm;
-	j[PATCH_KEY_QUANTIZE]      = g_patch.quantize;
-	j[PATCH_KEY_LAST_TAKE_ID]  = g_patch.lastTakeId;
-	j[PATCH_KEY_SAMPLERATE]    = g_patch.samplerate;
-	j[PATCH_KEY_METRONOME]     = g_patch.metronome;
+	j[PATCH_KEY_NAME]          = patch.name;
+	j[PATCH_KEY_BARS]          = patch.bars;
+	j[PATCH_KEY_BEATS]         = patch.beats;
+	j[PATCH_KEY_BPM]           = patch.bpm;
+	j[PATCH_KEY_QUANTIZE]      = patch.quantize;
+	j[PATCH_KEY_LAST_TAKE_ID]  = patch.lastTakeId;
+	j[PATCH_KEY_SAMPLERATE]    = patch.samplerate;
+	j[PATCH_KEY_METRONOME]     = patch.metronome;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void writeChannels_(nl::json& j)
+void writeChannels_(const Data& patch, nl::json& j)
 {
 	j[PATCH_KEY_CHANNELS] = nl::json::array();
 
-	for (const Channel& c : g_patch.channels)
+	for (const Channel& c : patch.channels)
 	{
 
 		nl::json jchannel;
@@ -356,9 +354,9 @@ void writeChannels_(nl::json& j)
 
 /* -------------------------------------------------------------------------- */
 
-void modernize_()
+void modernize_(Data& patch)
 {
-	for (Channel& c : g_patch.channels)
+	for (Channel& c : patch.channels)
 	{
 		/* 0.16.3
 		Make sure that ChannelType is correct: ID 1, 2 are MASTER channels, ID 3 
@@ -406,24 +404,24 @@ bool Version::operator<(const Version& o) const
 
 /* -------------------------------------------------------------------------- */
 
-void reset()
+void reset(Data& patch)
 {
-	g_patch = Data();
+	patch = Data();
 }
 
 /* -------------------------------------------------------------------------- */
 
-bool write(const std::string& file)
+bool write(const Data& patch, const std::string& file)
 {
 	nl::json j;
 
-	writeCommons_(j);
-	writeColumns_(j);
-	writeChannels_(j);
-	writeActions_(j);
-	writeWaves_(j);
+	writeCommons_(patch, j);
+	writeColumns_(patch, j);
+	writeChannels_(patch, j);
+	writeActions_(patch, j);
+	writeWaves_(patch, j);
 #ifdef WITH_VST
-	writePlugins_(j);
+	writePlugins_(patch, j);
 #endif
 
 	std::ofstream ofs(file);
@@ -436,7 +434,7 @@ bool write(const std::string& file)
 
 /* -------------------------------------------------------------------------- */
 
-int read(const std::string& file, const std::string& basePath)
+int read(Data& patch, const std::string& file, const std::string& basePath)
 {
 	std::ifstream ifs(file);
 	if (!ifs.good())
@@ -447,24 +445,24 @@ int read(const std::string& file, const std::string& basePath)
 	if (j[PATCH_KEY_HEADER] != "GIADAPTC")
 		return G_PATCH_INVALID;
 
-	g_patch.version = {
+	patch.version = {
 	    static_cast<int>(j[PATCH_KEY_VERSION_MAJOR]),
 	    static_cast<int>(j[PATCH_KEY_VERSION_MINOR]),
 	    static_cast<int>(j[PATCH_KEY_VERSION_PATCH])};
-	if (g_patch.version < Version{0, 16, 0})
+	if (patch.version < Version{0, 16, 0})
 		return G_PATCH_UNSUPPORTED;
 
 	try
 	{
-		readCommons_(j);
-		readColumns_(j);
+		readCommons_(patch, j);
+		readColumns_(patch, j);
 #ifdef WITH_VST
-		readPlugins_(j);
+		readPlugins_(patch, j);
 #endif
-		readWaves_(j, basePath);
-		readActions_(j);
-		readChannels_(j);
-		modernize_();
+		readWaves_(patch, j, basePath);
+		readActions_(patch, j);
+		readChannels_(patch, j);
+		modernize_(patch);
 	}
 	catch (nl::json::exception& e)
 	{

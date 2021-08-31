@@ -153,17 +153,17 @@ struct Data
 /* reset
 Initializes the patch with default values. */
 
-void reset();
+void reset(Data& patch);
 
 /* read
 Reads patch from file. It takes 'basePath' as parameter for Wave reading. */
 
-int read(const std::string& file, const std::string& basePath);
+int read(Data& patch, const std::string& file, const std::string& basePath);
 
 /* write
 Writes patch to file. */
 
-bool write(const std::string& file);
+bool write(const Data& patch, const std::string& file);
 } // namespace giada::m::patch
 
 #endif
