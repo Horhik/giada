@@ -38,8 +38,7 @@
 #include <string>
 #include <vector>
 
-extern giada::m::midiMap::Data g_midiMap;
-extern giada::m::KernelMidi    g_kernelMidi;
+extern giada::m::KernelMidi g_kernelMidi;
 
 namespace nl = nlohmann;
 
@@ -47,7 +46,7 @@ namespace giada::m::midiMap
 {
 namespace
 {
-bool readInitCommands_(const nl::json& j)
+bool readInitCommands_(Data& midiMap, const nl::json& j)
 {
 	if (j.find(MIDIMAP_KEY_INIT_COMMANDS) == j.end())
 		return false;
@@ -59,7 +58,7 @@ bool readInitCommands_(const nl::json& j)
 		m.valueStr = jc[MIDIMAP_KEY_MESSAGE];
 		m.value    = strtoul(m.valueStr.c_str(), nullptr, 16);
 
-		g_midiMap.midiMap.initCommands.push_back(m);
+		midiMap.midiMap.initCommands.push_back(m);
 	}
 
 	return true;
@@ -122,31 +121,31 @@ void parse_(Message& message)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void init()
+void init(Data& midiMap)
 {
-	g_midiMap.midimapsPath = u::fs::getHomePath() + G_SLASH + "midimaps" + G_SLASH;
+	midiMap.midimapsPath = u::fs::getHomePath() + G_SLASH + "midimaps" + G_SLASH;
 
 	/* scan dir of midi maps and load the filenames into <>maps. */
 
 	u::log::print("[midiMapConf::init] scanning midimaps directory '%s'...\n",
-	    g_midiMap.midimapsPath);
+	    midiMap.midimapsPath);
 
-	if (!std::filesystem::exists(g_midiMap.midimapsPath))
+	if (!std::filesystem::exists(midiMap.midimapsPath))
 	{
 		u::log::print("[midiMapConf::init] unable to scan midimaps directory!\n");
 		return;
 	}
 
-	for (const auto& d : std::filesystem::directory_iterator(g_midiMap.midimapsPath))
+	for (const auto& d : std::filesystem::directory_iterator(midiMap.midimapsPath))
 	{
 		// TODO - check if is a valid midiMap file (verify headers)
 		if (!d.is_regular_file())
 			continue;
 		u::log::print("[midiMapConf::init] found midiMap '%s'\n", d.path().filename().string());
-		g_midiMap.maps.push_back(d.path().filename().string());
+		midiMap.maps.push_back(d.path().filename().string());
 	}
 
-	u::log::print("[midiMapConf::init] total midimaps found: %d\n", g_midiMap.maps.size());
+	u::log::print("[midiMapConf::init] total midimaps found: %d\n", midiMap.maps.size());
 }
 
 /* -------------------------------------------------------------------------- */
@@ -158,7 +157,7 @@ bool isDefined(const Message& m)
 
 /* -------------------------------------------------------------------------- */
 
-int read(const std::string& file)
+int read(Data& midiMap, const std::string& file)
 {
 	if (file.empty())
 	{
@@ -168,44 +167,44 @@ int read(const std::string& file)
 
 	u::log::print("[midiMapConf::read] reading midiMap file '%s'\n", file);
 
-	std::ifstream ifs(g_midiMap.midimapsPath + file);
+	std::ifstream ifs(midiMap.midimapsPath + file);
 	if (!ifs.good())
 		return MIDIMAP_UNREADABLE;
 
 	nl::json j = nl::json::parse(ifs);
 
-	g_midiMap.midiMap.brand  = j[MIDIMAP_KEY_BRAND];
-	g_midiMap.midiMap.device = j[MIDIMAP_KEY_DEVICE];
+	midiMap.midiMap.brand  = j[MIDIMAP_KEY_BRAND];
+	midiMap.midiMap.device = j[MIDIMAP_KEY_DEVICE];
 
-	if (!readInitCommands_(j))
+	if (!readInitCommands_(midiMap, j))
 		return MIDIMAP_UNREADABLE;
-	if (readCommand_(j, g_midiMap.midiMap.muteOn, MIDIMAP_KEY_MUTE_ON))
-		parse_(g_midiMap.midiMap.muteOn);
-	if (readCommand_(j, g_midiMap.midiMap.muteOff, MIDIMAP_KEY_MUTE_OFF))
-		parse_(g_midiMap.midiMap.muteOff);
-	if (readCommand_(j, g_midiMap.midiMap.soloOn, MIDIMAP_KEY_SOLO_ON))
-		parse_(g_midiMap.midiMap.soloOn);
-	if (readCommand_(j, g_midiMap.midiMap.soloOff, MIDIMAP_KEY_SOLO_OFF))
-		parse_(g_midiMap.midiMap.soloOff);
-	if (readCommand_(j, g_midiMap.midiMap.waiting, MIDIMAP_KEY_WAITING))
-		parse_(g_midiMap.midiMap.waiting);
-	if (readCommand_(j, g_midiMap.midiMap.playing, MIDIMAP_KEY_PLAYING))
-		parse_(g_midiMap.midiMap.playing);
-	if (readCommand_(j, g_midiMap.midiMap.stopping, MIDIMAP_KEY_STOPPING))
-		parse_(g_midiMap.midiMap.stopping);
-	if (readCommand_(j, g_midiMap.midiMap.stopped, MIDIMAP_KEY_STOPPED))
-		parse_(g_midiMap.midiMap.stopped);
-	if (readCommand_(j, g_midiMap.midiMap.playingInaudible, MIDIMAP_KEY_PLAYING_INAUDIBLE))
-		parse_(g_midiMap.midiMap.playingInaudible);
+	if (readCommand_(j, midiMap.midiMap.muteOn, MIDIMAP_KEY_MUTE_ON))
+		parse_(midiMap.midiMap.muteOn);
+	if (readCommand_(j, midiMap.midiMap.muteOff, MIDIMAP_KEY_MUTE_OFF))
+		parse_(midiMap.midiMap.muteOff);
+	if (readCommand_(j, midiMap.midiMap.soloOn, MIDIMAP_KEY_SOLO_ON))
+		parse_(midiMap.midiMap.soloOn);
+	if (readCommand_(j, midiMap.midiMap.soloOff, MIDIMAP_KEY_SOLO_OFF))
+		parse_(midiMap.midiMap.soloOff);
+	if (readCommand_(j, midiMap.midiMap.waiting, MIDIMAP_KEY_WAITING))
+		parse_(midiMap.midiMap.waiting);
+	if (readCommand_(j, midiMap.midiMap.playing, MIDIMAP_KEY_PLAYING))
+		parse_(midiMap.midiMap.playing);
+	if (readCommand_(j, midiMap.midiMap.stopping, MIDIMAP_KEY_STOPPING))
+		parse_(midiMap.midiMap.stopping);
+	if (readCommand_(j, midiMap.midiMap.stopped, MIDIMAP_KEY_STOPPED))
+		parse_(midiMap.midiMap.stopped);
+	if (readCommand_(j, midiMap.midiMap.playingInaudible, MIDIMAP_KEY_PLAYING_INAUDIBLE))
+		parse_(midiMap.midiMap.playingInaudible);
 
 	return MIDIMAP_READ_OK;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void sendInitMessages()
+void sendInitMessages(const Data& midiMap)
 {
-	for (const midiMap::Message& m : g_midiMap.midiMap.initCommands)
+	for (const midiMap::Message& m : midiMap.midiMap.initCommands)
 	{
 		if (m.value == 0x0 || m.channel == -1)
 			continue;

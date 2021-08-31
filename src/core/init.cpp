@@ -84,6 +84,7 @@ extern giada::m::KernelMidi     g_kernelMidi;
 extern giada::m::Actions        g_actions;
 extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
+extern giada::m::midiMap::Data  g_midiMap;
 
 namespace giada::m::init
 {
@@ -99,8 +100,8 @@ void initConf_()
 	if (!u::log::init(g_conf.logMode))
 		u::log::print("[init] log init failed! Using default stdout\n");
 
-	midiMap::init();
-	if (midiMap::read(g_conf.midiMapPath) != MIDIMAP_READ_OK)
+	midiMap::init(g_midiMap);
+	if (midiMap::read(g_midiMap, g_conf.midiMapPath) != MIDIMAP_READ_OK)
 		u::log::print("[init] MIDI map read failed!\n");
 }
 
@@ -122,7 +123,7 @@ void initMIDI_()
 	g_kernelMidi.setApi(g_conf.midiSystem);
 	g_kernelMidi.openOutDevice(g_conf.midiPortOut);
 	g_kernelMidi.openInDevice(g_conf.midiPortIn);
-	midiMap::sendInitMessages();
+	midiMap::sendInitMessages(g_midiMap);
 }
 
 /* -------------------------------------------------------------------------- */

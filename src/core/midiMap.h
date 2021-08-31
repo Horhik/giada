@@ -78,24 +78,24 @@ struct Data
 /* -------------------------------------------------------------------------- */
 
 /* init
-Parses the midi maps folders and find the available maps. */
+Parses the MIDI maps folders and find the available maps. */
 
-void init();
+void init(Data& midiMap);
 
 /* isDefined
-Checks whether a specific message has been defined within midi map file. */
+Checks whether a specific message has been defined within MIDI map file. */
 
 bool isDefined(const Message& msg);
 
 /* read
-Reads a midi map from file 'file'. */
+Reads a MIDI map from file 'file'. */
 
-int read(const std::string& file);
+int read(Data& midiMap, const std::string& file);
 
 /* sendInitMessages
 Sends initialization messages to the connected MIDI devices. */
 
-void sendInitMessages();
+void sendInitMessages(const Data& midiMap);
 
 /* sendMidiLightning
 Sends a MIDI lightning message defined by 'msg'. */
