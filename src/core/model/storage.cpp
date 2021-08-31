@@ -43,6 +43,7 @@ extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
 extern giada::m::PluginManager  g_pluginManager;
 extern giada::m::ChannelManager g_channelManager;
+extern giada::m::WaveManager    g_waveManager;
 
 namespace giada::m::model
 {
@@ -87,7 +88,7 @@ void store(patch::Data& patch)
 	patch.actions = g_actionRecorder.serializeActions(g_model.getAll<Actions::Map>());
 
 	for (const auto& w : g_model.getAll<WavePtrs>())
-		patch.waves.push_back(waveManager::serializeWave(*w));
+		patch.waves.push_back(g_waveManager.serializeWave(*w));
 
 	for (const channel::Data& c : layout.channels)
 		patch.channels.push_back(g_channelManager.serializeChannel(c));
@@ -135,7 +136,7 @@ void load(const patch::Data& patch)
 	g_model.getAll<WavePtrs>().clear();
 	for (const patch::Wave& pwave : patch.waves)
 	{
-		std::unique_ptr<Wave> w = waveManager::deserializeWave(pwave, g_conf.samplerate,
+		std::unique_ptr<Wave> w = g_waveManager.deserializeWave(pwave, g_conf.samplerate,
 		    g_conf.rsmpQuality);
 		if (w != nullptr)
 			g_model.getAll<WavePtrs>().push_back(std::move(w));

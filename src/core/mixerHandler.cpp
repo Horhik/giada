@@ -64,6 +64,7 @@ extern giada::m::Recorder       g_recorder;
 extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
 extern giada::m::ChannelManager g_channelManager;
+extern giada::m::WaveManager    g_waveManager;
 
 namespace giada::m
 {
@@ -106,7 +107,7 @@ void MixerHandler::addChannel(ChannelType type, ID columnId)
 
 int MixerHandler::loadChannel(ID channelId, const std::string& fname)
 {
-	waveManager::Result res = createWave(fname);
+	WaveManager::Result res = createWave(fname);
 
 	if (res.status != G_RES_OK)
 		return res.status;
@@ -134,7 +135,7 @@ int MixerHandler::loadChannel(ID channelId, const std::string& fname)
 
 int MixerHandler::addAndLoadChannel(ID columnId, const std::string& fname)
 {
-	waveManager::Result res = createWave(fname);
+	WaveManager::Result res = createWave(fname);
 	if (res.status == G_RES_OK)
 		addAndLoadChannel(columnId, std::move(res.wave));
 	return res.status;
@@ -170,7 +171,7 @@ void MixerHandler::cloneChannel(ID channelId)
 	if (newChannel.samplePlayer && newChannel.samplePlayer->hasWave())
 	{
 		Wave* wave = newChannel.samplePlayer->getWave();
-		g_model.add(waveManager::createFromWave(*wave, 0, wave->getBuffer().countFrames()));
+		g_model.add(g_waveManager.createFromWave(*wave, 0, wave->getBuffer().countFrames()));
 	}
 
 	/* Then push the new channel in the channels vector. */
@@ -342,9 +343,9 @@ channel::Data& MixerHandler::addChannelInternal(ChannelType type, ID columnId)
 
 /* -------------------------------------------------------------------------- */
 
-waveManager::Result MixerHandler::createWave(const std::string& fname)
+WaveManager::Result MixerHandler::createWave(const std::string& fname)
 {
-	return waveManager::createFromFile(fname, /*id=*/0, g_conf.samplerate,
+	return g_waveManager.createFromFile(fname, /*id=*/0, g_conf.samplerate,
 	    g_conf.rsmpQuality);
 }
 
@@ -395,7 +396,7 @@ void MixerHandler::recordChannel(channel::Data& ch, Frame recordedFrames)
 	/* Create a new Wave with audio coming from Mixer's input buffer. */
 
 	std::string           filename = "TAKE-" + std::to_string(g_patch.lastTakeId++) + ".wav";
-	std::unique_ptr<Wave> wave     = waveManager::createEmpty(recordedFrames, G_MAX_IO_CHANS,
+	std::unique_ptr<Wave> wave     = g_waveManager.createEmpty(recordedFrames, G_MAX_IO_CHANS,
         g_conf.samplerate, filename);
 
 	G_DEBUG("Created new Wave, size=" << wave->getBuffer().countFrames());

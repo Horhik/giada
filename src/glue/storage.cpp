@@ -64,6 +64,7 @@ extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
 extern giada::m::PluginManager  g_pluginManager;
+extern giada::m::WaveManager    g_waveManager;
 
 namespace giada::c::storage
 {
@@ -123,7 +124,7 @@ void saveWavesToProject_(const std::string& basePath)
 	for (const std::unique_ptr<m::Wave>& w : g_model.getAll<m::model::WavePtrs>())
 	{
 		w->setPath(makeUniqueWavePath_(basePath, *w));
-		m::waveManager::save(*w, w->getPath()); // TODO - error checking
+		g_waveManager.save(*w, w->getPath()); // TODO - error checking
 	}
 }
 } // namespace
@@ -275,7 +276,7 @@ void saveSample(void* data)
 
 	assert(wave != nullptr);
 
-	if (!m::waveManager::save(*wave, filePath))
+	if (!g_waveManager.save(*wave, filePath))
 	{
 		v::gdAlert("Unable to save this sample!");
 		return;

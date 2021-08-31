@@ -148,7 +148,7 @@ private:
 	std::vector<channel::Data*> getChannelsIf(std::function<bool(const channel::Data&)> f);
 
 	channel::Data&      addChannelInternal(ChannelType type, ID columnId);
-	waveManager::Result createWave(const std::string& fname);
+	WaveManager::Result createWave(const std::string& fname);
 
 	std::vector<channel::Data*> getRecordableChannels();
 	std::vector<channel::Data*> getOverdubbableChannels();

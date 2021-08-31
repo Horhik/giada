@@ -40,14 +40,10 @@
 
 extern giada::m::model::Model g_model;
 
-namespace giada::m::waveManager
+namespace giada::m
 {
 namespace
 {
-IdManager waveId_;
-
-/* -------------------------------------------------------------------------- */
-
 int getBits_(const SF_INFO& header)
 {
 	if (header.format & SF_FORMAT_PCM_S8)
@@ -72,14 +68,15 @@ int getBits_(const SF_INFO& header)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void init()
+void WaveManager::reset()
 {
-	waveId_ = IdManager();
+	m_waveId = IdManager();
 }
 
 /* -------------------------------------------------------------------------- */
 
-Result createFromFile(const std::string& path, ID id, int samplerate, int quality)
+WaveManager::Result WaveManager::createFromFile(const std::string& path, ID id,
+    int samplerate, int quality)
 {
 	if (path == "" || u::fs::isDir(path))
 	{
@@ -105,9 +102,9 @@ Result createFromFile(const std::string& path, ID id, int samplerate, int qualit
 		return {G_RES_ERR_WRONG_DATA};
 	}
 
-	waveId_.set(id);
+	m_waveId.set(id);
 
-	std::unique_ptr<Wave> wave = std::make_unique<Wave>(waveId_.generate(id));
+	std::unique_ptr<Wave> wave = std::make_unique<Wave>(m_waveId.generate(id));
 	wave->alloc(header.frames, header.channels, header.samplerate, getBits_(header), path);
 
 	if (sf_readf_float(fileIn, wave->getBuffer()[0], header.frames) != header.frames)
@@ -133,10 +130,10 @@ Result createFromFile(const std::string& path, ID id, int samplerate, int qualit
 
 /* -------------------------------------------------------------------------- */
 
-std::unique_ptr<Wave> createEmpty(int frames, int channels, int samplerate,
+std::unique_ptr<Wave> WaveManager::createEmpty(int frames, int channels, int samplerate,
     const std::string& name)
 {
-	std::unique_ptr<Wave> wave = std::make_unique<Wave>(waveId_.generate());
+	std::unique_ptr<Wave> wave = std::make_unique<Wave>(m_waveId.generate());
 	wave->alloc(frames, channels, samplerate, G_DEFAULT_BIT_DEPTH, name);
 	wave->setLogical(true);
 
@@ -148,12 +145,12 @@ std::unique_ptr<Wave> createEmpty(int frames, int channels, int samplerate,
 
 /* -------------------------------------------------------------------------- */
 
-std::unique_ptr<Wave> createFromWave(const Wave& src, int a, int b)
+std::unique_ptr<Wave> WaveManager::createFromWave(const Wave& src, int a, int b)
 {
 	int channels = src.getBuffer().countChannels();
 	int frames   = b - a;
 
-	std::unique_ptr<Wave> wave = std::make_unique<Wave>(waveId_.generate());
+	std::unique_ptr<Wave> wave = std::make_unique<Wave>(m_waveId.generate());
 	wave->alloc(frames, channels, src.getRate(), src.getBits(), src.getPath());
 	wave->getBuffer().set(src.getBuffer(), frames);
 	wave->setLogical(true);
@@ -165,26 +162,26 @@ std::unique_ptr<Wave> createFromWave(const Wave& src, int a, int b)
 
 /* -------------------------------------------------------------------------- */
 
-std::unique_ptr<Wave> deserializeWave(const patch::Wave& w, int samplerate, int quality)
+std::unique_ptr<Wave> WaveManager::deserializeWave(const patch::Wave& w, int samplerate, int quality)
 {
 	return createFromFile(w.path, w.id, samplerate, quality).wave;
 }
 
-const patch::Wave serializeWave(const Wave& w)
+const patch::Wave WaveManager::serializeWave(const Wave& w) const
 {
 	return {w.id, u::fs::basename(w.getPath())};
 }
 
 /* -------------------------------------------------------------------------- */
 
-Wave* hydrateWave(ID waveId)
+Wave* WaveManager::hydrateWave(ID waveId)
 {
 	return g_model.find<Wave>(waveId);
 }
 
 /* -------------------------------------------------------------------------- */
 
-int resample(Wave& w, int quality, int samplerate)
+int WaveManager::resample(Wave& w, int quality, int samplerate)
 {
 	float ratio         = samplerate / (float)w.getRate();
 	int   newSizeFrames = static_cast<int>(ceil(w.getBuffer().countFrames() * ratio));
@@ -216,7 +213,7 @@ int resample(Wave& w, int quality, int samplerate)
 
 /* -------------------------------------------------------------------------- */
 
-int save(const Wave& w, const std::string& path)
+int WaveManager::save(const Wave& w, const std::string& path)
 {
 	SF_INFO header;
 	header.samplerate = w.getRate();
@@ -238,4 +235,7 @@ int save(const Wave& w, const std::string& path)
 
 	return G_RES_OK;
 }
-} // namespace giada::m::waveManager
+
+/* -------------------------------------------------------------------------- */
+
+} // namespace giada::m

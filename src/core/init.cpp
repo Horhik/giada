@@ -79,6 +79,7 @@ extern giada::m::Synchronizer   g_synchronizer;
 extern giada::m::PluginHost     g_pluginHost;
 extern giada::m::PluginManager  g_pluginManager;
 extern giada::m::ChannelManager g_channelManager;
+extern giada::m::WaveManager    g_waveManager;
 extern giada::m::KernelMidi     g_kernelMidi;
 extern giada::m::Actions        g_actions;
 extern giada::m::conf::Data     g_conf;
@@ -234,7 +235,7 @@ void reset()
 
 	g_model.reset();
 	g_channelManager.reset();
-	waveManager::init();
+	g_waveManager.reset();
 	g_synchronizer.reset(g_conf.samplerate, g_conf.midiTCfps);
 	g_clock.reset();
 	g_mixerHandler.reset(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());

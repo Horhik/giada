@@ -42,6 +42,7 @@
 #include "core/recorder.h"
 #include "core/sequencer.h"
 #include "core/sync.h"
+#include "core/waveManager.h"
 #include "gui/dialogs/mainWindow.h"
 #include "src/core/actions/actionRecorder.h"
 #include "src/core/actions/actions.h"
@@ -77,6 +78,7 @@ giada::m::MixerHandler    g_mixerHandler(g_clock.getMaxFramesInLoop(), g_kernelA
 giada::m::PluginHost      g_pluginHost(g_kernelAudio.getRealBufSize());
 giada::m::PluginManager   g_pluginManager;
 giada::m::ChannelManager  g_channelManager;
+giada::m::WaveManager     g_waveManager;
 giada::v::gdMainWindow*   G_MainWin = nullptr;
 
 int main(int argc, char** argv)

@@ -33,6 +33,8 @@
 #include <algorithm>
 #include <cassert>
 
+extern giada::m::WaveManager g_waveManager;
+
 namespace giada::m::samplePlayer
 {
 namespace
@@ -109,7 +111,7 @@ Data::Data(const patch::Channel& p, float samplerateRatio, Resampler* r)
 , velocityAsVol(p.midiInVeloAsVol)
 , waveReader(r)
 {
-	setWave_(*this, waveManager::hydrateWave(p.waveId), samplerateRatio);
+	setWave_(*this, g_waveManager.hydrateWave(p.waveId), samplerateRatio);
 }
 
 /* -------------------------------------------------------------------------- */
