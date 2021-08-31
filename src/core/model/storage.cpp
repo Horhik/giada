@@ -42,6 +42,7 @@ extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
 extern giada::m::PluginManager  g_pluginManager;
+extern giada::m::ChannelManager g_channelManager;
 
 namespace giada::m::model
 {
@@ -52,7 +53,7 @@ void loadChannels_(const std::vector<patch::Channel>& channels, int samplerate)
 	float samplerateRatio = g_conf.samplerate / static_cast<float>(samplerate);
 
 	for (const patch::Channel& pchannel : channels)
-		g_model.get().channels.push_back(channelManager::deserializeChannel(pchannel, samplerateRatio));
+		g_model.get().channels.push_back(g_channelManager.deserializeChannel(pchannel, samplerateRatio));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -89,7 +90,7 @@ void store(patch::Data& patch)
 		patch.waves.push_back(waveManager::serializeWave(*w));
 
 	for (const channel::Data& c : layout.channels)
-		patch.channels.push_back(channelManager::serializeChannel(c));
+		patch.channels.push_back(g_channelManager.serializeChannel(c));
 }
 
 /* -------------------------------------------------------------------------- */

@@ -27,43 +27,59 @@
 #ifndef G_CHANNEL_MANAGER_H
 #define G_CHANNEL_MANAGER_H
 
+#include "core/idManager.h"
 #include "core/types.h"
 
 namespace giada::m::channel
 {
 struct Data;
-}
+struct State;
+struct Buffer;
+} // namespace giada::m::channel
+
 namespace giada::m::conf
 {
 struct Data;
 }
+
 namespace giada::m::patch
 {
 struct Channel;
 }
-namespace giada::m::channelManager
+
+namespace giada::m
 {
-/* init
-Initializes internal data. */
+class ChannelManager
+{
+public:
+	/* reset
+    Resets internal ID generator. */
 
-void init();
+	void reset();
 
-/* create (1)
-Creates a new channel. If channelId == 0 generates a new ID, reuse the one 
-passed in otherwise. */
+	/* create (1)
+    Creates a new channel. If channelId == 0 generates a new ID, reuse the one 
+    passed in otherwise. */
 
-channel::Data create(ID channelId, ChannelType type, ID columnId);
+	channel::Data create(ID channelId, ChannelType type, ID columnId);
 
-/* create (2)
-Creates a new channel given an existing one (i.e. clone). */
+	/* create (2)
+    Creates a new channel given an existing one (i.e. clone). */
 
-channel::Data create(const channel::Data& ch);
+	channel::Data create(const channel::Data& ch);
 
-/* (de)serializeWave
-Creates a new channel given the patch raw data and vice versa. */
+	/* (de)serializeWave
+    Creates a new channel given the patch raw data and vice versa. */
 
-channel::Data        deserializeChannel(const patch::Channel& c, float samplerateRatio);
-const patch::Channel serializeChannel(const channel::Data& c);
-} // namespace giada::m::channelManager
+	channel::Data        deserializeChannel(const patch::Channel& c, float samplerateRatio);
+	const patch::Channel serializeChannel(const channel::Data& c);
+
+private:
+	channel::State&  makeState_(ChannelType type);
+	channel::Buffer& makeBuffer_();
+
+	IdManager channelId_;
+};
+} // namespace giada::m
 
 #endif

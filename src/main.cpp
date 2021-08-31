@@ -24,6 +24,7 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include "core/channels/channelManager.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/eventDispatcher.h"
@@ -75,6 +76,7 @@ giada::m::Mixer           g_mixer(g_clock.getMaxFramesInLoop(), g_kernelAudio.ge
 giada::m::MixerHandler    g_mixerHandler(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 giada::m::PluginHost      g_pluginHost(g_kernelAudio.getRealBufSize());
 giada::m::PluginManager   g_pluginManager;
+giada::m::ChannelManager  g_channelManager;
 giada::v::gdMainWindow*   G_MainWin = nullptr;
 
 int main(int argc, char** argv)

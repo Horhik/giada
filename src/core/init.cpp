@@ -68,20 +68,21 @@
 #include "utils/ver.h"
 #include <FL/Fl.H>
 
-extern giada::v::gdMainWindow* G_MainWin;
-extern giada::m::model::Model  g_model;
-extern giada::m::KernelAudio   g_kernelAudio;
-extern giada::m::Clock         g_clock;
-extern giada::m::Sequencer     g_sequencer;
-extern giada::m::Mixer         g_mixer;
-extern giada::m::MixerHandler  g_mixerHandler;
-extern giada::m::Synchronizer  g_synchronizer;
-extern giada::m::PluginHost    g_pluginHost;
-extern giada::m::PluginManager g_pluginManager;
-extern giada::m::KernelMidi    g_kernelMidi;
-extern giada::m::Actions       g_actions;
-extern giada::m::conf::Data    g_conf;
-extern giada::m::patch::Data   g_patch;
+extern giada::v::gdMainWindow*  G_MainWin;
+extern giada::m::model::Model   g_model;
+extern giada::m::KernelAudio    g_kernelAudio;
+extern giada::m::Clock          g_clock;
+extern giada::m::Sequencer      g_sequencer;
+extern giada::m::Mixer          g_mixer;
+extern giada::m::MixerHandler   g_mixerHandler;
+extern giada::m::Synchronizer   g_synchronizer;
+extern giada::m::PluginHost     g_pluginHost;
+extern giada::m::PluginManager  g_pluginManager;
+extern giada::m::ChannelManager g_channelManager;
+extern giada::m::KernelMidi     g_kernelMidi;
+extern giada::m::Actions        g_actions;
+extern giada::m::conf::Data     g_conf;
+extern giada::m::patch::Data    g_patch;
 
 namespace giada::m::init
 {
@@ -232,7 +233,7 @@ void reset()
 	g_mixerHandler.stopRendering();
 
 	g_model.reset();
-	channelManager::init();
+	g_channelManager.reset();
 	waveManager::init();
 	g_synchronizer.reset(g_conf.samplerate, g_conf.midiTCfps);
 	g_clock.reset();

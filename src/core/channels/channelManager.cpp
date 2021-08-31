@@ -48,46 +48,16 @@ extern giada::m::model::Model g_model;
 extern giada::m::KernelAudio  g_kernelAudio;
 extern giada::m::conf::Data   g_conf;
 
-namespace giada::m::channelManager
+namespace giada::m
 {
-namespace
-{
-IdManager channelId_;
-
-/* -------------------------------------------------------------------------- */
-
-channel::State& makeState_(ChannelType type)
-{
-	std::unique_ptr<channel::State> state = std::make_unique<channel::State>();
-
-	if (type == ChannelType::SAMPLE || type == ChannelType::PREVIEW)
-		state->resampler = Resampler(static_cast<Resampler::Quality>(g_conf.rsmpQuality), G_MAX_IO_CHANS);
-
-	g_model.add(std::move(state));
-	return g_model.back<channel::State>();
-}
-
-/* -------------------------------------------------------------------------- */
-
-channel::Buffer& makeBuffer_()
-{
-	g_model.add(std::make_unique<channel::Buffer>(g_kernelAudio.getRealBufSize()));
-	return g_model.back<channel::Buffer>();
-}
-} // namespace
-
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-void init()
+void ChannelManager::reset()
 {
 	channelId_ = IdManager();
 }
 
 /* -------------------------------------------------------------------------- */
 
-channel::Data create(ID channelId, ChannelType type, ID columnId)
+channel::Data ChannelManager::create(ID channelId, ChannelType type, ID columnId)
 {
 	channel::Data out = channel::Data(type, channelId_.generate(channelId),
 	    columnId, makeState_(type), makeBuffer_());
@@ -100,7 +70,7 @@ channel::Data create(ID channelId, ChannelType type, ID columnId)
 
 /* -------------------------------------------------------------------------- */
 
-channel::Data create(const channel::Data& o)
+channel::Data ChannelManager::create(const channel::Data& o)
 {
 	channel::Data out = channel::Data(o);
 
@@ -113,7 +83,7 @@ channel::Data create(const channel::Data& o)
 
 /* -------------------------------------------------------------------------- */
 
-channel::Data deserializeChannel(const patch::Channel& pch, float samplerateRatio)
+channel::Data ChannelManager::deserializeChannel(const patch::Channel& pch, float samplerateRatio)
 {
 	channelId_.set(pch.id);
 	return channel::Data(pch, makeState_(pch.type), makeBuffer_(), samplerateRatio);
@@ -121,7 +91,7 @@ channel::Data deserializeChannel(const patch::Channel& pch, float samplerateRati
 
 /* -------------------------------------------------------------------------- */
 
-const patch::Channel serializeChannel(const channel::Data& c)
+const patch::Channel ChannelManager::serializeChannel(const channel::Data& c)
 {
 	patch::Channel pc;
 
@@ -179,4 +149,25 @@ const patch::Channel serializeChannel(const channel::Data& c)
 
 	return pc;
 }
-} // namespace giada::m::channelManager
+
+/* -------------------------------------------------------------------------- */
+
+channel::State& ChannelManager::makeState_(ChannelType type)
+{
+	std::unique_ptr<channel::State> state = std::make_unique<channel::State>();
+
+	if (type == ChannelType::SAMPLE || type == ChannelType::PREVIEW)
+		state->resampler = Resampler(static_cast<Resampler::Quality>(g_conf.rsmpQuality), G_MAX_IO_CHANS);
+
+	g_model.add(std::move(state));
+	return g_model.back<channel::State>();
+}
+
+/* -------------------------------------------------------------------------- */
+
+channel::Buffer& ChannelManager::makeBuffer_()
+{
+	g_model.add(std::make_unique<channel::Buffer>(g_kernelAudio.getRealBufSize()));
+	return g_model.back<channel::Buffer>();
+}
+} // namespace giada::m

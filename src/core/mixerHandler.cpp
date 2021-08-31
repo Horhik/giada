@@ -63,6 +63,7 @@ extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::Recorder       g_recorder;
 extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
+extern giada::m::ChannelManager g_channelManager;
 
 namespace giada::m
 {
@@ -79,11 +80,11 @@ void MixerHandler::reset(Frame framesInLoop, Frame framesInBuffer)
 
 	g_model.get().channels.clear();
 
-	g_model.get().channels.push_back(channelManager::create(
+	g_model.get().channels.push_back(g_channelManager.create(
 	    Mixer::MASTER_OUT_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0));
-	g_model.get().channels.push_back(channelManager::create(
+	g_model.get().channels.push_back(g_channelManager.create(
 	    Mixer::MASTER_IN_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0));
-	g_model.get().channels.push_back(channelManager::create(
+	g_model.get().channels.push_back(g_channelManager.create(
 	    Mixer::PREVIEW_CHANNEL_ID, ChannelType::PREVIEW, /*columnId=*/0));
 
 	g_model.swap(model::SwapType::NONE);
@@ -157,7 +158,7 @@ void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
 void MixerHandler::cloneChannel(ID channelId)
 {
 	channel::Data& oldChannel = g_model.get().getChannel(channelId);
-	channel::Data  newChannel = channelManager::create(oldChannel);
+	channel::Data  newChannel = g_channelManager.create(oldChannel);
 
 	/* Clone plugins, actions and wave first in their own lists. */
 
@@ -333,7 +334,7 @@ bool MixerHandler::hasAudioData() const
 
 channel::Data& MixerHandler::addChannelInternal(ChannelType type, ID columnId)
 {
-	g_model.get().channels.push_back(channelManager::create(/*id=*/0, type, columnId));
+	g_model.get().channels.push_back(g_channelManager.create(/*id=*/0, type, columnId));
 	g_model.swap(model::SwapType::HARD);
 
 	return g_model.get().channels.back();
