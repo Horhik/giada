@@ -28,6 +28,7 @@
 #define G_KERNELAUDIO_H
 
 #include "deps/rtaudio/RtAudio.h"
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -43,7 +44,7 @@ struct Data;
 
 namespace giada::m
 {
-class KernelAudio
+class KernelAudio final
 {
 public:
 	struct Device
@@ -58,6 +59,8 @@ public:
 		bool             isDefaultIn       = false;
 		std::vector<int> sampleRates       = {};
 	};
+
+	KernelAudio();
 
 	int  openDevice(const m::conf::Data& conf);
 	void closeDevice();
@@ -81,7 +84,14 @@ public:
 	Device                     getDevice(const char* name) const;
 	const std::vector<Device>& getDevices() const;
 
+	/* onAudioCallback
+	Main callback invoked on each audio block. */
+
+	std::function<int(void*, void*, int)> onAudioCallback;
+
 private:
+	static int audioCallback(void*, void*, unsigned, double, RtAudioStreamStatus, void*);
+
 	Device              fetchDevice(size_t deviceIndex) const;
 	std::vector<Device> fetchDevices() const;
 	void                printDevices(const std::vector<Device>& devices) const;

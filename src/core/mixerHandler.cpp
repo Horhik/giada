@@ -40,6 +40,7 @@
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
 #include "core/recorder.h"
+#include "core/sync.h"
 #include "core/wave.h"
 #include "core/waveFx.h"
 #include "glue/channel.h"
@@ -58,8 +59,10 @@ extern giada::m::model::Model   g_model;
 extern giada::m::KernelAudio    g_kernelAudio;
 extern giada::m::Clock          g_clock;
 extern giada::m::Mixer          g_mixer;
+extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::PluginHost     g_pluginHost;
 extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::Synchronizer   g_synchronizer;
 extern giada::m::Recorder       g_recorder;
 extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
@@ -68,9 +71,54 @@ extern giada::m::WaveManager    g_waveManager;
 
 namespace giada::m
 {
+namespace
+{
+int audioCallback_(void* outBuf, void* inBuf, int bufferSize)
+{
+	mcl::AudioBuffer out(static_cast<float*>(outBuf), bufferSize, G_MAX_IO_CHANS);
+	mcl::AudioBuffer in;
+	if (g_kernelAudio.isInputEnabled())
+		in = mcl::AudioBuffer(static_cast<float*>(inBuf), bufferSize, g_conf.channelsInCount);
+
+	/* Clean up output buffer before any rendering. Do this even if mixer is
+	disabled to avoid audio leftovers during a temporary suspension (e.g. when
+	loading a new patch). */
+
+	out.clear();
+
+	if (!g_kernelAudio.canRender())
+		return 0;
+
+#ifdef WITH_AUDIO_JACK
+	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
+		g_synchronizer.recvJackSync(g_kernelAudio.jackTransportQuery());
+#endif
+
+	Mixer::RenderInfo info;
+	info.isAudioReady    = g_kernelAudio.isReady();
+	info.hasInput        = g_kernelAudio.isInputEnabled();
+	info.isClockActive   = g_clock.isActive();
+	info.isClockRunning  = g_clock.isRunning();
+	info.canLineInRec    = g_recorder.isRecordingInput() && g_kernelAudio.isInputEnabled();
+	info.limitOutput     = g_conf.limitOutput;
+	info.inToOut         = g_mixerHandler.getInToOut();
+	info.maxFramesToRec  = g_conf.inputRecMode == InputRecMode::FREE ? g_clock.getMaxFramesInLoop() : g_clock.getFramesInLoop();
+	info.outVol          = g_mixerHandler.getOutVol();
+	info.inVol           = g_mixerHandler.getInVol();
+	info.recTriggerLevel = g_conf.recTriggerLevel;
+
+	return g_mixer.render(out, in, info);
+}
+} // namespace
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
 MixerHandler::MixerHandler(Frame framesInLoop, Frame framesInBuffer)
 {
 	reset(framesInLoop, framesInBuffer);
+	g_kernelAudio.onAudioCallback = audioCallback_;
 }
 
 /* -------------------------------------------------------------------------- */

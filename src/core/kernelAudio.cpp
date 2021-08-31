@@ -26,78 +26,28 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "kernelAudio.h"
-#include "conf.h"
-#include "const.h"
-#include "core/clock.h"
-#include "core/mixerHandler.h"
+#include "core/kernelAudio.h"
+#include "core/conf.h"
+#include "core/const.h"
 #include "core/model/model.h"
-#include "core/recorder.h"
-#include "core/sync.h"
-#include "deps/mcl-audio-buffer/src/audioBuffer.hpp"
-#include "glue/main.h"
-#include "mixer.h"
 #include "utils/log.h"
 #include "utils/vector.h"
 
 extern giada::m::model::Model g_model;
-extern giada::m::KernelAudio  g_kernelAudio;
-extern giada::m::Clock        g_clock;
-extern giada::m::Mixer        g_mixer;
-extern giada::m::MixerHandler g_mixerHandler;
-extern giada::m::Synchronizer g_synchronizer;
-extern giada::m::Recorder     g_recorder;
-extern giada::m::conf::Data   g_conf;
 
 namespace giada::m
 {
-namespace
+KernelAudio::KernelAudio()
+: onAudioCallback(nullptr)
 {
-int callback_(void* outBuf, void* inBuf, unsigned bufferSize, double /*streamTime*/,
-    RtAudioStreamStatus /*status*/, void* /*userData*/)
-{
-	mcl::AudioBuffer out(static_cast<float*>(outBuf), bufferSize, G_MAX_IO_CHANS);
-	mcl::AudioBuffer in;
-	if (g_kernelAudio.isInputEnabled())
-		in = mcl::AudioBuffer(static_cast<float*>(inBuf), bufferSize, g_conf.channelsInCount);
-
-	/* Clean up output buffer before any rendering. Do this even if mixer is
-	disabled to avoid audio leftovers during a temporary suspension (e.g. when
-	loading a new patch). */
-
-	out.clear();
-
-	if (!g_kernelAudio.canRender())
-		return 0;
-
-#ifdef WITH_AUDIO_JACK
-	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
-		g_synchronizer.recvJackSync(g_kernelAudio.jackTransportQuery());
-#endif
-
-	Mixer::RenderInfo info;
-	info.isAudioReady    = g_model.get().kernel.audioReady;
-	info.hasInput        = g_kernelAudio.isInputEnabled();
-	info.isClockActive   = g_clock.isActive();
-	info.isClockRunning  = g_clock.isRunning();
-	info.canLineInRec    = g_recorder.isRecordingInput() && g_kernelAudio.isInputEnabled();
-	info.limitOutput     = g_conf.limitOutput;
-	info.inToOut         = g_mixerHandler.getInToOut();
-	info.maxFramesToRec  = g_conf.inputRecMode == InputRecMode::FREE ? g_clock.getMaxFramesInLoop() : g_clock.getFramesInLoop();
-	info.outVol          = g_mixerHandler.getOutVol();
-	info.inVol           = g_mixerHandler.getInVol();
-	info.recTriggerLevel = g_conf.recTriggerLevel;
-
-	return g_mixer.render(out, in, info);
 }
-} // namespace
 
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
 int KernelAudio::openDevice(const conf::Data& conf)
 {
+	assert(onAudioCallback != nullptr);
+
 	m_api = conf.soundSystem;
 	u::log::print("[KA] using system 0x%x\n", m_api);
 
@@ -205,8 +155,8 @@ int KernelAudio::openDevice(const conf::Data& conf)
 		    RTAUDIO_FLOAT32,                                // audio format
 		    m_realSampleRate,                               // sample rate
 		    &m_realBufferSize,                              // buffer size in byte
-		    &callback_,                                     // audio callback
-		    nullptr,                                        // user data (unused)
+		    &audioCallback,                                 // audio callback
+		    this,                                           // user data (unused)
 		    &options);
 
 #ifdef WITH_AUDIO_JACK
@@ -465,5 +415,13 @@ void KernelAudio::printDevices(const std::vector<m::KernelAudio::Device>& device
 bool KernelAudio::canRender() const
 {
 	return g_model.get().kernel.audioReady && g_model.get().mixer.state->active.load() == true;
+}
+
+/* -------------------------------------------------------------------------- */
+
+int KernelAudio::audioCallback(void* outBuf, void* inBuf, unsigned bufferSize,
+    double /*streamTime*/, RtAudioStreamStatus /*status*/, void*   data)
+{
+	return static_cast<KernelAudio*>(data)->onAudioCallback(outBuf, inBuf, bufferSize);
 }
 } // namespace giada::m
