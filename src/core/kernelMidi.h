@@ -63,11 +63,6 @@ public:
 	void send(uint32_t s);
 	void send(int b1, int b2 = -1, int b3 = -1);
 
-	/* sendMidiLightning
-    Sends a MIDI lightning message defined by 'msg'. */
-
-	void sendMidiLightning(uint32_t learnt, const midiMap::Message& msg);
-
 	/* setApi
     Sets the Api in use for both in & out messages. */
 
@@ -85,8 +80,6 @@ public:
 private:
 	static void callback(double, std::vector<unsigned char>*, void*);
 	void        callback(std::vector<unsigned char>*);
-
-	void sendMidiLightningInitMsgs();
 
 	std::unique_ptr<RtMidiOut> m_midiOut;
 	std::unique_ptr<RtMidiIn>  m_midiIn;

@@ -91,6 +91,16 @@ bool isDefined(const Message& msg);
 Reads a midi map from file 'file'. */
 
 int read(const std::string& file);
+
+/* sendInitMessages
+Sends initialization messages to the connected MIDI devices. */
+
+void sendInitMessages();
+
+/* sendMidiLightning
+Sends a MIDI lightning message defined by 'msg'. */
+
+void sendMidiLightning(uint32_t learnt, const midiMap::Message& msg);
 } // namespace giada::m::midiMap
 
 #endif

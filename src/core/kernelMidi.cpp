@@ -24,13 +24,10 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "kernelMidi.h"
-#include "const.h"
-#include "midiDispatcher.h"
-#include "midiMap.h"
+#include "core/kernelMidi.h"
+#include "core/const.h"
 #include "utils/log.h"
-
-extern giada::m::midiMap::Data g_midiMap;
+#include <cassert>
 
 namespace giada::m
 {
@@ -104,11 +101,6 @@ int KernelMidi::openOutDevice(int port)
 		{
 			m_midiOut->openPort(port, getOutPortName(port));
 			u::log::print("[KM] MIDI out port %d open\n", port);
-
-			/* TODO - it shold send midiLightning message only if there is a map loaded
-			and available in midimap:: */
-
-			sendMidiLightningInitMsgs();
 			return 1;
 		}
 		catch (RtMidiError& error)
@@ -239,52 +231,9 @@ void KernelMidi::send(int b1, int b2, int b3)
 
 /* -------------------------------------------------------------------------- */
 
-void KernelMidi::sendMidiLightning(uint32_t learnt, const midiMap::Message& m)
-{
-	// Skip lightning message if not defined in midi map
-
-	if (!midiMap::isDefined(m))
-	{
-		u::log::print("[KM::sendMidiLightning] message skipped (not defined in midiMap)");
-		return;
-	}
-
-	u::log::print("[KM::sendMidiLightning] learnt=0x%X, chan=%d, msg=0x%X, offset=%d\n",
-	    learnt, m.channel, m.value, m.offset);
-
-	/* Isolate 'channel' from learnt message and offset it as requested by 'nn' in 
-	the midiMap configuration file. */
-
-	uint32_t out = ((learnt & 0x00FF0000) >> 16) << m.offset;
-
-	/* Merge the previously prepared channel into final message, and finally send 
-	it. */
-
-	out |= m.value | (m.channel << 24);
-	send(out);
-}
-
-/* -------------------------------------------------------------------------- */
-
 unsigned KernelMidi::countInPorts() const { return m_numInPorts; }
 unsigned KernelMidi::countOutPorts() const { return m_numOutPorts; }
 bool     KernelMidi::getStatus() const { return m_status; }
-
-/* -------------------------------------------------------------------------- */
-
-void KernelMidi::sendMidiLightningInitMsgs()
-{
-	for (const midiMap::Message& m : g_midiMap.midiMap.initCommands)
-	{
-		if (m.value != 0x0 && m.channel != -1)
-		{
-			u::log::print("[KM] MIDI send (init) - Channel %x - Event 0x%X\n", m.channel, m.value);
-			MidiEvent e(m.value);
-			e.setChannel(m.channel);
-			send(e.getRaw());
-		}
-	}
-}
 
 /* -------------------------------------------------------------------------- */
 
