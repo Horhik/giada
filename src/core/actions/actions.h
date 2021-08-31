@@ -37,6 +37,11 @@
 #include <memory>
 #include <vector>
 
+namespace giada::m::model
+{
+class Model;
+}
+
 namespace giada::m
 {
 class Actions
@@ -44,7 +49,7 @@ class Actions
 public:
 	using Map = std::map<Frame, std::vector<Action>>;
 
-	Actions();
+	Actions(model::Model& model);
 
 	/* forEachAction
     Applies a read-only callback on each action recorded. NEVER do anything
@@ -169,6 +174,8 @@ private:
 	void optimize(Map& map);
 
 	void removeIf(std::function<bool(const Action&)> f);
+
+	model::Model& m_model;
 
 	//TODO - move to actionManager
 	IdManager m_actionId;
