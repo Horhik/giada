@@ -45,7 +45,7 @@ class Wave;
 
 namespace giada::m
 {
-class MixerHandler
+class MixerHandler final
 {
 public:
 	MixerHandler(Frame framesInLoop, Frame framesInBuffer);
@@ -79,6 +79,7 @@ public:
 	float getInVol() const;
 	float getOutVol() const;
 	bool  getInToOut() const;
+	bool  canRender() const;
 
 	/* reset
 	Brings everything back to the initial state. */

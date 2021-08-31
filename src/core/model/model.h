@@ -39,12 +39,6 @@
 
 namespace giada::m::model
 {
-struct Kernel
-{
-	bool audioReady = false;
-	bool midiReady  = false;
-};
-
 struct Recorder
 {
 	bool isRecordingAction = false;
@@ -110,7 +104,6 @@ struct Layout
 
 	Clock    clock;
 	Mixer    mixer;
-	Kernel   kernel;
 	Recorder recorder;
 	MidiIn   midiIn;
 

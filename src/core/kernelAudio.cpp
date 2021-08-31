@@ -29,16 +29,19 @@
 #include "core/kernelAudio.h"
 #include "core/conf.h"
 #include "core/const.h"
-#include "core/model/model.h"
 #include "utils/log.h"
 #include "utils/vector.h"
-
-extern giada::m::model::Model g_model;
+#include <cassert>
 
 namespace giada::m
 {
 KernelAudio::KernelAudio()
 : onAudioCallback(nullptr)
+, m_ready(false)
+, m_inputEnabled(false)
+, m_realBufferSize(0)
+, m_realSampleRate(0)
+, m_api(0)
 {
 }
 
@@ -163,8 +166,7 @@ int KernelAudio::openDevice(const conf::Data& conf)
 		m_jackTransport.emplace(*static_cast<jack_client_t*>(m_rtAudio->HACK__getJackClient()));
 #endif
 
-		g_model.get().kernel.audioReady = true;
-		g_model.swap(model::SwapType::NONE);
+		m_ready = true;
 		return 1;
 	}
 	catch (RtAudioError& e)
@@ -223,7 +225,7 @@ void KernelAudio::closeDevice()
 
 bool KernelAudio::isReady() const
 {
-	return g_model.get().kernel.audioReady;
+	return m_ready;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -408,13 +410,6 @@ void KernelAudio::printDevices(const std::vector<m::KernelAudio::Device>& device
 			u::log::print("%d ", s);
 		u::log::print("\n");
 	}
-}
-
-/* -------------------------------------------------------------------------- */
-
-bool KernelAudio::canRender() const
-{
-	return g_model.get().kernel.audioReady && g_model.get().mixer.state->active.load() == true;
 }
 
 /* -------------------------------------------------------------------------- */

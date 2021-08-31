@@ -76,7 +76,6 @@ public:
 
 	bool                       isReady() const;
 	bool                       isInputEnabled() const;
-	bool                       canRender() const;
 	unsigned                   getRealBufSize() const;
 	bool                       hasAPI(int API) const;
 	int                        getAPI() const;
@@ -101,10 +100,11 @@ private:
 #endif
 	std::vector<Device>      m_devices;
 	std::unique_ptr<RtAudio> m_rtAudio;
-	bool                     m_inputEnabled   = false;
-	unsigned                 m_realBufferSize = 0; // Real buffer size from the soundcard
-	int                      m_realSampleRate = 0; // Sample rate might differ if JACK in use
-	int                      m_api            = 0;
+	bool                     m_ready;
+	bool                     m_inputEnabled;
+	unsigned                 m_realBufferSize; // Real buffer size from the soundcard
+	int                      m_realSampleRate; // Sample rate might differ if JACK in use
+	int                      m_api;
 };
 } // namespace giada::m
 

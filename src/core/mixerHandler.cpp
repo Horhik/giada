@@ -86,7 +86,7 @@ int audioCallback_(void* outBuf, void* inBuf, int bufferSize)
 
 	out.clear();
 
-	if (!g_kernelAudio.canRender())
+	if (!g_mixerHandler.canRender())
 		return 0;
 
 #ifdef WITH_AUDIO_JACK
@@ -329,6 +329,13 @@ float MixerHandler::getOutVol() const
 bool MixerHandler::getInToOut() const
 {
 	return g_model.get().mixer.inToOut;
+}
+
+/* -------------------------------------------------------------------------- */
+
+bool MixerHandler::canRender() const
+{
+	return g_kernelAudio.isReady() && g_model.get().mixer.state->active.load() == true;
 }
 
 /* -------------------------------------------------------------------------- */

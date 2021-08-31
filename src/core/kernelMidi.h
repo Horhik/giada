@@ -36,7 +36,7 @@
 
 namespace giada::m
 {
-class KernelMidi
+class KernelMidi final
 {
 public:
 	KernelMidi();
