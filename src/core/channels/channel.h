@@ -89,7 +89,7 @@ struct Buffer
 struct Data
 {
 	Data(ChannelType t, ID id, ID columnId, State& state, Buffer& buffer);
-	Data(const patch::Channel& p, State& state, Buffer& buffer, float samplerateRatio);
+	Data(const patch::Channel& p, State& state, Buffer& buffer, float samplerateRatio, Wave* w);
 	Data(const Data& o) = default;
 	Data(Data&& o)      = default;
 	Data& operator=(const Data&) = default;

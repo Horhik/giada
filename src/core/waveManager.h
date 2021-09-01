@@ -77,7 +77,6 @@ public:
 
 	std::unique_ptr<Wave> deserializeWave(const patch::Wave& w, int samplerate, int quality);
 	const patch::Wave     serializeWave(const Wave& w) const;
-	Wave*                 hydrateWave(ID waveId);
 
 	/* resample
 	Change sample rate of 'w' to the desider value. The 'quality' parameter sets 

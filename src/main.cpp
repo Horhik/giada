@@ -59,27 +59,27 @@
 #include <vector>
 #endif
 
-giada::m::model::Model    g_model;
-giada::m::conf::Data      g_conf;
-giada::m::patch::Data     g_patch;
-giada::m::midiMap::Data   g_midiMap;
-giada::m::KernelAudio     g_kernelAudio;
-giada::m::KernelMidi      g_kernelMidi;
-giada::m::MidiDispatcher  g_midiDispatcher;
-giada::m::EventDispatcher g_eventDispatcher;
-giada::m::Actions         g_actions(g_model);
-giada::m::ActionRecorder  g_actionRecorder;
-giada::m::Recorder        g_recorder;
-giada::m::Synchronizer    g_synchronizer(g_conf.samplerate, g_conf.midiTCfps);
-giada::m::Clock           g_clock(g_kernelAudio, g_synchronizer);
-giada::m::Sequencer       g_sequencer(g_kernelAudio, g_clock);
-giada::m::Mixer           g_mixer(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
-giada::m::MixerHandler    g_mixerHandler(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
-giada::m::PluginHost      g_pluginHost(g_kernelAudio.getRealBufSize());
-giada::m::PluginManager   g_pluginManager;
-giada::m::ChannelManager  g_channelManager;
-giada::m::WaveManager     g_waveManager;
-giada::v::gdMainWindow*   G_MainWin = nullptr;
+giada::m::model::Model           g_model;
+giada::m::conf::Data             g_conf;
+giada::m::patch::Data            g_patch;
+giada::m::midiMap::Data          g_midiMap;
+giada::m::KernelAudio            g_kernelAudio;
+giada::m::KernelMidi             g_kernelMidi;
+/*! */ giada::m::MidiDispatcher  g_midiDispatcher;
+/*! */ giada::m::EventDispatcher g_eventDispatcher;
+giada::m::Actions                g_actions(g_model);
+/*! */ giada::m::ActionRecorder  g_actionRecorder;
+/*! */ giada::m::Recorder        g_recorder;
+/*! */ giada::m::Synchronizer    g_synchronizer(g_conf.samplerate, g_conf.midiTCfps);
+/*! */ giada::m::Clock           g_clock(g_kernelAudio, g_synchronizer);
+/*! */ giada::m::Sequencer       g_sequencer(g_kernelAudio, g_clock);
+/*! */ giada::m::Mixer           g_mixer(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
+/*! */ giada::m::MixerHandler    g_mixerHandler(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
+/*! */ giada::m::PluginHost      g_pluginHost(g_kernelAudio.getRealBufSize());
+/*! */ giada::m::PluginManager   g_pluginManager;
+/*! */ giada::m::ChannelManager  g_channelManager;
+giada::m::WaveManager            g_waveManager;
+giada::v::gdMainWindow*          G_MainWin = nullptr;
 
 int main(int argc, char** argv)
 {

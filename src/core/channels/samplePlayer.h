@@ -37,16 +37,18 @@ namespace giada::m::channel
 {
 struct Data;
 }
+
 namespace giada::m::patch
 {
 struct Channel;
 }
+
 namespace giada::m::samplePlayer
 {
 struct Data
 {
 	Data(Resampler* r);
-	Data(const patch::Channel& p, float samplerateRatio, Resampler* r);
+	Data(const patch::Channel& p, float samplerateRatio, Resampler* r, Wave* w);
 	Data(const Data& o) = default;
 	Data(Data&& o)      = default;
 	Data& operator=(const Data&) = default;

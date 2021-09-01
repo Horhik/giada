@@ -28,7 +28,6 @@
 #include "const.h"
 #include "deps/mcl-audio-buffer/src/audioBuffer.hpp"
 #include "idManager.h"
-#include "model/model.h"
 #include "patch.h"
 #include "utils/fs.h"
 #include "utils/log.h"
@@ -37,8 +36,6 @@
 #include <cmath>
 #include <samplerate.h>
 #include <sndfile.h>
-
-extern giada::m::model::Model g_model;
 
 namespace giada::m
 {
@@ -170,13 +167,6 @@ std::unique_ptr<Wave> WaveManager::deserializeWave(const patch::Wave& w, int sam
 const patch::Wave WaveManager::serializeWave(const Wave& w) const
 {
 	return {w.id, u::fs::basename(w.getPath())};
-}
-
-/* -------------------------------------------------------------------------- */
-
-Wave* WaveManager::hydrateWave(ID waveId)
-{
-	return g_model.find<Wave>(waveId);
 }
 
 /* -------------------------------------------------------------------------- */

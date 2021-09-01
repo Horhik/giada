@@ -28,12 +28,9 @@
 #include "core/channels/channel.h"
 #include "core/clock.h"
 #include "core/wave.h"
-#include "core/waveManager.h"
 #include "deps/mcl-audio-buffer/src/audioBuffer.hpp"
 #include <algorithm>
 #include <cassert>
-
-extern giada::m::WaveManager g_waveManager;
 
 namespace giada::m::samplePlayer
 {
@@ -102,7 +99,7 @@ Data::Data(Resampler* r)
 
 /* -------------------------------------------------------------------------- */
 
-Data::Data(const patch::Channel& p, float samplerateRatio, Resampler* r)
+Data::Data(const patch::Channel& p, float samplerateRatio, Resampler* r, Wave* w)
 : pitch(p.pitch)
 , mode(p.mode)
 , shift(p.shift)
@@ -111,7 +108,7 @@ Data::Data(const patch::Channel& p, float samplerateRatio, Resampler* r)
 , velocityAsVol(p.midiInVeloAsVol)
 , waveReader(r)
 {
-	setWave_(*this, g_waveManager.hydrateWave(p.waveId), samplerateRatio);
+	setWave_(*this, w, samplerateRatio);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -86,7 +86,7 @@ channel::Data ChannelManager::create(const channel::Data& o)
 channel::Data ChannelManager::deserializeChannel(const patch::Channel& pch, float samplerateRatio)
 {
 	channelId_.set(pch.id);
-	return channel::Data(pch, makeState_(pch.type), makeBuffer_(), samplerateRatio);
+	return channel::Data(pch, makeState_(pch.type), makeBuffer_(), samplerateRatio, g_model.find<Wave>(pch.waveId));
 }
 
 /* -------------------------------------------------------------------------- */
