@@ -40,7 +40,7 @@ struct Wave;
 
 namespace giada::m
 {
-class WaveManager
+class WaveManager final
 {
 public:
 	struct Result

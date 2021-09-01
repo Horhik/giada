@@ -30,6 +30,16 @@
 #include "core/idManager.h"
 #include "core/types.h"
 
+namespace giada::m
+{
+class KernelAudio;
+}
+
+namespace giada::m::model
+{
+class Model;
+}
+
 namespace giada::m::channel
 {
 struct Data;
@@ -49,9 +59,11 @@ struct Channel;
 
 namespace giada::m
 {
-class ChannelManager
+class ChannelManager final
 {
 public:
+	ChannelManager(const KernelAudio&, const conf::Data&, model::Model&);
+
 	/* reset
     Resets internal ID generator. */
 
@@ -79,6 +91,10 @@ private:
 	channel::Buffer& makeBuffer_();
 
 	IdManager channelId_;
+
+	const KernelAudio& m_kernelAudio;
+	const conf::Data&  m_conf;
+	model::Model&      m_model;
 };
 } // namespace giada::m
 

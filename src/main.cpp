@@ -77,7 +77,7 @@ giada::m::Actions                g_actions(g_model);
 /*! */ giada::m::MixerHandler    g_mixerHandler(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 /*! */ giada::m::PluginHost      g_pluginHost(g_kernelAudio.getRealBufSize());
 /*! */ giada::m::PluginManager   g_pluginManager;
-/*! */ giada::m::ChannelManager  g_channelManager;
+giada::m::ChannelManager         g_channelManager(g_kernelAudio, g_conf, g_model);
 giada::m::WaveManager            g_waveManager;
 giada::v::gdMainWindow*          G_MainWin = nullptr;
 
