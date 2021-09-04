@@ -65,8 +65,8 @@ giada::m::patch::Data            g_patch;
 giada::m::midiMap::Data          g_midiMap;
 giada::m::KernelAudio            g_kernelAudio;
 giada::m::KernelMidi             g_kernelMidi;
-/*! */ giada::m::MidiDispatcher  g_midiDispatcher;
 /*! */ giada::m::EventDispatcher g_eventDispatcher;
+giada::m::MidiDispatcher         g_midiDispatcher(g_eventDispatcher, g_model);
 giada::m::Actions                g_actions(g_model);
 /*! */ giada::m::ActionRecorder  g_actionRecorder;
 /*! */ giada::m::Recorder        g_recorder;
@@ -88,6 +88,9 @@ int main(int argc, char** argv)
 	if (args.size() > 1 && strcmp(args[1], "--run-tests") == 0)
 		return Catch::Session().run(args.size() - 1, &args[1]);
 #endif
+
+	// TODO - move the setup to Engine class
+	g_kernelMidi.onMidiReceived = [](uint32_t msg) { g_midiDispatcher.dispatch(msg); };
 
 	giada::m::init::startup(argc, argv);
 

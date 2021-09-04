@@ -38,7 +38,7 @@ namespace giada::m
 class MidiDispatcher
 {
 public:
-	MidiDispatcher();
+	MidiDispatcher(EventDispatcher&, model::Model&);
 
 	void startChannelLearn(int param, ID channelId, std::function<void()> f);
 	void startMasterLearn(int param, std::function<void()> f);
@@ -91,6 +91,9 @@ private:
 
 	std::function<void()>          m_signalCb;
 	std::function<void(MidiEvent)> m_learnCb;
+
+	EventDispatcher& m_eventDispatcher;
+	model::Model&    m_model;
 };
 } // namespace giada::m
 

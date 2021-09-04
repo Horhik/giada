@@ -97,6 +97,7 @@ public:
 	Collect events coming from the UI or MIDI devices. Our poor man's Queue is a 
 	single-producer/single-consumer one, so we need two queues for two writers. 
 	TODO - let's add a multi-producer queue sooner or later! */
+	/*TODO - make them private*/
 
 	Queue<Event, G_MAX_DISPATCHER_EVENTS> UIevents;
 	Queue<Event, G_MAX_DISPATCHER_EVENTS> MidiEvents;
