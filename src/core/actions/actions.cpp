@@ -38,7 +38,6 @@ namespace giada::m
 Actions::Actions(model::Model& model)
 : m_model(model)
 {
-	reset();
 }
 
 /* -------------------------------------------------------------------------- */
