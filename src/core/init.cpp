@@ -238,7 +238,7 @@ void reset()
 	g_model.reset();
 	g_channelManager.reset();
 	g_waveManager.reset();
-	g_synchronizer.reset(g_conf.samplerate, g_conf.midiTCfps);
+	g_synchronizer.reset();
 	g_clock.reset();
 	g_mixerHandler.reset(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 	g_sequencer.reset();

@@ -24,67 +24,54 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "sync.h"
+#include "core/sync.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/kernelAudio.h"
 #include "core/kernelMidi.h"
 #include "core/model/model.h"
 
-extern giada::m::model::Model g_model;
-extern giada::m::Sequencer    g_sequencer;
-extern giada::m::Clock        g_clock;
-extern giada::m::KernelMidi   g_kernelMidi;
-extern giada::m::conf::Data   g_conf;
-
 namespace giada::m
 {
-Synchronizer::Synchronizer(int sampleRate, float midiTCfps)
-: m_onJackRewind(nullptr)
-, m_onJackChangeBpm(nullptr)
-, m_onJackStart(nullptr)
-, m_onJackStop(nullptr)
+Synchronizer::Synchronizer(const conf::Data& c, KernelMidi& k)
+: onJackRewind(nullptr)
+, onJackChangeBpm(nullptr)
+, onJackStart(nullptr)
+, onJackStop(nullptr)
+, m_kernelMidi(k)
+, m_conf(c)
 {
-	reset(sampleRate, midiTCfps);
-
-#ifdef WITH_AUDIO_JACK
-	m_onJackRewind    = []() { g_sequencer.rawRewind(); };
-	m_onJackChangeBpm = [this](float bpm) { g_clock.setBpmRaw(bpm); };
-	m_onJackStart     = []() { g_sequencer.rawStart(); };
-	m_onJackStop      = []() { g_sequencer.rawStop(); };
-#endif
+	reset();
 }
 
 /* -------------------------------------------------------------------------- */
 
-void Synchronizer::reset(int sampleRate, float midiTCfps)
+void Synchronizer::reset()
 {
-	m_midiTCrate = static_cast<int>((sampleRate / midiTCfps) * G_MAX_IO_CHANS); // stereo values
+	m_midiTCrate = static_cast<int>((m_conf.samplerate / m_conf.midiTCfps) * G_MAX_IO_CHANS); // stereo values
 }
 
 /* -------------------------------------------------------------------------- */
 
-void Synchronizer::sendMIDIsync()
+void Synchronizer::sendMIDIsync(const model::Clock& clock)
 {
-	const model::Clock& c = g_model.get().clock;
-
 	/* Sending MIDI sync while waiting is meaningless. */
 
-	if (c.status == ClockStatus::WAITING)
+	if (clock.status == ClockStatus::WAITING)
 		return;
 
-	int currentFrame = c.state->currentFrame.load();
+	int currentFrame = clock.state->currentFrame.load();
 
 	/* TODO - only Master (_M) is implemented so far. */
 
-	if (g_conf.midiSync == MIDI_SYNC_CLOCK_M)
+	if (m_conf.midiSync == MIDI_SYNC_CLOCK_M)
 	{
-		if (currentFrame % (c.framesInBeat / 24) == 0)
-			g_kernelMidi.send(MIDI_CLOCK, -1, -1);
+		if (currentFrame % (clock.framesInBeat / 24) == 0)
+			m_kernelMidi.send(MIDI_CLOCK, -1, -1);
 		return;
 	}
 
-	if (g_conf.midiSync == MIDI_SYNC_MTC_M)
+	if (m_conf.midiSync == MIDI_SYNC_MTC_M)
 	{
 
 		/* check if a new timecode frame has passed. If so, send MIDI TC
@@ -102,10 +89,10 @@ void Synchronizer::sendMIDIsync()
 
 		if (m_midiTCframes % 2 == 0)
 		{
-			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCframes & 0x0F) | 0x00, -1);
-			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCframes >> 4) | 0x10, -1);
-			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCseconds & 0x0F) | 0x20, -1);
-			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCseconds >> 4) | 0x30, -1);
+			m_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCframes & 0x0F) | 0x00, -1);
+			m_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCframes >> 4) | 0x10, -1);
+			m_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCseconds & 0x0F) | 0x20, -1);
+			m_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCseconds >> 4) | 0x30, -1);
 		}
 
 		/* minutes low nibble
@@ -115,10 +102,10 @@ void Synchronizer::sendMIDIsync()
 
 		else
 		{
-			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCminutes & 0x0F) | 0x40, -1);
-			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCminutes >> 4) | 0x50, -1);
-			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTChours & 0x0F) | 0x60, -1);
-			g_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTChours >> 4) | 0x70, -1);
+			m_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCminutes & 0x0F) | 0x40, -1);
+			m_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTCminutes >> 4) | 0x50, -1);
+			m_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTChours & 0x0F) | 0x60, -1);
+			m_kernelMidi.send(MIDI_MTC_QUARTER, (m_midiTChours >> 4) | 0x70, -1);
 		}
 
 		m_midiTCframes++;
@@ -126,7 +113,7 @@ void Synchronizer::sendMIDIsync()
 		/* check if total timecode frames are greater than timecode fps:
 		 * if so, a second has passed */
 
-		if (m_midiTCframes > g_conf.midiTCfps)
+		if (m_midiTCframes > m_conf.midiTCfps)
 		{
 			m_midiTCframes = 0;
 			m_midiTCseconds++;
@@ -158,25 +145,25 @@ void Synchronizer::sendMIDIrewind()
     are not used. Instead, an MTC Full Frame message should be sent. The Full 
     Frame is a SysEx message that encodes the entire SMPTE time in one message. */
 
-	if (g_conf.midiSync == MIDI_SYNC_MTC_M)
+	if (m_conf.midiSync == MIDI_SYNC_MTC_M)
 	{
-		g_kernelMidi.send(MIDI_SYSEX, 0x7F, 0x00); // send msg on channel 0
-		g_kernelMidi.send(0x01, 0x01, 0x00);       // hours 0
-		g_kernelMidi.send(0x00, 0x00, 0x00);       // mins, secs, frames 0
-		g_kernelMidi.send(MIDI_EOX, -1, -1);       // end of sysex
+		m_kernelMidi.send(MIDI_SYSEX, 0x7F, 0x00); // send msg on channel 0
+		m_kernelMidi.send(0x01, 0x01, 0x00);       // hours 0
+		m_kernelMidi.send(0x00, 0x00, 0x00);       // mins, secs, frames 0
+		m_kernelMidi.send(MIDI_EOX, -1, -1);       // end of sysex
 	}
-	else if (g_conf.midiSync == MIDI_SYNC_CLOCK_M)
-		g_kernelMidi.send(MIDI_POSITION_PTR, 0, 0);
+	else if (m_conf.midiSync == MIDI_SYNC_CLOCK_M)
+		m_kernelMidi.send(MIDI_POSITION_PTR, 0, 0);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void Synchronizer::sendMIDIstart()
 {
-	if (g_conf.midiSync == MIDI_SYNC_CLOCK_M)
+	if (m_conf.midiSync == MIDI_SYNC_CLOCK_M)
 	{
-		g_kernelMidi.send(MIDI_START, -1, -1);
-		g_kernelMidi.send(MIDI_POSITION_PTR, 0, 0);
+		m_kernelMidi.send(MIDI_START, -1, -1);
+		m_kernelMidi.send(MIDI_POSITION_PTR, 0, 0);
 	}
 }
 
@@ -184,8 +171,8 @@ void Synchronizer::sendMIDIstart()
 
 void Synchronizer::sendMIDIstop()
 {
-	if (g_conf.midiSync == MIDI_SYNC_CLOCK_M)
-		g_kernelMidi.send(MIDI_STOP, -1, -1);
+	if (m_conf.midiSync == MIDI_SYNC_CLOCK_M)
+		m_kernelMidi.send(MIDI_STOP, -1, -1);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -194,10 +181,10 @@ void Synchronizer::sendMIDIstop()
 
 void Synchronizer::recvJackSync(const JackTransport::State& state)
 {
-	assert(m_onJackRewind != nullptr);
-	assert(m_onJackChangeBpm != nullptr);
-	assert(m_onJackStart != nullptr);
-	assert(m_onJackStop != nullptr);
+	assert(onJackRewind != nullptr);
+	assert(onJackChangeBpm != nullptr);
+	assert(onJackStart != nullptr);
+	assert(onJackStop != nullptr);
 
 	JackTransport::State jackStateCurr = state;
 
@@ -206,20 +193,20 @@ void Synchronizer::recvJackSync(const JackTransport::State& state)
 		if (jackStateCurr.frame != m_jackStatePrev.frame && jackStateCurr.frame == 0)
 		{
 			G_DEBUG("JackState received - rewind to frame 0");
-			m_onJackRewind();
+			onJackRewind();
 		}
 
 		// jackStateCurr.bpm == 0 if JACK doesn't send that info
 		if (jackStateCurr.bpm != m_jackStatePrev.bpm && jackStateCurr.bpm > 1.0f)
 		{
 			G_DEBUG("JackState received - bpm=" << jackStateCurr.bpm);
-			m_onJackChangeBpm(jackStateCurr.bpm);
+			onJackChangeBpm(jackStateCurr.bpm);
 		}
 
 		if (jackStateCurr.running != m_jackStatePrev.running)
 		{
 			G_DEBUG("JackState received - running=" << jackStateCurr.running);
-			jackStateCurr.running ? m_onJackStart() : m_onJackStop();
+			jackStateCurr.running ? onJackStart() : onJackStop();
 		}
 	}
 
