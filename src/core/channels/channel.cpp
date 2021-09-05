@@ -26,6 +26,7 @@
 
 #include "channel.h"
 #include "core/mixerHandler.h"
+#include "core/model/model.h"
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
 #include <cassert>
@@ -33,6 +34,7 @@
 extern giada::m::MixerHandler  g_mixerHandler;
 extern giada::m::PluginHost    g_pluginHost;
 extern giada::m::PluginManager g_pluginManager;
+extern giada::m::model::Model  g_model;
 
 namespace giada::m::channel
 {
@@ -205,7 +207,7 @@ Data::Data(const patch::Channel& p, State& state, Buffer& buffer, float samplera
 , name(p.name)
 , height(p.height)
 #ifdef WITH_VST
-, plugins(g_pluginManager.hydratePlugins(p.pluginIds))
+, plugins(g_pluginManager.hydratePlugins(p.pluginIds, g_model)) // TODO move outside, as constructor parameter
 #endif
 , midiLearner(p)
 {

@@ -26,8 +26,10 @@
 
 #ifdef WITH_VST
 
-#include "plugin.h"
+#include "core/plugins/plugin.h"
+#include "core/conf.h"
 #include "core/const.h"
+#include "core/kernelAudio.h"
 #include "core/plugins/pluginManager.h"
 #include "utils/log.h"
 #include "utils/time.h"
@@ -35,6 +37,8 @@
 #include <cassert>
 
 extern giada::m::PluginManager g_pluginManager;
+extern giada::m::KernelAudio   g_kernelAudio;
+extern giada::m::conf::Data    g_conf;
 
 namespace giada::m
 {
@@ -97,7 +101,7 @@ Plugin::Plugin(const Plugin& o)
 , midiInParams(o.midiInParams)
 , valid(o.valid)
 , onEditorResize(o.onEditorResize)
-, m_plugin(std::move(g_pluginManager.makePlugin(o)->m_plugin))
+, m_plugin(std::move(g_pluginManager.makePlugin(o, g_conf.samplerate, g_kernelAudio.getRealBufSize())->m_plugin))
 , m_bypass(o.m_bypass.load())
 {
 }

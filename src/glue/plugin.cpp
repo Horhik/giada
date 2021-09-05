@@ -30,6 +30,7 @@
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/mixer.h"
+#include "core/kernelAudio.h"
 #include "core/model/model.h"
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
@@ -49,6 +50,7 @@ extern giada::m::model::Model  g_model;
 extern giada::m::PluginHost    g_pluginHost;
 extern giada::m::conf::Data    g_conf;
 extern giada::m::PluginManager g_pluginManager;
+extern giada::m::KernelAudio   g_kernelAudio;
 
 namespace giada::c::plugin
 {
@@ -165,7 +167,7 @@ void addPlugin(int pluginListIndex, ID channelId)
 {
 	if (pluginListIndex >= g_pluginManager.countAvailablePlugins())
 		return;
-	std::unique_ptr<m::Plugin> p = g_pluginManager.makePlugin(pluginListIndex);
+	std::unique_ptr<m::Plugin> p = g_pluginManager.makePlugin(pluginListIndex, g_conf.samplerate, g_kernelAudio.getRealBufSize());
 	if (p != nullptr)
 		g_pluginHost.addPlugin(std::move(p), channelId);
 }

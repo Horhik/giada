@@ -29,7 +29,9 @@
 #include "core/plugins/pluginHost.h"
 #include "core/channels/channel.h"
 #include "core/clock.h"
+#include "core/kernelAudio.h"
 #include "core/const.h"
+#include "core/conf.h"
 #include "core/model/model.h"
 #include "core/plugins/plugin.h"
 #include "core/plugins/pluginManager.h"
@@ -40,7 +42,9 @@
 
 extern giada::m::model::Model  g_model;
 extern giada::m::Clock         g_clock;
+extern giada::m::conf::Data    g_conf;
 extern giada::m::PluginManager g_pluginManager;
+extern giada::m::KernelAudio   g_kernelAudio;
 
 namespace giada::m
 {
@@ -162,7 +166,7 @@ std::vector<Plugin*> PluginHost::clonePlugins(const std::vector<Plugin*>& plugin
 	std::vector<Plugin*> out;
 	for (const Plugin* p : plugins)
 	{
-		g_model.add(g_pluginManager.makePlugin(*p));
+		g_model.add(g_pluginManager.makePlugin(*p, g_conf.samplerate, g_kernelAudio.getRealBufSize()));
 		out.push_back(&g_model.back<Plugin>());
 	}
 	return out;

@@ -245,7 +245,7 @@ void reset()
 	g_actions.reset();
 #ifdef WITH_VST
 	g_pluginHost.reset(g_kernelAudio.getRealBufSize());
-	g_pluginManager.reset();
+	g_pluginManager.reset(static_cast<PluginManager::SortMethod>(g_conf.pluginSortMethod));
 #endif
 	g_mixerHandler.startRendering();
 

@@ -131,7 +131,7 @@ void load(const patch::Data& patch)
 #ifdef WITH_VST
 	g_model.getAll<PluginPtrs>().clear();
 	for (const patch::Plugin& pplugin : patch.plugins)
-		g_model.getAll<PluginPtrs>().push_back(g_pluginManager.deserializePlugin(pplugin, patch.version));
+		g_model.getAll<PluginPtrs>().push_back(g_pluginManager.deserializePlugin(pplugin, patch.version, g_conf.samplerate, g_kernelAudio.getRealBufSize()));
 #endif
 
 	g_model.getAll<WavePtrs>().clear();
