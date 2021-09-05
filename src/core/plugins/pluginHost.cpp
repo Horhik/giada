@@ -29,9 +29,7 @@
 #include "core/plugins/pluginHost.h"
 #include "core/channels/channel.h"
 #include "core/clock.h"
-#include "core/kernelAudio.h"
 #include "core/const.h"
-#include "core/conf.h"
 #include "core/model/model.h"
 #include "core/plugins/plugin.h"
 #include "core/plugins/pluginManager.h"
@@ -40,20 +38,21 @@
 #include "utils/vector.h"
 #include <cassert>
 
-extern giada::m::model::Model  g_model;
-extern giada::m::Clock         g_clock;
-extern giada::m::conf::Data    g_conf;
-extern giada::m::PluginManager g_pluginManager;
-extern giada::m::KernelAudio   g_kernelAudio;
-
 namespace giada::m
 {
+PluginHost::Info::Info(const Clock& c)
+: m_clock(c)
+{
+}
+
+/* -------------------------------------------------------------------------- */
+
 bool PluginHost::Info::getCurrentPosition(CurrentPositionInfo& result)
 {
-	result.bpm           = g_clock.getBpm();
-	result.timeInSamples = g_clock.getCurrentFrame();
-	result.timeInSeconds = g_clock.getCurrentSecond();
-	result.isPlaying     = g_clock.isRunning();
+	result.bpm           = m_clock.getBpm();
+	result.timeInSamples = m_clock.getCurrentFrame();
+	result.timeInSeconds = m_clock.getCurrentSecond();
+	result.isPlaying     = m_clock.isRunning();
 
 	return true;
 }
@@ -69,7 +68,9 @@ bool PluginHost::Info::canControlTransport()
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-PluginHost::PluginHost(int bufferSize)
+PluginHost::PluginHost(PluginManager& p, model::Model& m, int bufferSize)
+: m_pluginManager(p)
+, m_model(m)
 {
 	m_messageManager = juce::MessageManager::getInstance();
 	reset(bufferSize);
@@ -86,7 +87,7 @@ PluginHost::~PluginHost()
 
 void PluginHost::reset(int bufferSize)
 {
-	g_model.clear<model::PluginPtrs>();
+	m_model.clear<model::PluginPtrs>();
 	m_audioBuffer.setSize(G_MAX_IO_CHANS, bufferSize);
 }
 
@@ -120,54 +121,54 @@ void PluginHost::processStack(mcl::AudioBuffer& outBuf, const std::vector<Plugin
 
 void PluginHost::addPlugin(std::unique_ptr<Plugin> p, ID channelId)
 {
-	g_model.add(std::move(p));
+	m_model.add(std::move(p));
 
-	const Plugin& pluginRef = g_model.back<Plugin>();
+	const Plugin& pluginRef = m_model.back<Plugin>();
 
 	/* TODO - unfortunately JUCE wants mutable plugin objects due to the
 	presence of the non-const processBlock() method. Why not const_casting
 	only in the Plugin class? */
-	g_model.get().getChannel(channelId).plugins.push_back(const_cast<Plugin*>(&pluginRef));
-	g_model.swap(model::SwapType::HARD);
+	m_model.get().getChannel(channelId).plugins.push_back(const_cast<Plugin*>(&pluginRef));
+	m_model.swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void PluginHost::swapPlugin(const m::Plugin& p1, const m::Plugin& p2, ID channelId)
 {
-	std::vector<m::Plugin*>& pvec   = g_model.get().getChannel(channelId).plugins;
+	std::vector<m::Plugin*>& pvec   = m_model.get().getChannel(channelId).plugins;
 	std::size_t              index1 = u::vector::indexOf(pvec, &p1);
 	std::size_t              index2 = u::vector::indexOf(pvec, &p2);
 	std::swap(pvec.at(index1), pvec.at(index2));
 
-	g_model.swap(model::SwapType::HARD);
+	m_model.swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void PluginHost::freePlugin(const m::Plugin& plugin, ID channelId)
 {
-	u::vector::remove(g_model.get().getChannel(channelId).plugins, &plugin);
-	g_model.swap(model::SwapType::HARD);
-	g_model.remove(plugin);
+	u::vector::remove(m_model.get().getChannel(channelId).plugins, &plugin);
+	m_model.swap(model::SwapType::HARD);
+	m_model.remove(plugin);
 }
 
 void PluginHost::freePlugins(const std::vector<Plugin*>& plugins)
 {
 	// TODO - channels???
 	for (const Plugin* p : plugins)
-		g_model.remove(*p);
+		m_model.remove(*p);
 }
 
 /* -------------------------------------------------------------------------- */
 
-std::vector<Plugin*> PluginHost::clonePlugins(const std::vector<Plugin*>& plugins)
+std::vector<Plugin*> PluginHost::clonePlugins(const std::vector<Plugin*>& plugins, int sampleRate, int bufferSize)
 {
 	std::vector<Plugin*> out;
 	for (const Plugin* p : plugins)
 	{
-		g_model.add(g_pluginManager.makePlugin(*p, g_conf.samplerate, g_kernelAudio.getRealBufSize()));
-		out.push_back(&g_model.back<Plugin>());
+		m_model.add(m_pluginManager.makePlugin(*p, sampleRate, bufferSize));
+		out.push_back(&m_model.back<Plugin>());
 	}
 	return out;
 }
@@ -176,21 +177,21 @@ std::vector<Plugin*> PluginHost::clonePlugins(const std::vector<Plugin*>& plugin
 
 void PluginHost::setPluginParameter(ID pluginId, int paramIndex, float value)
 {
-	g_model.find<Plugin>(pluginId)->setParameter(paramIndex, value);
+	m_model.find<Plugin>(pluginId)->setParameter(paramIndex, value);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void PluginHost::setPluginProgram(ID pluginId, int programIndex)
 {
-	g_model.find<Plugin>(pluginId)->setCurrentProgram(programIndex);
+	m_model.find<Plugin>(pluginId)->setCurrentProgram(programIndex);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void PluginHost::toggleBypass(ID pluginId)
 {
-	Plugin& plugin = *g_model.find<Plugin>(pluginId);
+	Plugin& plugin = *m_model.find<Plugin>(pluginId);
 	plugin.setBypass(!plugin.isBypassed());
 }
 

@@ -212,7 +212,7 @@ void MixerHandler::cloneChannel(ID channelId)
 	/* Clone plugins, actions and wave first in their own lists. */
 
 #ifdef WITH_VST
-	newChannel.plugins = g_pluginHost.clonePlugins(oldChannel.plugins);
+	newChannel.plugins = g_pluginHost.clonePlugins(oldChannel.plugins, g_patch.samplerate, g_kernelAudio.getRealBufSize());
 #endif
 	g_actionRecorder.cloneActions(channelId, newChannel.id);
 

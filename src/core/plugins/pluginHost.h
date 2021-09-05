@@ -43,18 +43,31 @@ namespace giada::m
 class Plugin;
 }
 
+namespace giada::m::model
+{
+class Model;
+}
+
 namespace giada::m
 {
-class PluginHost
+class PluginManager;
+class Clock;
+class PluginHost final
 {
 public:
-	struct Info : public juce::AudioPlayHead
+	class Info final : public juce::AudioPlayHead
 	{
+	public:
+		Info(const Clock&);
+
 		bool getCurrentPosition(CurrentPositionInfo& result) override;
 		bool canControlTransport() override;
+
+	private:
+		const Clock& m_clock;
 	};
 
-	PluginHost(int bufferSize);
+	PluginHost(PluginManager&, model::Model&, int bufferSize);
 	~PluginHost();
 
 	void reset(int bufferSize);
@@ -88,7 +101,7 @@ public:
 	/* clonePlugins
 	Clones all the plug-ins in the 'plugins' vector. */
 
-	std::vector<Plugin*> clonePlugins(const std::vector<Plugin*>& plugins);
+	std::vector<Plugin*> clonePlugins(const std::vector<Plugin*>& plugins, int sampleRate, int bufferSize);
 
 	void setPluginParameter(ID pluginId, int paramIndex, float value);
 	void setPluginProgram(ID pluginId, int programIndex);
@@ -109,6 +122,9 @@ private:
 	void juceToGiadaOutBuf(mcl::AudioBuffer& outBuf) const;
 
 	void processPlugins(const std::vector<Plugin*>& plugins, juce::MidiBuffer& events);
+
+	PluginManager& m_pluginManager;
+	model::Model&  m_model;
 
 	juce::MessageManager*    m_messageManager;
 	juce::AudioBuffer<float> m_audioBuffer;
