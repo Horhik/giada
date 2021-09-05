@@ -102,10 +102,18 @@ public:
 	Queue<Event, G_MAX_DISPATCHER_EVENTS> UIevents;
 	Queue<Event, G_MAX_DISPATCHER_EVENTS> MidiEvents;
 
+	/* on[...]
+	Callbacks fired when something happens in the Event Dispatcher. */
+
+	std::function<void(const MidiEvent& e)> onMidiLearn;
+	std::function<void(const MidiEvent& e)> onMidiProcess;
+	std::function<void(const EventBuffer&)> onProcessChannels;
+	std::function<void(const EventBuffer&)> onProcessSequencer;
+	std::function<void()>                   onMixerSignalCallback;
+	std::function<void()>                   onMixerEndOfRecCallback;
+
 private:
 	void processFuntions();
-	void processChannels();
-	void processSequencer();
 	void process();
 
 	/* m_worker

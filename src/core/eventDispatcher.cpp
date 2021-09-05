@@ -24,23 +24,19 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "eventDispatcher.h"
-#include "core/clock.h"
+#include "core/eventDispatcher.h"
 #include "core/const.h"
-#include "core/midiDispatcher.h"
-#include "core/model/model.h"
-#include "core/sequencer.h"
-#include "utils/log.h"
-#include <functional>
-
-extern giada::m::model::Model   g_model;
-extern giada::m::Sequencer      g_sequencer;
-extern giada::m::Mixer          g_mixer;
-extern giada::m::MidiDispatcher g_midiDispatcher;
+#include <cassert>
 
 namespace giada::m
 {
 EventDispatcher::EventDispatcher()
+: onMidiLearn(nullptr)
+, onMidiProcess(nullptr)
+, onProcessChannels(nullptr)
+, onProcessSequencer(nullptr)
+, onMixerSignalCallback(nullptr)
+, onMixerEndOfRecCallback(nullptr)
 {
 	m_worker.start([this]() { process(); }, /*sleep=*/G_EVENT_DISPATCHER_RATE_MS);
 }
@@ -54,24 +50,29 @@ void EventDispatcher::pumpMidiEvent(Event e) { MidiEvents.push(e); }
 
 void EventDispatcher::processFuntions()
 {
+	assert(onMidiLearn != nullptr);
+	assert(onMidiProcess != nullptr);
+	assert(onMixerSignalCallback != nullptr);
+	assert(onMixerEndOfRecCallback != nullptr);
+
 	for (const Event& e : m_eventBuffer)
 	{
 		switch (e.type)
 		{
 		case EventType::MIDI_DISPATCHER_LEARN:
-			g_midiDispatcher.learn(std::get<Action>(e.data).event);
+			onMidiLearn(std::get<Action>(e.data).event);
 			break;
 
 		case EventType::MIDI_DISPATCHER_PROCESS:
-			g_midiDispatcher.process(std::get<Action>(e.data).event);
+			onMidiProcess(std::get<Action>(e.data).event);
 			break;
 
 		case EventType::MIXER_SIGNAL_CALLBACK:
-			g_mixer.execSignalCb();
+			onMixerSignalCallback();
 			break;
 
 		case EventType::MIXER_END_OF_REC_CALLBACK:
-			g_mixer.execEndOfRecCb();
+			onMixerEndOfRecCallback();
 			break;
 
 		default:
@@ -82,24 +83,11 @@ void EventDispatcher::processFuntions()
 
 /* -------------------------------------------------------------------------- */
 
-void EventDispatcher::processChannels()
-{
-	for (channel::Data& ch : g_model.get().channels)
-		channel::react(ch, m_eventBuffer, g_mixer.isChannelAudible(ch));
-	g_model.swap(model::SwapType::SOFT);
-}
-
-/* -------------------------------------------------------------------------- */
-
-void EventDispatcher::processSequencer()
-{
-	g_sequencer.react(m_eventBuffer);
-}
-
-/* -------------------------------------------------------------------------- */
-
 void EventDispatcher::process()
 {
+	assert(onProcessChannels != nullptr);
+	assert(onProcessSequencer != nullptr);
+
 	m_eventBuffer.clear();
 
 	Event e;
@@ -112,7 +100,7 @@ void EventDispatcher::process()
 		return;
 
 	processFuntions();
-	processChannels();
-	processSequencer();
+	onProcessChannels(m_eventBuffer);
+	onProcessSequencer(m_eventBuffer);
 }
 } // namespace giada::m
