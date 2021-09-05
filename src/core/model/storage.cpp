@@ -38,6 +38,7 @@
 
 extern giada::m::model::Model   g_model;
 extern giada::m::Sequencer      g_sequencer;
+extern giada::m::KernelAudio    g_kernelAudio;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
@@ -54,7 +55,7 @@ void loadChannels_(const std::vector<patch::Channel>& channels, int samplerate)
 	float samplerateRatio = g_conf.samplerate / static_cast<float>(samplerate);
 
 	for (const patch::Channel& pchannel : channels)
-		g_model.get().channels.push_back(g_channelManager.deserializeChannel(pchannel, samplerateRatio));
+		g_model.get().channels.push_back(g_channelManager.deserializeChannel(pchannel, samplerateRatio, g_kernelAudio.getRealBufSize()));
 }
 
 /* -------------------------------------------------------------------------- */

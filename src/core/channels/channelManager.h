@@ -62,7 +62,7 @@ namespace giada::m
 class ChannelManager final
 {
 public:
-	ChannelManager(const KernelAudio&, const conf::Data&, model::Model&);
+	ChannelManager(const conf::Data&, model::Model&);
 
 	/* reset
     Resets internal ID generator. */
@@ -73,28 +73,27 @@ public:
     Creates a new channel. If channelId == 0 generates a new ID, reuse the one 
     passed in otherwise. */
 
-	channel::Data create(ID channelId, ChannelType type, ID columnId);
+	channel::Data create(ID channelId, ChannelType type, ID columnId, int bufferSize);
 
 	/* create (2)
     Creates a new channel given an existing one (i.e. clone). */
 
-	channel::Data create(const channel::Data& ch);
+	channel::Data create(const channel::Data& ch, int bufferSize);
 
 	/* (de)serializeWave
     Creates a new channel given the patch raw data and vice versa. */
 
-	channel::Data        deserializeChannel(const patch::Channel& c, float samplerateRatio);
+	channel::Data        deserializeChannel(const patch::Channel& c, float samplerateRatio, int bufferSize);
 	const patch::Channel serializeChannel(const channel::Data& c);
 
 private:
 	channel::State&  makeState_(ChannelType type);
-	channel::Buffer& makeBuffer_();
+	channel::Buffer& makeBuffer_(int bufferSize);
 
 	IdManager channelId_;
 
-	const KernelAudio& m_kernelAudio;
-	const conf::Data&  m_conf;
-	model::Model&      m_model;
+	const conf::Data& m_conf;
+	model::Model&     m_model;
 };
 } // namespace giada::m
 

@@ -130,11 +130,11 @@ void MixerHandler::reset(Frame framesInLoop, Frame framesInBuffer)
 	g_model.get().channels.clear();
 
 	g_model.get().channels.push_back(g_channelManager.create(
-	    Mixer::MASTER_OUT_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0));
+	    Mixer::MASTER_OUT_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0, g_kernelAudio.getRealBufSize()));
 	g_model.get().channels.push_back(g_channelManager.create(
-	    Mixer::MASTER_IN_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0));
+	    Mixer::MASTER_IN_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0, g_kernelAudio.getRealBufSize()));
 	g_model.get().channels.push_back(g_channelManager.create(
-	    Mixer::PREVIEW_CHANNEL_ID, ChannelType::PREVIEW, /*columnId=*/0));
+	    Mixer::PREVIEW_CHANNEL_ID, ChannelType::PREVIEW, /*columnId=*/0, g_kernelAudio.getRealBufSize()));
 
 	g_model.swap(model::SwapType::NONE);
 }
@@ -207,7 +207,7 @@ void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
 void MixerHandler::cloneChannel(ID channelId)
 {
 	channel::Data& oldChannel = g_model.get().getChannel(channelId);
-	channel::Data  newChannel = g_channelManager.create(oldChannel);
+	channel::Data  newChannel = g_channelManager.create(oldChannel, g_kernelAudio.getRealBufSize());
 
 	/* Clone plugins, actions and wave first in their own lists. */
 
@@ -390,7 +390,7 @@ bool MixerHandler::hasAudioData() const
 
 channel::Data& MixerHandler::addChannelInternal(ChannelType type, ID columnId)
 {
-	g_model.get().channels.push_back(g_channelManager.create(/*id=*/0, type, columnId));
+	g_model.get().channels.push_back(g_channelManager.create(/*id=*/0, type, columnId, g_kernelAudio.getRealBufSize()));
 	g_model.swap(model::SwapType::HARD);
 
 	return g_model.get().channels.back();

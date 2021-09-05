@@ -77,7 +77,7 @@ giada::m::Synchronizer          g_synchronizer(g_conf, g_kernelMidi);
 /*! */ giada::m::MixerHandler   g_mixerHandler(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 /*! */ giada::m::PluginHost     g_pluginHost(g_kernelAudio.getRealBufSize());
 /*! */ giada::m::PluginManager  g_pluginManager;
-giada::m::ChannelManager        g_channelManager(g_kernelAudio, g_conf, g_model);
+giada::m::ChannelManager        g_channelManager(g_conf, g_model);
 giada::m::WaveManager           g_waveManager;
 giada::v::gdMainWindow*         G_MainWin = nullptr;
 
@@ -89,6 +89,8 @@ int main(int argc, char** argv)
 		return Catch::Session().run(args.size() - 1, &args[1]);
 #endif
 
+	// TODO - move the setup to Engine class
+	// TODO - move the setup to Engine class
 	// TODO - move the setup to Engine class
 	g_kernelMidi.onMidiReceived = [](uint32_t msg) { g_midiDispatcher.dispatch(msg); };
 
@@ -109,6 +111,8 @@ int main(int argc, char** argv)
 	g_eventDispatcher.onProcessSequencer      = [](const EventDispatcher::EventBuffer& eb) { g_sequencer.react(eb); };
 	g_eventDispatcher.onMixerSignalCallback   = []() { g_mixer.execSignalCb(); };
 	g_eventDispatcher.onMixerEndOfRecCallback = []() { g_mixer.execEndOfRecCb(); };
+	// TODO - move the setup to Engine class
+	// TODO - move the setup to Engine class
 	// TODO - move the setup to Engine class
 
 	giada::m::init::startup(argc, argv);
