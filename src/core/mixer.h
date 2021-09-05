@@ -30,9 +30,9 @@
 #include "core/midiEvent.h"
 #include "core/queue.h"
 #include "core/ringBuffer.h"
+#include "core/sequencer.h"
 #include "core/types.h"
 #include "deps/mcl-audio-buffer/src/audioBuffer.hpp"
-#include "deps/rtaudio/RtAudio.h"
 #include "src/core/actions/actions.h"
 #include <functional>
 
@@ -93,7 +93,7 @@ public:
 		Frame maxLength;
 	};
 
-	Mixer(Frame framesInLoop, Frame framesInBuffer);
+	Mixer(model::Model&, Frame framesInLoop, Frame framesInBuffer);
 
 	/* isChannelAudible
 	True if the channel 'c' is currently audible: not muted or not included in a 
@@ -169,26 +169,27 @@ public:
 
 	void execEndOfRecCb();
 
+	/* onSignalTresholdReached
+	Callback fired when audio has reached a certain threshold. */
+
+	std::function<void()> onSignalTresholdReached;
+
+	/* onEndOfRecording
+	Callback fired when the audio recording session has ended. */
+
+	std::function<void()> onEndOfRecording;
+
+	/* onProcessSequencer
+	Callback fired when it's time to render + advance the sequencer. */
+
+	std::function<const Sequencer::EventBuffer&(Frame, mcl::AudioBuffer&)> onProcessSequencer;
+
 private:
 	/* thresholdReached
 	Returns true if left or right channel's peak has reached a certain 
 	threshold. */
 
 	bool thresholdReached(Peak p, float threshold) const;
-
-	/* fireSignalCb
-	Invokes the signal callback. This is done by pumping a MIXER_SIGNAL_CALLBACK
-	event to the event dispatcher, rather than invoking the callback directly.
-	This is done on purpose: the callback might (and surely will) contain 
-	blocking stuff from model:: that the realtime thread cannot perform 
-	directly. */
-
-	void fireSignalCb();
-
-	/* fireEndOfRecCb
-	Same rationale of fireSignalCb, for the m_endOfRecCb callback. */
-
-	void fireEndOfRecCb();
 
 	/* lineInRec
 	Records from line in. 'maxFrames' determines how many frames to record 
@@ -221,6 +222,8 @@ private:
 
 	void finalizeOutput(const model::Mixer& mixer, mcl::AudioBuffer& outBuf,
 	    const RenderInfo& info);
+
+	model::Model& m_model;
 
 	/* m_recBuffer
 	Working buffer for audio recording. */

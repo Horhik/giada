@@ -27,13 +27,8 @@
 #include "core/mixer.h"
 #include "core/const.h"
 #include "core/model/model.h"
-#include "core/sequencer.h"
 #include "utils/log.h"
 #include "utils/math.h"
-
-extern giada::m::model::Model    g_model;
-extern giada::m::Sequencer       g_sequencer;
-extern giada::m::EventDispatcher g_eventDispatcher;
 
 namespace giada::m
 {
@@ -50,8 +45,12 @@ constexpr int CH_RIGHT = 1;
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-Mixer::Mixer(Frame maxFramesInLoop, Frame framesInBuffer)
-: m_inputTracker(0)
+Mixer::Mixer(model::Model& m, Frame maxFramesInLoop, Frame framesInBuffer)
+: onSignalTresholdReached(nullptr)
+, onEndOfRecording(nullptr)
+, onProcessSequencer(nullptr)
+, m_model(m)
+, m_inputTracker(0)
 , m_signalCb(nullptr)
 , m_endOfRecCb(nullptr)
 , m_signalCbFired(false)
@@ -77,14 +76,14 @@ void Mixer::reset(Frame maxFramesInLoop, Frame framesInBuffer)
 
 void Mixer::enable()
 {
-	g_model.get().mixer.state->active.store(true);
+	m_model.get().mixer.state->active.store(true);
 	u::log::print("[mixer::enable] enabled\n");
 }
 
 void Mixer::disable()
 {
-	g_model.get().mixer.state->active.store(false);
-	while (g_model.isLocked())
+	m_model.get().mixer.state->active.store(false);
+	while (m_model.isLocked())
 		;
 	u::log::print("[mixer::disable] disabled\n");
 }
@@ -110,7 +109,7 @@ const mcl::AudioBuffer& Mixer::getRecBuffer()
 
 int Mixer::render(mcl::AudioBuffer& out, const mcl::AudioBuffer& in, const RenderInfo& info)
 {
-	const model::LayoutLock layoutLock = g_model.get_RT();
+	const model::LayoutLock layoutLock = m_model.get_RT();
 	const model::Mixer&     mixer      = layoutLock.get().mixer;
 
 	m_inBuffer.clear();
@@ -188,7 +187,7 @@ bool Mixer::isChannelAudible(const channel::Data& c) const
 		return true;
 	if (c.mute)
 		return false;
-	bool hasSolos = g_model.get().mixer.hasSolos;
+	bool hasSolos = m_model.get().mixer.hasSolos;
 	return !hasSolos || (hasSolos && c.solo);
 }
 
@@ -197,15 +196,15 @@ bool Mixer::isChannelAudible(const channel::Data& c) const
 Peak Mixer::getPeakOut() const
 {
 	return {
-	    g_model.get().mixer.state->peakOutL.load(),
-	    g_model.get().mixer.state->peakOutR.load()};
+	    m_model.get().mixer.state->peakOutL.load(),
+	    m_model.get().mixer.state->peakOutR.load()};
 }
 
 Peak Mixer::getPeakIn() const
 {
 	return {
-	    g_model.get().mixer.state->peakInL.load(),
-	    g_model.get().mixer.state->peakInR.load()};
+	    m_model.get().mixer.state->peakInL.load(),
+	    m_model.get().mixer.state->peakInR.load()};
 }
 
 /* -------------------------------------------------------------------------- */
@@ -231,18 +230,6 @@ void Mixer::execEndOfRecCb()
 	m_endOfRecCb = nullptr;
 }
 
-void Mixer::fireSignalCb()
-{
-	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::MIXER_SIGNAL_CALLBACK});
-}
-
-/* -------------------------------------------------------------------------- */
-
-void Mixer::fireEndOfRecCb()
-{
-	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::MIXER_END_OF_REC_CALLBACK});
-}
-
 /* -------------------------------------------------------------------------- */
 
 bool Mixer::thresholdReached(Peak p, float threshold) const
@@ -256,10 +243,11 @@ bool Mixer::thresholdReached(Peak p, float threshold) const
 void Mixer::lineInRec(const mcl::AudioBuffer& inBuf, Frame maxFrames, float inVol)
 {
 	assert(maxFrames <= m_recBuffer.countFrames());
+	assert(onEndOfRecording != nullptr);
 
 	if (m_inputTracker >= maxFrames && m_endOfRecCb != nullptr)
 	{
-		fireEndOfRecCb();
+		onEndOfRecording();
 		return;
 	}
 
@@ -277,12 +265,14 @@ void Mixer::lineInRec(const mcl::AudioBuffer& inBuf, Frame maxFrames, float inVo
 void Mixer::processLineIn(const model::Mixer& mixer, const mcl::AudioBuffer& inBuf,
     float inVol, float recTriggerLevel)
 {
+	assert(onSignalTresholdReached != nullptr);
+
 	const Peak peak{inBuf.getPeak(CH_LEFT), inBuf.getPeak(CH_RIGHT)};
 
 	if (m_signalCb != nullptr && thresholdReached(peak, recTriggerLevel) && !m_signalCbFired)
 	{
 		G_DEBUG("Signal > threshold!");
-		fireSignalCb();
+		onSignalTresholdReached();
 		m_signalCbFired = true;
 	}
 
@@ -310,12 +300,13 @@ void Mixer::processChannels(const model::Layout& layout, mcl::AudioBuffer& out, 
 
 void Mixer::processSequencer(const model::Layout& layout, mcl::AudioBuffer& out, const mcl::AudioBuffer& in)
 {
+	assert(onProcessSequencer != nullptr);
+
 	/* Advance sequencer first, then render it (rendering is just about
 	generating metronome audio). This way the metronome is aligned with 
 	everything else. */
 
-	const Sequencer::EventBuffer& events = g_sequencer.advance(in.countFrames());
-	g_sequencer.render(out);
+	const Sequencer::EventBuffer& events = onProcessSequencer(in.countFrames(), out);
 
 	/* No channel processing if layout is locked: another thread is changing
     data (e.g. Plugins or Waves). */

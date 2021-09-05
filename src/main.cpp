@@ -43,6 +43,7 @@
 #include "core/sequencer.h"
 #include "core/sync.h"
 #include "core/waveManager.h"
+#include "deps/mcl-audio-buffer/src/audioBuffer.hpp"
 #include "gui/dialogs/mainWindow.h"
 #include "src/core/actions/actionRecorder.h"
 #include "src/core/actions/actions.h"
@@ -73,7 +74,7 @@ giada::m::Actions               g_actions(g_model);
 giada::m::Synchronizer          g_synchronizer(g_conf, g_kernelMidi);
 /*! */ giada::m::Clock          g_clock(g_kernelAudio, g_synchronizer);
 /*! */ giada::m::Sequencer      g_sequencer(g_kernelAudio, g_clock);
-/*! */ giada::m::Mixer          g_mixer(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
+giada::m::Mixer                 g_mixer(g_model, g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 /*! */ giada::m::MixerHandler   g_mixerHandler(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 giada::m::PluginManager         g_pluginManager(static_cast<PluginManager::SortMethod>(g_conf.pluginSortMethod));
 giada::m::PluginHost            g_pluginHost(g_pluginManager, g_model, g_kernelAudio.getRealBufSize());
@@ -111,6 +112,27 @@ int main(int argc, char** argv)
 	g_eventDispatcher.onProcessSequencer      = [](const EventDispatcher::EventBuffer& eb) { g_sequencer.react(eb); };
 	g_eventDispatcher.onMixerSignalCallback   = []() { g_mixer.execSignalCb(); };
 	g_eventDispatcher.onMixerEndOfRecCallback = []() { g_mixer.execEndOfRecCb(); };
+
+	/* Invokes the signal callback. This is done by pumping a MIXER_SIGNAL_CALLBACK
+	event to the event dispatcher, rather than invoking the callback directly.
+	This is done on purpose: the callback might (and surely will) contain 
+	blocking stuff from model:: that the realtime thread cannot perform 
+	directly. */
+	g_mixer.onSignalTresholdReached = []() {
+		g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::MIXER_SIGNAL_CALLBACK});
+	};
+
+	/* Same rationale as above, for the end-of-recording callback. */
+	g_mixer.onEndOfRecording = []() {
+		g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::MIXER_END_OF_REC_CALLBACK});
+	};
+
+	g_mixer.onProcessSequencer = [](Frame frames, mcl::AudioBuffer& out) {
+		const Sequencer::EventBuffer& events = g_sequencer.advance(frames);
+		g_sequencer.render(out);
+		return events;
+	};
+
 	// TODO - move the setup to Engine class
 	// TODO - move the setup to Engine class
 	// TODO - move the setup to Engine class
