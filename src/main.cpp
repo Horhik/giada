@@ -67,7 +67,7 @@ giada::m::midiMap::Data         g_midiMap;
 giada::m::KernelAudio           g_kernelAudio;
 giada::m::KernelMidi            g_kernelMidi;
 giada::m::EventDispatcher       g_eventDispatcher;
-giada::m::MidiDispatcher        g_midiDispatcher(g_eventDispatcher, g_model);
+giada::m::MidiDispatcher        g_midiDispatcher(g_model);
 giada::m::Actions               g_actions(g_model);
 /*! */ giada::m::ActionRecorder g_actionRecorder;
 /*! */ giada::m::Recorder       g_recorder;
@@ -112,6 +112,11 @@ int main(int argc, char** argv)
 	g_eventDispatcher.onProcessSequencer      = [](const EventDispatcher::EventBuffer& eb) { g_sequencer.react(eb); };
 	g_eventDispatcher.onMixerSignalCallback   = []() { g_mixer.execSignalCb(); };
 	g_eventDispatcher.onMixerEndOfRecCallback = []() { g_mixer.execEndOfRecCb(); };
+
+	/* Notify Event Dispatcher when a MIDI signal is received. */
+	g_midiDispatcher.onDispatch = [](EventDispatcher::EventType event, Action action) {
+		g_eventDispatcher.pumpMidiEvent({event, 0, 0, action});
+	};
 
 	/* Invokes the signal callback. This is done by pumping a MIXER_SIGNAL_CALLBACK
 	event to the event dispatcher, rather than invoking the callback directly.

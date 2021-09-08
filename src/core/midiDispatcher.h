@@ -27,6 +27,7 @@
 #ifndef G_MIDI_DISPATCHER_H
 #define G_MIDI_DISPATCHER_H
 
+#include "core/actions/action.h"
 #include "core/midiEvent.h"
 #include "core/model/model.h"
 #include "core/types.h"
@@ -38,7 +39,7 @@ namespace giada::m
 class MidiDispatcher
 {
 public:
-	MidiDispatcher(EventDispatcher&, model::Model&);
+	MidiDispatcher(model::Model&);
 
 	void startChannelLearn(int param, ID channelId, std::function<void()> f);
 	void startMasterLearn(int param, std::function<void()> f);
@@ -68,6 +69,11 @@ public:
 
 	void setSignalCallback(std::function<void()> f);
 
+	/* onDispatch
+	Callback fired when the dispatch() method is invoked by KernelMidi. */
+
+	std::function<void(EventDispatcher::EventType, Action)> onDispatch;
+
 private:
 	bool isMasterMidiInAllowed(int c);
 	bool isChannelMidiInAllowed(ID channelId, int c);
@@ -92,8 +98,7 @@ private:
 	std::function<void()>          m_signalCb;
 	std::function<void(MidiEvent)> m_learnCb;
 
-	EventDispatcher& m_eventDispatcher;
-	model::Model&    m_model;
+	model::Model& m_model;
 };
 } // namespace giada::m
 

@@ -42,10 +42,10 @@
 
 namespace giada::m
 {
-MidiDispatcher::MidiDispatcher(EventDispatcher& e, model::Model& m)
-: m_signalCb(nullptr)
+MidiDispatcher::MidiDispatcher(model::Model& m)
+: onDispatch(nullptr)
+, m_signalCb(nullptr)
 , m_learnCb(nullptr)
-, m_eventDispatcher(e)
 , m_model(m)
 {
 }
@@ -101,6 +101,8 @@ void MidiDispatcher::clearPluginLearn(std::size_t paramIndex, ID pluginId, std::
 
 void MidiDispatcher::dispatch(uint32_t msg)
 {
+	assert(onDispatch != nullptr);
+
 	/* Here we want to catch two things: a) note on/note off from a MIDI keyboard 
 	and b) knob/wheel/slider movements from a MIDI controller. 
 	We must also fix the velocity zero issue for those devices that sends NOTE
@@ -119,7 +121,8 @@ void MidiDispatcher::dispatch(uint32_t msg)
 	Action action = {0, 0, 0, midiEvent};
 	auto   event  = m_learnCb != nullptr ? EventDispatcher::EventType::MIDI_DISPATCHER_LEARN : EventDispatcher::EventType::MIDI_DISPATCHER_PROCESS;
 
-	m_eventDispatcher.pumpMidiEvent({event, 0, 0, action});
+	onDispatch(event, action);
+	//m_eventDispatcher.pumpMidiEvent({event, 0, 0, action});
 }
 
 /* -------------------------------------------------------------------------- */
