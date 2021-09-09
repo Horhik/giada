@@ -24,7 +24,8 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "sequencer.h"
+#include "core/sequencer.h"
+#include "core/actions/actionRecorder.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
@@ -35,11 +36,11 @@
 #include "core/quantizer.h"
 #include "core/recorder.h"
 
-extern giada::m::KernelAudio g_kernelAudio;
-extern giada::m::Clock       g_clock;
-extern giada::m::Actions     g_actions;
-extern giada::m::Recorder    g_recorder;
-extern giada::m::conf::Data  g_conf;
+extern giada::m::KernelAudio    g_kernelAudio;
+extern giada::m::Clock          g_clock;
+extern giada::m::Recorder       g_recorder;
+extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::conf::Data     g_conf;
 
 namespace giada::m
 {
@@ -123,7 +124,7 @@ const Sequencer::EventBuffer& Sequencer::advance(Frame bufferSize)
 			m_metronome.trigger(Metronome::Click::BEAT, local);
 		}
 
-		const std::vector<Action>* as = g_actions.getActionsOnFrame(global);
+		const std::vector<Action>* as = g_actionRecorder.getActionsOnFrame(global);
 		if (as != nullptr)
 			m_eventBuffer.push_back({EventType::ACTIONS, global, local, as});
 	}

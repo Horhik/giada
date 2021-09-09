@@ -33,11 +33,14 @@
 #if (defined(__linux__) || defined(__FreeBSD__)) && defined(WITH_VST)
 #include <X11/Xlib.h> // For XInitThreads
 #endif
+#include "core/actions/actionRecorder.h"
+#include "core/actions/actions.h"
 #include "core/channels/channelManager.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/eventDispatcher.h"
+#include "core/init.h"
 #include "core/kernelAudio.h"
 #include "core/kernelMidi.h"
 #include "core/midiMap.h"
@@ -58,9 +61,6 @@
 #include "gui/dialogs/mainWindow.h"
 #include "gui/dialogs/warnings.h"
 #include "gui/updater.h"
-#include "init.h"
-#include "src/core/actions/actionRecorder.h"
-#include "src/core/actions/actions.h"
 #include "utils/fs.h"
 #include "utils/gui.h"
 #include "utils/log.h"
@@ -74,6 +74,7 @@ extern giada::m::KernelAudio    g_kernelAudio;
 extern giada::m::Clock          g_clock;
 extern giada::m::Sequencer      g_sequencer;
 extern giada::m::Mixer          g_mixer;
+extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::Synchronizer   g_synchronizer;
 extern giada::m::PluginHost     g_pluginHost;
@@ -81,7 +82,6 @@ extern giada::m::PluginManager  g_pluginManager;
 extern giada::m::ChannelManager g_channelManager;
 extern giada::m::WaveManager    g_waveManager;
 extern giada::m::KernelMidi     g_kernelMidi;
-extern giada::m::Actions        g_actions;
 extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
 extern giada::m::midiMap::Data  g_midiMap;
@@ -242,7 +242,7 @@ void reset()
 	g_clock.reset();
 	g_mixerHandler.reset(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
 	g_sequencer.reset();
-	g_actions.reset();
+	g_actionRecorder.reset();
 #ifdef WITH_VST
 	g_pluginHost.reset(g_kernelAudio.getRealBufSize());
 	g_pluginManager.reset(static_cast<PluginManager::SortMethod>(g_conf.pluginSortMethod));

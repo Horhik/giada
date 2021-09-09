@@ -27,7 +27,7 @@
 #ifndef G_ACTION_RECORDER_H
 #define G_ACTION_RECORDER_H
 
-#include "actions.h"
+#include "core/actions/actions.h"
 #include "core/midiEvent.h"
 #include "core/types.h"
 #include <unordered_set>
@@ -40,14 +40,15 @@ struct Action;
 namespace giada::m
 {
 struct Action;
-}
-
-namespace giada::m
-{
 class ActionRecorder
 {
 public:
-	ActionRecorder();
+	ActionRecorder(model::Model&);
+
+	/* reset
+	Brings everything back to the initial state. */
+
+	void reset();
 
 	bool isBoundaryEnvelopeAction(const Action& a) const;
 
@@ -91,6 +92,21 @@ public:
 	Actions::Map               deserializeActions(const std::vector<patch::Action>& as);
 	std::vector<patch::Action> serializeActions(const Actions::Map& as);
 
+	/* Pass-thru functions. See Actions.h */
+
+	const std::vector<Action>* getActionsOnFrame(Frame f) const;
+	bool                       hasActions(ID channelId, int type = 0) const;
+	Action                     getClosestAction(ID channelId, Frame f, int type) const;
+	std::vector<Action>        getActionsOnChannel(ID channelId) const;
+	void                       clearChannel(ID channelId);
+	void                       clearActions(ID channelId, int type);
+	Action                     rec(ID channelId, Frame frame, MidiEvent e);
+	void                       rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2);
+	void                       updateSiblings(ID id, ID prevId, ID nextId);
+	void                       deleteAction(ID id);
+	void                       deleteAction(ID currId, ID nextId);
+	void                       updateEvent(ID id, MidiEvent e);
+
 private:
 	/* areComposite
     Composite: NOTE_ON + NOTE_OFF on the same note. */
@@ -105,7 +121,9 @@ private:
 
 	void consolidate(const Action& a1, std::size_t i);
 
-	std::vector<Action> m_actions;
+	model::Model&       m_model;
+	Actions             m_actions;
+	std::vector<Action> m_liveActions;
 };
 } // namespace giada::m
 
