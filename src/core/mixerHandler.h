@@ -79,7 +79,6 @@ public:
 	float getInVol() const;
 	float getOutVol() const;
 	bool  getInToOut() const;
-	bool  canRender() const;
 
 	/* reset
 	Brings everything back to the initial state. */
@@ -100,7 +99,7 @@ public:
     Adds a new channel of type 'type' into the channels stack. Returns the new
     channel ID. */
 
-	void addChannel(ChannelType type, ID columnId);
+	void addChannel(ChannelType type, ID columnId, int bufferSize);
 
 	/* loadChannel
     Loads a new Wave inside a Sample Channel. */
@@ -110,12 +109,12 @@ public:
 	/* addAndLoadChannel (1)
     Creates a new channels, fills it with a Wave and then add it to the stack. */
 
-	int addAndLoadChannel(ID columnId, const std::string& fname);
+	int addAndLoadChannel(ID columnId, const std::string& fname, int bufferSize);
 
 	/* addAndLoadChannel (2)
     Same as (1), but Wave is already provided. */
 
-	void addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w);
+	void addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w, int bufferSize);
 
 	/* freeChannel
     Unloads existing Wave from a Sample Channel. */
@@ -127,7 +126,7 @@ public:
 
 	void deleteChannel(ID channelId);
 
-	void cloneChannel(ID channelId);
+	void cloneChannel(ID channelId, int bufferSize);
 	void renameChannel(ID channelId, const std::string& name);
 	void freeAllChannels();
 
@@ -153,7 +152,7 @@ private:
 	bool                        forAnyChannel(std::function<bool(const channel::Data&)> f) const;
 	std::vector<channel::Data*> getChannelsIf(std::function<bool(const channel::Data&)> f);
 
-	channel::Data&      addChannelInternal(ChannelType type, ID columnId);
+	channel::Data&      addChannelInternal(ChannelType type, ID columnId, int bufferSize);
 	WaveManager::Result createWave(const std::string& fname);
 
 	std::vector<channel::Data*> getRecordableChannels();

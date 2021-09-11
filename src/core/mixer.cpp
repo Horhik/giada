@@ -74,6 +74,13 @@ void Mixer::reset(Frame maxFramesInLoop, Frame framesInBuffer)
 
 /* -------------------------------------------------------------------------- */
 
+bool Mixer::isActive() const
+{
+	return m_model.get().mixer.state->active.load() == true;
+}
+
+/* -------------------------------------------------------------------------- */
+
 void Mixer::enable()
 {
 	m_model.get().mixer.state->active.store(true);

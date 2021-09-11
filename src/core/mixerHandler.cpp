@@ -86,7 +86,7 @@ int audioCallback_(void* outBuf, void* inBuf, int bufferSize)
 
 	out.clear();
 
-	if (!g_mixerHandler.canRender())
+	if (!g_kernelAudio.isReady() || !g_mixer.isActive())
 		return 0;
 
 #ifdef WITH_AUDIO_JACK
@@ -131,11 +131,11 @@ void MixerHandler::reset(Frame framesInLoop, Frame framesInBuffer)
 	g_model.get().channels.clear();
 
 	g_model.get().channels.push_back(g_channelManager.create(
-	    Mixer::MASTER_OUT_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0, g_kernelAudio.getRealBufSize()));
+	    Mixer::MASTER_OUT_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0, framesInBuffer));
 	g_model.get().channels.push_back(g_channelManager.create(
-	    Mixer::MASTER_IN_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0, g_kernelAudio.getRealBufSize()));
+	    Mixer::MASTER_IN_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0, framesInBuffer));
 	g_model.get().channels.push_back(g_channelManager.create(
-	    Mixer::PREVIEW_CHANNEL_ID, ChannelType::PREVIEW, /*columnId=*/0, g_kernelAudio.getRealBufSize()));
+	    Mixer::PREVIEW_CHANNEL_ID, ChannelType::PREVIEW, /*columnId=*/0, framesInBuffer));
 
 	g_model.swap(model::SwapType::NONE);
 }
@@ -147,9 +147,9 @@ void MixerHandler::stopRendering() { g_mixer.disable(); }
 
 /* -------------------------------------------------------------------------- */
 
-void MixerHandler::addChannel(ChannelType type, ID columnId)
+void MixerHandler::addChannel(ChannelType type, ID columnId, int bufferSize)
 {
-	addChannelInternal(type, columnId);
+	addChannelInternal(type, columnId, bufferSize);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -184,22 +184,22 @@ int MixerHandler::loadChannel(ID channelId, const std::string& fname)
 
 /* -------------------------------------------------------------------------- */
 
-int MixerHandler::addAndLoadChannel(ID columnId, const std::string& fname)
+int MixerHandler::addAndLoadChannel(ID columnId, const std::string& fname, int bufferSize)
 {
 	WaveManager::Result res = createWave(fname);
 	if (res.status == G_RES_OK)
-		addAndLoadChannel(columnId, std::move(res.wave));
+		addAndLoadChannel(columnId, std::move(res.wave), bufferSize);
 	return res.status;
 }
 
-void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
+void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w, int bufferSize)
 {
 	assert(onChannelsAltered != nullptr);
 
 	g_model.add(std::move(w));
 
 	Wave&          wave    = g_model.back<Wave>();
-	channel::Data& channel = addChannelInternal(ChannelType::SAMPLE, columnId);
+	channel::Data& channel = addChannelInternal(ChannelType::SAMPLE, columnId, bufferSize);
 
 	samplePlayer::loadWave(channel, &wave);
 	g_model.swap(model::SwapType::HARD);
@@ -209,15 +209,15 @@ void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
 
 /* -------------------------------------------------------------------------- */
 
-void MixerHandler::cloneChannel(ID channelId)
+void MixerHandler::cloneChannel(ID channelId, int bufferSize)
 {
 	channel::Data& oldChannel = g_model.get().getChannel(channelId);
-	channel::Data  newChannel = g_channelManager.create(oldChannel, g_kernelAudio.getRealBufSize());
+	channel::Data  newChannel = g_channelManager.create(oldChannel, bufferSize);
 
 	/* Clone plugins, actions and wave first in their own lists. */
 
 #ifdef WITH_VST
-	newChannel.plugins = g_pluginHost.clonePlugins(oldChannel.plugins, g_patch.samplerate, g_kernelAudio.getRealBufSize());
+	newChannel.plugins = g_pluginHost.clonePlugins(oldChannel.plugins, g_patch.samplerate, bufferSize);
 #endif
 	g_actionRecorder.cloneActions(channelId, newChannel.id);
 
@@ -344,13 +344,6 @@ bool MixerHandler::getInToOut() const
 
 /* -------------------------------------------------------------------------- */
 
-bool MixerHandler::canRender() const
-{
-	return g_kernelAudio.isReady() && g_model.get().mixer.state->active.load() == true;
-}
-
-/* -------------------------------------------------------------------------- */
-
 void MixerHandler::finalizeInputRec(Frame recordedFrames)
 {
 	for (channel::Data* ch : getRecordableChannels())
@@ -399,9 +392,9 @@ bool MixerHandler::hasAudioData() const
 
 /* -------------------------------------------------------------------------- */
 
-channel::Data& MixerHandler::addChannelInternal(ChannelType type, ID columnId)
+channel::Data& MixerHandler::addChannelInternal(ChannelType type, ID columnId, int bufferSize)
 {
-	g_model.get().channels.push_back(g_channelManager.create(/*id=*/0, type, columnId, g_kernelAudio.getRealBufSize()));
+	g_model.get().channels.push_back(g_channelManager.create(/*id=*/0, type, columnId, bufferSize));
 	g_model.swap(model::SwapType::HARD);
 
 	return g_model.get().channels.back();

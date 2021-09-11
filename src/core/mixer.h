@@ -95,6 +95,11 @@ public:
 
 	Mixer(model::Model&, Frame framesInLoop, Frame framesInBuffer);
 
+	/* isActive
+	Mixer might be inactive (not initialized or suspended). */
+
+	bool isActive() const;
+
 	/* isChannelAudible
 	True if the channel 'c' is currently audible: not muted or not included in a 
 	solo session. */

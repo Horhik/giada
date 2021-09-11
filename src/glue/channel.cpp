@@ -64,6 +64,7 @@
 #include <functional>
 
 extern giada::v::gdMainWindow*  G_MainWin;
+extern giada::m::KernelAudio    g_kernelAudio;
 extern giada::m::model::Model   g_model;
 extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::ActionRecorder g_actionRecorder;
@@ -190,14 +191,14 @@ int loadChannel(ID channelId, const std::string& fname)
 
 void addChannel(ID columnId, ChannelType type)
 {
-	g_mixerHandler.addChannel(type, columnId);
+	g_mixerHandler.addChannel(type, columnId, g_kernelAudio.getRealBufSize());
 }
 
 /* -------------------------------------------------------------------------- */
 
 void addAndLoadChannel(ID columnId, const std::string& fpath)
 {
-	int res = g_mixerHandler.addAndLoadChannel(columnId, fpath);
+	int res = g_mixerHandler.addAndLoadChannel(columnId, fpath, g_kernelAudio.getRealBufSize());
 	if (res != G_RES_OK)
 		printLoadError_(res);
 }
@@ -209,7 +210,7 @@ void addAndLoadChannels(ID columnId, const std::vector<std::string>& fpaths)
 
 	bool errors = false;
 	for (const std::string& f : fpaths)
-		if (g_mixerHandler.addAndLoadChannel(columnId, f) != G_RES_OK)
+		if (g_mixerHandler.addAndLoadChannel(columnId, f, g_kernelAudio.getRealBufSize()) != G_RES_OK)
 			errors = true;
 
 	if (errors)
@@ -261,7 +262,7 @@ void setOverdubProtection(ID channelId, bool value)
 
 void cloneChannel(ID channelId)
 {
-	g_mixerHandler.cloneChannel(channelId);
+	g_mixerHandler.cloneChannel(channelId, g_kernelAudio.getRealBufSize());
 }
 
 /* -------------------------------------------------------------------------- */
