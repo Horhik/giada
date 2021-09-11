@@ -190,22 +190,16 @@ void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave> w, int b
 /* -------------------------------------------------------------------------- */
 
 #ifdef WITH_VST
-void MixerHandler::cloneChannel(ID channelId, int bufferSize, const std::vector<Plugin*>& plugins)
+void MixerHandler::cloneChannel(ID channelId, int bufferSize, std::unique_ptr<Wave> wave, const std::vector<Plugin*>& plugins)
 #else
-void MixerHandler::cloneChannel(ID channelId, int bufferSize)
+void MixerHandler::cloneChannel(ID channelId, int bufferSize, std::unique_ptr<Wave> wave)
 #endif
 {
 	channel::Data& oldChannel = g_model.get().getChannel(channelId);
 	channel::Data  newChannel = g_channelManager.create(oldChannel, bufferSize);
 
-	/* Clone Wave first in its own list. */
-
-	if (newChannel.samplePlayer && newChannel.samplePlayer->hasWave())
-	{
-		Wave* wave = newChannel.samplePlayer->getWave();
-		g_model.add(g_waveManager.createFromWave(*wave, 0, wave->getBuffer().countFrames()));
-	}
-
+	if (wave != nullptr)
+		g_model.add(std::move(wave));
 #ifdef WITH_VST
 	newChannel.plugins = plugins;
 #endif

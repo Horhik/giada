@@ -123,9 +123,9 @@ public:
 	void deleteChannel(ID channelId);
 
 #ifdef WITH_VST
-	void cloneChannel(ID channelId, int bufferSize, const std::vector<Plugin*>& plugins);
+	void cloneChannel(ID channelId, int bufferSize, std::unique_ptr<Wave>, const std::vector<Plugin*>&);
 #else
-	void cloneChannel(ID channelId, int bufferSize);
+	void cloneChannel(ID channelId, int bufferSize, std::unique_ptr<Wave>);
 #endif
 	void renameChannel(ID channelId, const std::string& name);
 	void freeAllChannels();

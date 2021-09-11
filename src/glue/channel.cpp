@@ -287,14 +287,23 @@ void setOverdubProtection(ID channelId, bool value)
 
 void cloneChannel(ID channelId)
 {
-	/* Clone plugins and actions first in their own lists. */
+	const m::channel::Data& ch = g_model.get().getChannel(channelId);
+
+	/* Clone waves, plugins and actions first in their own lists. */
+
+	std::unique_ptr<m::Wave> newWave;
+	if (ch.samplePlayer && ch.samplePlayer->hasWave())
+	{
+		m::Wave* oldWave = ch.samplePlayer->getWave();
+		newWave          = g_waveManager.createFromWave(*oldWave, 0, oldWave->getBuffer().countFrames());
+	}
 
 	g_actionRecorder.cloneActions(channelId, g_channelManager.getNextId());
 #ifdef WITH_VST
-	std::vector<m::Plugin*> plugins = g_pluginHost.clonePlugins(g_model.get().getChannel(channelId).plugins, g_patch.samplerate, g_kernelAudio.getRealBufSize());
+	std::vector<m::Plugin*> plugins = g_pluginHost.clonePlugins(ch.plugins, g_patch.samplerate, g_kernelAudio.getRealBufSize());
 #endif
 
-	g_mixerHandler.cloneChannel(channelId, g_kernelAudio.getRealBufSize(), plugins);
+	g_mixerHandler.cloneChannel(channelId, g_kernelAudio.getRealBufSize(), std::move(newWave), plugins);
 }
 
 /* -------------------------------------------------------------------------- */
