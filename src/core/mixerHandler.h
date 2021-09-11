@@ -141,7 +141,7 @@ public:
     Fills armed Sample Channels with audio data coming from an input recording
     session. */
 
-	void finalizeInputRec(Frame recordedFrames);
+	void finalizeInputRec(Frame recordedFrames, Frame currentFrame);
 
 	/* onChannelsAltered
 	Fired when something is done on channels (added, removed, loaded, ...). */
@@ -158,18 +158,18 @@ private:
 	std::vector<channel::Data*> getRecordableChannels();
 	std::vector<channel::Data*> getOverdubbableChannels();
 
-	void setupChannelPostRecording(channel::Data& ch);
+	void setupChannelPostRecording(channel::Data& ch, Frame currentFrame);
 
 	/* recordChannel
 	Records the current Mixer audio input data into an empty channel. */
 
-	void recordChannel(channel::Data& ch, Frame recordedFrames);
+	void recordChannel(channel::Data& ch, Frame recordedFrames, Frame currentFrame);
 
 	/* overdubChannel
 	Records the current Mixer audio input data into a channel with an existing
 	Wave, overdub mode. */
 
-	void overdubChannel(channel::Data& ch);
+	void overdubChannel(channel::Data& ch, Frame currentFrame);
 };
 } // namespace giada::m
 

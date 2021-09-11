@@ -155,7 +155,6 @@ void PluginHost::freePlugin(const m::Plugin& plugin, ID channelId)
 
 void PluginHost::freePlugins(const std::vector<Plugin*>& plugins)
 {
-	// TODO - channels???
 	for (const Plugin* p : plugins)
 		m_model.remove(*p);
 }

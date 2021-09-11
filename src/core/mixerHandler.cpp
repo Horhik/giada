@@ -344,12 +344,12 @@ bool MixerHandler::getInToOut() const
 
 /* -------------------------------------------------------------------------- */
 
-void MixerHandler::finalizeInputRec(Frame recordedFrames)
+void MixerHandler::finalizeInputRec(Frame recordedFrames, Frame currentFrame)
 {
 	for (channel::Data* ch : getRecordableChannels())
-		recordChannel(*ch, recordedFrames);
+		recordChannel(*ch, recordedFrames, currentFrame);
 	for (channel::Data* ch : getOverdubbableChannels())
-		overdubChannel(*ch);
+		overdubChannel(*ch, currentFrame);
 
 	g_mixer.clearRecBuffer();
 }
@@ -438,11 +438,11 @@ std::vector<channel::Data*> MixerHandler::getOverdubbableChannels()
 
 /* -------------------------------------------------------------------------- */
 
-void MixerHandler::setupChannelPostRecording(channel::Data& ch)
+void MixerHandler::setupChannelPostRecording(channel::Data& ch, Frame currentFrame)
 {
 	/* Start sample channels in loop mode right away. */
 	if (ch.samplePlayer->isAnyLoopMode())
-		samplePlayer::kickIn(ch, g_clock.getCurrentFrame());
+		samplePlayer::kickIn(ch, currentFrame);
 	/* Disable 'arm' button if overdub protection is on. */
 	if (ch.audioReceiver->overdubProtection == true)
 		ch.armed = false;
@@ -450,7 +450,7 @@ void MixerHandler::setupChannelPostRecording(channel::Data& ch)
 
 /* -------------------------------------------------------------------------- */
 
-void MixerHandler::recordChannel(channel::Data& ch, Frame recordedFrames)
+void MixerHandler::recordChannel(channel::Data& ch, Frame recordedFrames, Frame currentFrame)
 {
 	/* Create a new Wave with audio coming from Mixer's input buffer. */
 
@@ -468,14 +468,14 @@ void MixerHandler::recordChannel(channel::Data& ch, Frame recordedFrames)
 
 	g_model.add(std::move(wave));
 	samplePlayer::loadWave(ch, &g_model.back<Wave>());
-	setupChannelPostRecording(ch);
+	setupChannelPostRecording(ch, currentFrame);
 
 	g_model.swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void MixerHandler::overdubChannel(channel::Data& ch)
+void MixerHandler::overdubChannel(channel::Data& ch, Frame currentFrame)
 {
 	Wave* wave = ch.samplePlayer->getWave();
 
@@ -487,6 +487,6 @@ void MixerHandler::overdubChannel(channel::Data& ch)
 	wave->getBuffer().sum(g_mixer.getRecBuffer(), /*gain=*/1.0f);
 	wave->setLogical(true);
 
-	setupChannelPostRecording(ch);
+	setupChannelPostRecording(ch, currentFrame);
 }
 } // namespace giada::m

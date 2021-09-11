@@ -187,7 +187,7 @@ void Recorder::stopInputRec(InputRecMode recMode)
 
 	/* Finalize recordings. InputRecMode::FREE requires some adjustments. */
 
-	g_mixerHandler.finalizeInputRec(recordedFrames);
+	g_mixerHandler.finalizeInputRec(recordedFrames, g_clock.getCurrentFrame());
 
 	if (recMode == InputRecMode::FREE)
 	{
