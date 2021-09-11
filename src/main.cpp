@@ -137,6 +137,10 @@ int main(int argc, char** argv)
 		return events;
 	};
 
+	g_mixerHandler.onChannelsAltered = []() {
+		g_recorder.refreshInputRecMode();
+	};
+
 	// TODO - move the setup to Engine class
 	// TODO - move the setup to Engine class
 	// TODO - move the setup to Engine class

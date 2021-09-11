@@ -144,6 +144,11 @@ public:
 
 	void finalizeInputRec(Frame recordedFrames);
 
+	/* onChannelsAltered
+	Fired when something is done on channels (added, removed, loaded, ...). */
+
+	std::function<void()> onChannelsAltered;
+
 private:
 	bool                        forAnyChannel(std::function<bool(const channel::Data&)> f) const;
 	std::vector<channel::Data*> getChannelsIf(std::function<bool(const channel::Data&)> f);

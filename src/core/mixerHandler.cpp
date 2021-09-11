@@ -116,6 +116,7 @@ int audioCallback_(void* outBuf, void* inBuf, int bufferSize)
 /* -------------------------------------------------------------------------- */
 
 MixerHandler::MixerHandler(Frame framesInLoop, Frame framesInBuffer)
+: onChannelsAltered(nullptr)
 {
 	reset(framesInLoop, framesInBuffer);
 	g_kernelAudio.onAudioCallback = audioCallback_;
@@ -155,6 +156,8 @@ void MixerHandler::addChannel(ChannelType type, ID columnId)
 
 int MixerHandler::loadChannel(ID channelId, const std::string& fname)
 {
+	assert(onChannelsAltered != nullptr);
+
 	WaveManager::Result res = createWave(fname);
 
 	if (res.status != G_RES_OK)
@@ -174,7 +177,7 @@ int MixerHandler::loadChannel(ID channelId, const std::string& fname)
 	if (old != nullptr)
 		g_model.remove<Wave>(*old);
 
-	g_recorder.refreshInputRecMode();
+	onChannelsAltered();
 
 	return res.status;
 }
@@ -191,6 +194,8 @@ int MixerHandler::addAndLoadChannel(ID columnId, const std::string& fname)
 
 void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
 {
+	assert(onChannelsAltered != nullptr);
+
 	g_model.add(std::move(w));
 
 	Wave&          wave    = g_model.back<Wave>();
@@ -199,7 +204,7 @@ void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
 	samplePlayer::loadWave(channel, &wave);
 	g_model.swap(model::SwapType::HARD);
 
-	g_recorder.refreshInputRecMode();
+	onChannelsAltered();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -232,6 +237,8 @@ void MixerHandler::cloneChannel(ID channelId)
 
 void MixerHandler::freeChannel(ID channelId)
 {
+	assert(onChannelsAltered != nullptr);
+
 	channel::Data& ch = g_model.get().getChannel(channelId);
 
 	assert(ch.samplePlayer);
@@ -244,13 +251,15 @@ void MixerHandler::freeChannel(ID channelId)
 	if (wave != nullptr)
 		g_model.remove<Wave>(*wave);
 
-	g_recorder.refreshInputRecMode();
+	onChannelsAltered();
 }
 
 /* -------------------------------------------------------------------------- */
 
 void MixerHandler::freeAllChannels()
 {
+	assert(onChannelsAltered != nullptr);
+
 	for (channel::Data& ch : g_model.get().channels)
 		if (ch.samplePlayer)
 			samplePlayer::loadWave(ch, nullptr);
@@ -258,13 +267,15 @@ void MixerHandler::freeAllChannels()
 	g_model.swap(model::SwapType::HARD);
 	g_model.clear<model::WavePtrs>();
 
-	g_recorder.refreshInputRecMode();
+	onChannelsAltered();
 }
 
 /* -------------------------------------------------------------------------- */
 
 void MixerHandler::deleteChannel(ID channelId)
 {
+	assert(onChannelsAltered != nullptr);
+
 	const channel::Data& ch   = g_model.get().getChannel(channelId);
 	const Wave*          wave = ch.samplePlayer ? ch.samplePlayer->getWave() : nullptr;
 #ifdef WITH_VST
@@ -283,7 +294,7 @@ void MixerHandler::deleteChannel(ID channelId)
 	g_pluginHost.freePlugins(plugins);
 #endif
 
-	g_recorder.refreshInputRecMode();
+	onChannelsAltered();
 }
 
 /* -------------------------------------------------------------------------- */
