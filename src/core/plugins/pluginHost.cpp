@@ -119,37 +119,25 @@ void PluginHost::processStack(mcl::AudioBuffer& outBuf, const std::vector<Plugin
 
 /* -------------------------------------------------------------------------- */
 
-void PluginHost::addPlugin(std::unique_ptr<Plugin> p, ID channelId)
+const Plugin& PluginHost::addPlugin(std::unique_ptr<Plugin> p)
 {
 	m_model.add(std::move(p));
-
-	const Plugin& pluginRef = m_model.back<Plugin>();
-
-	/* TODO - unfortunately JUCE wants mutable plugin objects due to the
-	presence of the non-const processBlock() method. Why not const_casting
-	only in the Plugin class? */
-	m_model.get().getChannel(channelId).plugins.push_back(const_cast<Plugin*>(&pluginRef));
-	m_model.swap(model::SwapType::HARD);
+	return m_model.back<Plugin>();
 }
 
 /* -------------------------------------------------------------------------- */
 
-void PluginHost::swapPlugin(const m::Plugin& p1, const m::Plugin& p2, ID channelId)
+void PluginHost::swapPlugin(const m::Plugin& p1, const m::Plugin& p2, std::vector<Plugin*>& plugins)
 {
-	std::vector<m::Plugin*>& pvec   = m_model.get().getChannel(channelId).plugins;
-	std::size_t              index1 = u::vector::indexOf(pvec, &p1);
-	std::size_t              index2 = u::vector::indexOf(pvec, &p2);
-	std::swap(pvec.at(index1), pvec.at(index2));
-
-	m_model.swap(model::SwapType::HARD);
+	std::size_t index1 = u::vector::indexOf(plugins, &p1);
+	std::size_t index2 = u::vector::indexOf(plugins, &p2);
+	std::swap(plugins.at(index1), plugins.at(index2));
 }
 
 /* -------------------------------------------------------------------------- */
 
-void PluginHost::freePlugin(const m::Plugin& plugin, ID channelId)
+void PluginHost::freePlugin(const m::Plugin& plugin)
 {
-	u::vector::remove(m_model.get().getChannel(channelId).plugins, &plugin);
-	m_model.swap(model::SwapType::HARD);
 	m_model.remove(plugin);
 }
 

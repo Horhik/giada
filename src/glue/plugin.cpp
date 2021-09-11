@@ -29,8 +29,8 @@
 #include "core/plugins/plugin.h"
 #include "core/conf.h"
 #include "core/const.h"
-#include "core/mixer.h"
 #include "core/kernelAudio.h"
+#include "core/mixer.h"
 #include "core/model/model.h"
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
@@ -167,23 +167,34 @@ void addPlugin(int pluginListIndex, ID channelId)
 {
 	if (pluginListIndex >= g_pluginManager.countAvailablePlugins())
 		return;
-	std::unique_ptr<m::Plugin> p = g_pluginManager.makePlugin(pluginListIndex, g_conf.samplerate, g_kernelAudio.getRealBufSize());
-	if (p != nullptr)
-		g_pluginHost.addPlugin(std::move(p), channelId);
+	std::unique_ptr<m::Plugin> plugin    = g_pluginManager.makePlugin(pluginListIndex, g_conf.samplerate, g_kernelAudio.getRealBufSize());
+	const m::Plugin*           pluginPtr = plugin.get();
+	if (plugin != nullptr)
+		g_pluginHost.addPlugin(std::move(plugin));
+
+	/* TODO - unfortunately JUCE wants mutable plugin objects due to the
+	presence of the non-const processBlock() method. Why not const_casting
+	only in the Plugin class? */
+	g_model.get().getChannel(channelId).plugins.push_back(const_cast<m::Plugin*>(pluginPtr));
+	g_model.swap(m::model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void swapPlugins(const m::Plugin& p1, const m::Plugin& p2, ID channelId)
 {
-	g_pluginHost.swapPlugin(p1, p2, channelId);
+	g_pluginHost.swapPlugin(p1, p2, g_model.get().getChannel(channelId).plugins);
+	g_model.swap(m::model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void freePlugin(const m::Plugin& plugin, ID channelId)
 {
-	g_pluginHost.freePlugin(plugin, channelId);
+	u::vector::remove(g_model.get().getChannel(channelId).plugins, &plugin);
+	g_model.swap(m::model::SwapType::HARD);
+
+	g_pluginHost.freePlugin(plugin);
 }
 
 /* -------------------------------------------------------------------------- */

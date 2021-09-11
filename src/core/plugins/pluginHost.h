@@ -73,9 +73,10 @@ public:
 	void reset(int bufferSize);
 
 	/* addPlugin
-	Adds a new plugin to channel 'channelId'. */
+	Loads a new plugin into memory. Returns a reference to the newly created
+	object. */
 
-	void addPlugin(std::unique_ptr<Plugin> p, ID channelId);
+	const Plugin& addPlugin(std::unique_ptr<Plugin> p);
 
 	/* processStack
 	Applies the fx list to the buffer. */
@@ -84,14 +85,14 @@ public:
 	    juce::MidiBuffer* events = nullptr);
 
 	/* swapPlugin 
-	Swaps plug-in 1 with plug-in 2 in Channel 'channelId'. */
+	Swaps plug-in 1 with plug-in 2 in the plug-in vector. */
 
-	void swapPlugin(const m::Plugin& p1, const m::Plugin& p2, ID channelId);
+	void swapPlugin(const m::Plugin& p1, const m::Plugin& p2, std::vector<Plugin*>& plugins);
 
 	/* freePlugin.
-	Unloads plugin from channel 'channelId'. */
+	Unloads plugin from memory. */
 
-	void freePlugin(const m::Plugin& plugin, ID channelId);
+	void freePlugin(const m::Plugin& plugin);
 
 	/* freePlugins
 	Unloads multiple plugins. Useful when freeing or deleting a channel. */
