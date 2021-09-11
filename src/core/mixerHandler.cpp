@@ -35,11 +35,8 @@
 #include "core/midiMap.h"
 #include "core/mixer.h"
 #include "core/model/model.h"
-#include "core/patch.h"
 #include "core/recorder.h"
 #include "core/sync.h"
-#include "core/wave.h"
-#include "core/waveFx.h"
 #include "glue/channel.h"
 #include "glue/main.h"
 #include "src/core/actions/actionRecorder.h"
@@ -53,16 +50,15 @@
 #include <vector>
 
 extern giada::m::model::Model   g_model;
-extern giada::m::KernelAudio    g_kernelAudio;
-extern giada::m::Clock          g_clock;
 extern giada::m::Mixer          g_mixer;
-extern giada::m::MixerHandler   g_mixerHandler;
-extern giada::m::Synchronizer   g_synchronizer;
-extern giada::m::Recorder       g_recorder;
-extern giada::m::conf::Data     g_conf;
-extern giada::m::patch::Data    g_patch;
 extern giada::m::ChannelManager g_channelManager;
-extern giada::m::WaveManager    g_waveManager;
+
+extern giada::m::KernelAudio  g_kernelAudio;
+extern giada::m::Clock        g_clock;
+extern giada::m::MixerHandler g_mixerHandler;
+extern giada::m::Synchronizer g_synchronizer;
+extern giada::m::Recorder     g_recorder;
+extern giada::m::conf::Data   g_conf;
 
 namespace giada::m
 {
@@ -112,6 +108,9 @@ int audioCallback_(void* outBuf, void* inBuf, int bufferSize)
 
 MixerHandler::MixerHandler(Frame framesInLoop, Frame framesInBuffer)
 : onChannelsAltered(nullptr)
+, onChannelRecorded(nullptr)
+, onCloneChannelWave(nullptr)
+, onCloneChannelPlugins(nullptr)
 {
 	reset(framesInLoop, framesInBuffer);
 	g_kernelAudio.onAudioCallback = audioCallback_;
@@ -189,19 +188,23 @@ void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave> w, int b
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef WITH_VST
-void MixerHandler::cloneChannel(ID channelId, int bufferSize, std::unique_ptr<Wave> wave, const std::vector<Plugin*>& plugins)
-#else
-void MixerHandler::cloneChannel(ID channelId, int bufferSize, std::unique_ptr<Wave> wave)
-#endif
+void MixerHandler::cloneChannel(ID channelId, int bufferSize)
 {
-	channel::Data& oldChannel = g_model.get().getChannel(channelId);
-	channel::Data  newChannel = g_channelManager.create(oldChannel, bufferSize);
+	assert(onCloneChannelWave != nullptr);
+	assert(onCloneChannelPlugins != nullptr);
 
-	if (wave != nullptr)
-		g_model.add(std::move(wave));
+	const channel::Data& oldChannel = g_model.get().getChannel(channelId);
+	channel::Data        newChannel = g_channelManager.create(oldChannel, bufferSize);
+
+	/* Clone waves and plugins first in their own lists. */
+
+	if (oldChannel.samplePlayer && oldChannel.samplePlayer->hasWave())
+	{
+		g_model.add(onCloneChannelWave(*oldChannel.samplePlayer->getWave()));
+		samplePlayer::loadWave(newChannel, &g_model.back<Wave>());
+	}
 #ifdef WITH_VST
-	newChannel.plugins = plugins;
+	newChannel.plugins = onCloneChannelPlugins(oldChannel.plugins);
 #endif
 
 	/* Then push the new channel in the channels vector. */
@@ -417,11 +420,9 @@ void MixerHandler::setupChannelPostRecording(channel::Data& ch, Frame currentFra
 
 void MixerHandler::recordChannel(channel::Data& ch, Frame recordedFrames, Frame currentFrame)
 {
-	/* Create a new Wave with audio coming from Mixer's input buffer. */
+	assert(onChannelRecorded != nullptr);
 
-	std::string           filename = "TAKE-" + std::to_string(g_patch.lastTakeId++) + ".wav";
-	std::unique_ptr<Wave> wave     = g_waveManager.createEmpty(recordedFrames, G_MAX_IO_CHANS,
-        g_conf.samplerate, filename);
+	std::unique_ptr<Wave> wave = onChannelRecorded(recordedFrames);
 
 	G_DEBUG("Created new Wave, size=" << wave->getBuffer().countFrames());
 

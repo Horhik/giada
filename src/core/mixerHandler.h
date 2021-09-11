@@ -122,11 +122,7 @@ public:
 
 	void deleteChannel(ID channelId);
 
-#ifdef WITH_VST
-	void cloneChannel(ID channelId, int bufferSize, std::unique_ptr<Wave>, const std::vector<Plugin*>&);
-#else
-	void cloneChannel(ID channelId, int bufferSize, std::unique_ptr<Wave>);
-#endif
+	void cloneChannel(ID channelId, int bufferSize);
 	void renameChannel(ID channelId, const std::string& name);
 	void freeAllChannels();
 
@@ -147,6 +143,25 @@ public:
 	Fired when something is done on channels (added, removed, loaded, ...). */
 
 	std::function<void()> onChannelsAltered;
+
+	/* onChannelRecorded
+	Fired during the input recording finalization, when a new empty Wave must
+	be added to each armed channel in order to store recorded audio coming from
+	Mixer. */
+
+	std::function<std::unique_ptr<Wave>(Frame)> onChannelRecorded;
+
+	/* onCloneChannelWave 
+	Fired when cloning a Wave that belongs to a channel. Wants a copy of the 
+	original Wave in return. */
+
+	std::function<std::unique_ptr<Wave>(const Wave&)> onCloneChannelWave;
+
+	/* onCloneChannelPlugins 
+	Fired when cloning a list of plug-ins that belong to a channel. Wants a
+	vector of cloned plug-ins pointers in return. */
+
+	std::function<std::vector<Plugin*>(const std::vector<Plugin*>&)> onCloneChannelPlugins;
 
 private:
 	bool                        forAnyChannel(std::function<bool(const channel::Data&)> f) const;

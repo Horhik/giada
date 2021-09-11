@@ -140,6 +140,16 @@ int main(int argc, char** argv)
 	g_mixerHandler.onChannelsAltered = []() {
 		g_recorder.refreshInputRecMode();
 	};
+	g_mixerHandler.onChannelRecorded = [](Frame recordedFrames) {
+		std::string filename = "TAKE-" + std::to_string(g_patch.lastTakeId++) + ".wav";
+		return g_waveManager.createEmpty(recordedFrames, G_MAX_IO_CHANS, g_conf.samplerate, filename);
+	};
+	g_mixerHandler.onCloneChannelWave = [](const Wave& oldWave) {
+		return g_waveManager.createFromWave(oldWave, 0, oldWave.getBuffer().countFrames());
+	};
+	g_mixerHandler.onCloneChannelPlugins = [](const std::vector<m::Plugin*>& plugins) {
+		return g_pluginHost.clonePlugins(plugins, g_patch.samplerate, g_kernelAudio.getRealBufSize());
+	};
 
 	// TODO - move the setup to Engine class
 	// TODO - move the setup to Engine class
