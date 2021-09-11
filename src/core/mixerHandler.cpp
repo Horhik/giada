@@ -36,9 +36,6 @@
 #include "core/mixer.h"
 #include "core/model/model.h"
 #include "core/patch.h"
-#include "core/plugins/plugin.h"
-#include "core/plugins/pluginHost.h"
-#include "core/plugins/pluginManager.h"
 #include "core/recorder.h"
 #include "core/sync.h"
 #include "core/wave.h"
@@ -60,8 +57,6 @@ extern giada::m::KernelAudio    g_kernelAudio;
 extern giada::m::Clock          g_clock;
 extern giada::m::Mixer          g_mixer;
 extern giada::m::MixerHandler   g_mixerHandler;
-extern giada::m::PluginHost     g_pluginHost;
-extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::Synchronizer   g_synchronizer;
 extern giada::m::Recorder       g_recorder;
 extern giada::m::conf::Data     g_conf;
@@ -209,23 +204,26 @@ void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w, int
 
 /* -------------------------------------------------------------------------- */
 
+#ifdef WITH_VST
+void MixerHandler::cloneChannel(ID channelId, int bufferSize, const std::vector<Plugin*>& plugins)
+#else
 void MixerHandler::cloneChannel(ID channelId, int bufferSize)
+#endif
 {
 	channel::Data& oldChannel = g_model.get().getChannel(channelId);
 	channel::Data  newChannel = g_channelManager.create(oldChannel, bufferSize);
 
-	/* Clone plugins, actions and wave first in their own lists. */
-
-#ifdef WITH_VST
-	newChannel.plugins = g_pluginHost.clonePlugins(oldChannel.plugins, g_patch.samplerate, bufferSize);
-#endif
-	g_actionRecorder.cloneActions(channelId, newChannel.id);
+	/* Clone Wave first in its own list. */
 
 	if (newChannel.samplePlayer && newChannel.samplePlayer->hasWave())
 	{
 		Wave* wave = newChannel.samplePlayer->getWave();
 		g_model.add(g_waveManager.createFromWave(*wave, 0, wave->getBuffer().countFrames()));
 	}
+
+#ifdef WITH_VST
+	newChannel.plugins = plugins;
+#endif
 
 	/* Then push the new channel in the channels vector. */
 
@@ -289,10 +287,6 @@ void MixerHandler::deleteChannel(ID channelId)
 
 	if (wave != nullptr)
 		g_model.remove<Wave>(*wave);
-
-#ifdef WITH_VST
-	g_pluginHost.freePlugins(plugins);
-#endif
 
 	onChannelsAltered();
 }

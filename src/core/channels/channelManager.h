@@ -64,6 +64,11 @@ class ChannelManager final
 public:
 	ChannelManager(const conf::Data&, model::Model&);
 
+	/* getNextId
+	Returns the next channel ID that will be assigned to a new channel. */
+
+	ID getNextId() const;
+
 	/* reset
     Resets internal ID generator. */
 
@@ -90,7 +95,7 @@ private:
 	channel::State&  makeState_(ChannelType type);
 	channel::Buffer& makeBuffer_(int bufferSize);
 
-	IdManager channelId_;
+	IdManager m_channelId;
 
 	const conf::Data& m_conf;
 	model::Model&     m_model;

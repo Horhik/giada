@@ -45,6 +45,7 @@ class Wave;
 
 namespace giada::m
 {
+class Plugin;
 class MixerHandler final
 {
 public:
@@ -126,7 +127,11 @@ public:
 
 	void deleteChannel(ID channelId);
 
+#ifdef WITH_VST
+	void cloneChannel(ID channelId, int bufferSize, const std::vector<Plugin*>& plugins);
+#else
 	void cloneChannel(ID channelId, int bufferSize);
+#endif
 	void renameChannel(ID channelId, const std::string& name);
 	void freeAllChannels();
 

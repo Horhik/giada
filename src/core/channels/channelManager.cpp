@@ -46,16 +46,23 @@ ChannelManager::ChannelManager(const conf::Data& c, model::Model& m)
 
 /* -------------------------------------------------------------------------- */
 
+ID ChannelManager::getNextId() const
+{
+	return m_channelId.getNext();
+}
+
+/* -------------------------------------------------------------------------- */
+
 void ChannelManager::reset()
 {
-	channelId_ = IdManager();
+	m_channelId = IdManager();
 }
 
 /* -------------------------------------------------------------------------- */
 
 channel::Data ChannelManager::create(ID channelId, ChannelType type, ID columnId, int bufferSize)
 {
-	channel::Data out = channel::Data(type, channelId_.generate(channelId),
+	channel::Data out = channel::Data(type, m_channelId.generate(channelId),
 	    columnId, makeState_(type), makeBuffer_(bufferSize));
 
 	if (out.audioReceiver)
@@ -70,7 +77,7 @@ channel::Data ChannelManager::create(const channel::Data& o, int bufferSize)
 {
 	channel::Data out = channel::Data(o);
 
-	out.id     = channelId_.generate();
+	out.id     = m_channelId.generate();
 	out.state  = &makeState_(o.type);
 	out.buffer = &makeBuffer_(bufferSize);
 
@@ -81,7 +88,7 @@ channel::Data ChannelManager::create(const channel::Data& o, int bufferSize)
 
 channel::Data ChannelManager::deserializeChannel(const patch::Channel& pch, float samplerateRatio, int bufferSize)
 {
-	channelId_.set(pch.id);
+	m_channelId.set(pch.id);
 	return channel::Data(pch, makeState_(pch.type), makeBuffer_(bufferSize), samplerateRatio, m_model.find<Wave>(pch.waveId));
 }
 

@@ -26,12 +26,14 @@
 
 #include "gui/elems/mainWindow/keyboard/channel.h"
 #include "core/actions/actionRecorder.h"
+#include "core/channels/channelManager.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/kernelAudio.h"
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
+#include "core/patch.h"
 #include "core/plugins/plugin.h"
 #include "core/plugins/pluginHost.h"
 #include "core/recorder.h"
@@ -66,10 +68,13 @@
 extern giada::v::gdMainWindow*  G_MainWin;
 extern giada::m::KernelAudio    g_kernelAudio;
 extern giada::m::model::Model   g_model;
+extern giada::m::PluginHost     g_pluginHost;
 extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::Recorder       g_recorder;
+extern giada::m::ChannelManager g_channelManager;
 extern giada::m::conf::Data     g_conf;
+extern giada::m::patch::Data    g_patch;
 
 namespace giada::c::channel
 {
@@ -224,8 +229,15 @@ void deleteChannel(ID channelId)
 	if (!v::gdConfirmWin("Warning", "Delete channel: are you sure?"))
 		return;
 	u::gui::closeAllSubwindows();
-	g_actionRecorder.clearChannel(channelId);
+
+#ifdef WITH_VST
+	const std::vector<m::Plugin*> plugins = g_model.get().getChannel(channelId).plugins;
+#endif
 	g_mixerHandler.deleteChannel(channelId);
+	g_actionRecorder.clearChannel(channelId);
+#ifdef WITH_VST
+	g_pluginHost.freePlugins(plugins);
+#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -262,7 +274,14 @@ void setOverdubProtection(ID channelId, bool value)
 
 void cloneChannel(ID channelId)
 {
-	g_mixerHandler.cloneChannel(channelId, g_kernelAudio.getRealBufSize());
+	/* Clone plugins and actions first in their own lists. */
+
+	g_actionRecorder.cloneActions(channelId, g_channelManager.getNextId());
+#ifdef WITH_VST
+	std::vector<m::Plugin*> plugins = g_pluginHost.clonePlugins(g_model.get().getChannel(channelId).plugins, g_patch.samplerate, g_kernelAudio.getRealBufSize());
+#endif
+
+	g_mixerHandler.cloneChannel(channelId, g_kernelAudio.getRealBufSize(), plugins);
 }
 
 /* -------------------------------------------------------------------------- */
