@@ -105,17 +105,12 @@ public:
 	/* loadChannel
     Loads a new Wave inside a Sample Channel. */
 
-	int loadChannel(ID channelId, const std::string& fname);
+	void loadChannel(ID channelId, std::unique_ptr<Wave> w);
 
-	/* addAndLoadChannel (1)
+	/* addAndLoadChannel
     Creates a new channels, fills it with a Wave and then add it to the stack. */
 
-	int addAndLoadChannel(ID columnId, const std::string& fname, int bufferSize);
-
-	/* addAndLoadChannel (2)
-    Same as (1), but Wave is already provided. */
-
-	void addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w, int bufferSize);
+	void addAndLoadChannel(ID columnId, std::unique_ptr<Wave> w, int bufferSize);
 
 	/* freeChannel
     Unloads existing Wave from a Sample Channel. */
@@ -157,8 +152,7 @@ private:
 	bool                        forAnyChannel(std::function<bool(const channel::Data&)> f) const;
 	std::vector<channel::Data*> getChannelsIf(std::function<bool(const channel::Data&)> f);
 
-	channel::Data&      addChannelInternal(ChannelType type, ID columnId, int bufferSize);
-	WaveManager::Result createWave(const std::string& fname);
+	channel::Data& addChannelInternal(ChannelType type, ID columnId, int bufferSize);
 
 	std::vector<channel::Data*> getRecordableChannels();
 	std::vector<channel::Data*> getOverdubbableChannels();

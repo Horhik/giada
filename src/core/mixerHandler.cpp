@@ -149,16 +149,11 @@ void MixerHandler::addChannel(ChannelType type, ID columnId, int bufferSize)
 
 /* -------------------------------------------------------------------------- */
 
-int MixerHandler::loadChannel(ID channelId, const std::string& fname)
+void MixerHandler::loadChannel(ID channelId, std::unique_ptr<Wave> w)
 {
 	assert(onChannelsAltered != nullptr);
 
-	WaveManager::Result res = createWave(fname);
-
-	if (res.status != G_RES_OK)
-		return res.status;
-
-	g_model.add(std::move(res.wave));
+	g_model.add(std::move(w));
 
 	Wave& wave = g_model.back<Wave>();
 	Wave* old  = g_model.get().getChannel(channelId).samplePlayer->getWave();
@@ -173,21 +168,11 @@ int MixerHandler::loadChannel(ID channelId, const std::string& fname)
 		g_model.remove<Wave>(*old);
 
 	onChannelsAltered();
-
-	return res.status;
 }
 
 /* -------------------------------------------------------------------------- */
 
-int MixerHandler::addAndLoadChannel(ID columnId, const std::string& fname, int bufferSize)
-{
-	WaveManager::Result res = createWave(fname);
-	if (res.status == G_RES_OK)
-		addAndLoadChannel(columnId, std::move(res.wave), bufferSize);
-	return res.status;
-}
-
-void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w, int bufferSize)
+void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave> w, int bufferSize)
 {
 	assert(onChannelsAltered != nullptr);
 
@@ -392,14 +377,6 @@ channel::Data& MixerHandler::addChannelInternal(ChannelType type, ID columnId, i
 	g_model.swap(model::SwapType::HARD);
 
 	return g_model.get().channels.back();
-}
-
-/* -------------------------------------------------------------------------- */
-
-WaveManager::Result MixerHandler::createWave(const std::string& fname)
-{
-	return g_waveManager.createFromFile(fname, /*id=*/0, g_conf.samplerate,
-	    g_conf.rsmpQuality);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -75,6 +75,7 @@ extern giada::m::Recorder       g_recorder;
 extern giada::m::ChannelManager g_channelManager;
 extern giada::m::conf::Data     g_conf;
 extern giada::m::patch::Data    g_patch;
+extern giada::m::WaveManager    g_waveManager;
 
 namespace giada::c::channel
 {
@@ -180,16 +181,22 @@ std::vector<Data> getChannels()
 
 int loadChannel(ID channelId, const std::string& fname)
 {
+	m::WaveManager::Result res = g_waveManager.createFromFile(fname, /*id=*/0,
+	    g_conf.samplerate, g_conf.rsmpQuality);
+
+	if (res.status != G_RES_OK)
+	{
+		printLoadError_(res.status);
+		return res.status;
+	}
+
 	/* Save the patch and take the last browser's dir in order to re-use it the 
 	next time. */
 
 	g_conf.samplePath = u::fs::dirname(fname);
+	g_mixerHandler.loadChannel(channelId, std::move(res.wave));
 
-	int res = g_mixerHandler.loadChannel(channelId, fname);
-	if (res != G_RES_OK)
-		printLoadError_(res);
-
-	return res;
+	return G_RES_OK;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -201,22 +208,28 @@ void addChannel(ID columnId, ChannelType type)
 
 /* -------------------------------------------------------------------------- */
 
-void addAndLoadChannel(ID columnId, const std::string& fpath)
+void addAndLoadChannel(ID columnId, const std::string& fname)
 {
-	int res = g_mixerHandler.addAndLoadChannel(columnId, fpath, g_kernelAudio.getRealBufSize());
-	if (res != G_RES_OK)
-		printLoadError_(res);
+	m::WaveManager::Result res = g_waveManager.createFromFile(fname, /*id=*/0,
+	    g_conf.samplerate, g_conf.rsmpQuality);
+	if (res.status == G_RES_OK)
+		g_mixerHandler.addAndLoadChannel(columnId, std::move(res.wave), g_kernelAudio.getRealBufSize());
+	else
+		printLoadError_(res.status);
 }
 
-void addAndLoadChannels(ID columnId, const std::vector<std::string>& fpaths)
+void addAndLoadChannels(ID columnId, const std::vector<std::string>& fnames)
 {
-	if (fpaths.size() == 1)
-		return addAndLoadChannel(columnId, fpaths[0]);
-
 	bool errors = false;
-	for (const std::string& f : fpaths)
-		if (g_mixerHandler.addAndLoadChannel(columnId, f, g_kernelAudio.getRealBufSize()) != G_RES_OK)
+	for (const std::string& f : fnames)
+	{
+		m::WaveManager::Result res = g_waveManager.createFromFile(f, /*id=*/0,
+		    g_conf.samplerate, g_conf.rsmpQuality);
+		if (res.status == G_RES_OK)
+			g_mixerHandler.addAndLoadChannel(columnId, std::move(res.wave), g_kernelAudio.getRealBufSize());
+		else
 			errors = true;
+	}
 
 	if (errors)
 		v::gdAlert("Some files weren't loaded sucessfully.");
