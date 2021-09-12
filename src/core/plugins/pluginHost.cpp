@@ -40,8 +40,9 @@
 
 namespace giada::m
 {
-PluginHost::Info::Info(const Clock& c)
+PluginHost::Info::Info(const Clock& c, int sampleRate)
 : m_clock(c)
+, m_sampleRate(sampleRate)
 {
 }
 
@@ -51,7 +52,7 @@ bool PluginHost::Info::getCurrentPosition(CurrentPositionInfo& result)
 {
 	result.bpm           = m_clock.getBpm();
 	result.timeInSamples = m_clock.getCurrentFrame();
-	result.timeInSeconds = m_clock.getCurrentSecond();
+	result.timeInSeconds = m_clock.getCurrentSecond(m_sampleRate);
 	result.isPlaying     = m_clock.isRunning();
 
 	return true;

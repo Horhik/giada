@@ -24,8 +24,7 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "clock.h"
-#include "core/conf.h"
+#include "core/clock.h"
 #include "core/const.h"
 #include "core/kernelAudio.h"
 #include "core/mixerHandler.h"
@@ -41,32 +40,31 @@
 
 extern giada::m::model::Model   g_model;
 extern giada::m::ActionRecorder g_actionRecorder;
-extern giada::m::conf::Data     g_conf;
 
 namespace giada::m
 {
-Clock::Clock(Synchronizer& s)
+Clock::Clock(Synchronizer& s, int sampleRate)
 : m_synchronizer(s)
 , m_quantizerStep(1)
 {
-	reset();
+	reset(sampleRate);
 }
 
 /* -------------------------------------------------------------------------- */
 
-float       Clock::getBpm() const { return g_model.get().sequencer.bpm; }
-int         Clock::getBeats() const { return g_model.get().sequencer.beats; }
-int         Clock::getBars() const { return g_model.get().sequencer.bars; }
-int         Clock::getCurrentBeat() const { return g_model.get().sequencer.state->currentBeat.load(); }
-int         Clock::getCurrentFrame() const { return g_model.get().sequencer.state->currentFrame.load(); }
-float       Clock::getCurrentSecond() const { return getCurrentFrame() / static_cast<float>(g_conf.samplerate); }
-int         Clock::getFramesInBar() const { return g_model.get().sequencer.framesInBar; }
-int         Clock::getFramesInBeat() const { return g_model.get().sequencer.framesInBeat; }
-int         Clock::getFramesInLoop() const { return g_model.get().sequencer.framesInLoop; }
-int         Clock::getFramesInSeq() const { return g_model.get().sequencer.framesInSeq; }
-int         Clock::getQuantizerValue() const { return g_model.get().sequencer.quantize; }
-int         Clock::getQuantizerStep() const { return m_quantizerStep; }
-SeqStatus   Clock::getStatus() const { return g_model.get().sequencer.status; }
+float     Clock::getBpm() const { return g_model.get().sequencer.bpm; }
+int       Clock::getBeats() const { return g_model.get().sequencer.beats; }
+int       Clock::getBars() const { return g_model.get().sequencer.bars; }
+int       Clock::getCurrentBeat() const { return g_model.get().sequencer.state->currentBeat.load(); }
+int       Clock::getCurrentFrame() const { return g_model.get().sequencer.state->currentFrame.load(); }
+float     Clock::getCurrentSecond(int sampleRate) const { return getCurrentFrame() / static_cast<float>(sampleRate); }
+int       Clock::getFramesInBar() const { return g_model.get().sequencer.framesInBar; }
+int       Clock::getFramesInBeat() const { return g_model.get().sequencer.framesInBeat; }
+int       Clock::getFramesInLoop() const { return g_model.get().sequencer.framesInLoop; }
+int       Clock::getFramesInSeq() const { return g_model.get().sequencer.framesInSeq; }
+int       Clock::getQuantizerValue() const { return g_model.get().sequencer.quantize; }
+int       Clock::getQuantizerStep() const { return m_quantizerStep; }
+SeqStatus Clock::getStatus() const { return g_model.get().sequencer.status; }
 
 /* -------------------------------------------------------------------------- */
 
@@ -116,9 +114,9 @@ bool Clock::isOnFirstBeat() const
 
 /* -------------------------------------------------------------------------- */
 
-Frame Clock::getMaxFramesInLoop() const
+Frame Clock::getMaxFramesInLoop(int sampleRate) const
 {
-	return (g_conf.samplerate * (60.0f / G_MIN_BPM)) * getBeats();
+	return (sampleRate * (60.0f / G_MIN_BPM)) * getBeats();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -140,50 +138,50 @@ bool Clock::canQuantize() const
 
 /* -------------------------------------------------------------------------- */
 
-float Clock::calcBpmFromRec(Frame recordedFrames) const
+float Clock::calcBpmFromRec(Frame recordedFrames, int sampleRate) const
 {
-	return (60.0f * getBeats()) / (recordedFrames / static_cast<float>(g_conf.samplerate));
+	return (60.0f * getBeats()) / (recordedFrames / static_cast<float>(sampleRate));
 }
 
 /* -------------------------------------------------------------------------- */
 
-void Clock::recomputeFrames()
+void Clock::recomputeFrames(int sampleRate)
 {
-	recomputeFrames(g_model.get().sequencer);
+	recomputeFrames(g_model.get().sequencer, sampleRate);
 	g_model.swap(model::SwapType::NONE);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void Clock::setBpm(float b, const KernelAudio& kernelAudio)
+void Clock::setBpm(float b, const KernelAudio& kernelAudio, int sampleRate)
 {
 	b = std::clamp(b, G_MIN_BPM, G_MAX_BPM);
 
 	/* If JACK is being used, let it handle the bpm change. */
 	if (!kernelAudio.jackSetBpm(b))
-		setBpmRaw(b);
+		setBpmRaw(b, sampleRate);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void Clock::setBeats(int newBeats, int newBars)
+void Clock::setBeats(int newBeats, int newBars, int sampleRate)
 {
 	newBeats = std::clamp(newBeats, 1, G_MAX_BEATS);
 	newBars  = std::clamp(newBars, 1, newBeats); // Bars cannot be greater than beats
 
 	g_model.get().sequencer.beats = newBeats;
 	g_model.get().sequencer.bars  = newBars;
-	recomputeFrames(g_model.get().sequencer);
+	recomputeFrames(g_model.get().sequencer, sampleRate);
 
 	g_model.swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void Clock::setQuantize(int q)
+void Clock::setQuantize(int q, int sampleRate)
 {
 	g_model.get().sequencer.quantize = q;
-	recomputeFrames(g_model.get().sequencer);
+	recomputeFrames(g_model.get().sequencer, sampleRate);
 
 	g_model.swap(model::SwapType::HARD);
 }
@@ -203,13 +201,13 @@ void Clock::setStatus(SeqStatus s)
 
 /* -------------------------------------------------------------------------- */
 
-void Clock::reset()
+void Clock::reset(int sampleRate)
 {
 	g_model.get().sequencer.bars     = G_DEFAULT_BARS;
 	g_model.get().sequencer.beats    = G_DEFAULT_BEATS;
 	g_model.get().sequencer.bpm      = G_DEFAULT_BPM;
 	g_model.get().sequencer.quantize = G_DEFAULT_QUANTIZE;
-	recomputeFrames(g_model.get().sequencer);
+	recomputeFrames(g_model.get().sequencer, sampleRate);
 
 	g_model.swap(model::SwapType::NONE);
 }
@@ -258,9 +256,9 @@ Frame Clock::quantize(Frame f)
 
 /* -------------------------------------------------------------------------- */
 
-void Clock::recomputeFrames(model::Sequencer& c)
+void Clock::recomputeFrames(model::Sequencer& c, int sampleRate)
 {
-	c.framesInLoop = static_cast<int>((g_conf.samplerate * (60.0f / c.bpm)) * c.beats);
+	c.framesInLoop = static_cast<int>((sampleRate * (60.0f / c.bpm)) * c.beats);
 	c.framesInBar  = static_cast<int>(c.framesInLoop / (float)c.bars);
 	c.framesInBeat = static_cast<int>(c.framesInLoop / (float)c.beats);
 	c.framesInSeq  = c.framesInBeat * G_MAX_BEATS;
@@ -271,12 +269,12 @@ void Clock::recomputeFrames(model::Sequencer& c)
 
 /* -------------------------------------------------------------------------- */
 
-void Clock::setBpmRaw(float v)
+void Clock::setBpmRaw(float v, int sampleRate)
 {
 	float ratio = g_model.get().sequencer.bpm / v;
 
 	g_model.get().sequencer.bpm = v;
-	recomputeFrames(g_model.get().sequencer);
+	recomputeFrames(g_model.get().sequencer, sampleRate);
 
 	g_actionRecorder.updateBpm(ratio, m_quantizerStep);
 

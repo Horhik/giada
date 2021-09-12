@@ -74,7 +74,7 @@ giada::m::MidiDispatcher  g_midiDispatcher(g_model);
 giada::m::ActionRecorder  g_actionRecorder(g_model);
 /*! */ giada::m::Recorder g_recorder;
 giada::m::Synchronizer    g_synchronizer(g_conf, g_kernelMidi);
-/*! */ giada::m::Clock    g_clock(g_synchronizer);
+/*! */ giada::m::Clock    g_clock(g_synchronizer, g_conf.samplerate);
 giada::m::Sequencer       g_sequencer(g_clock);
 giada::m::Mixer           g_mixer(g_model);
 giada::m::MixerHandler    g_mixerHandler(g_model, g_mixer, g_channelManager);
@@ -113,7 +113,7 @@ int audioCallback_(void* outBuf, void* inBuf, int bufferSize)
 	info.canLineInRec    = g_recorder.isRecordingInput() && g_kernelAudio.isInputEnabled();
 	info.limitOutput     = g_conf.limitOutput;
 	info.inToOut         = g_mixerHandler.getInToOut();
-	info.maxFramesToRec  = g_conf.inputRecMode == InputRecMode::FREE ? g_clock.getMaxFramesInLoop() : g_clock.getFramesInLoop();
+	info.maxFramesToRec  = g_conf.inputRecMode == InputRecMode::FREE ? g_clock.getMaxFramesInLoop(g_conf.samplerate) : g_clock.getFramesInLoop();
 	info.outVol          = g_mixerHandler.getOutVol();
 	info.inVol           = g_mixerHandler.getInVol();
 	info.recTriggerLevel = g_conf.recTriggerLevel;
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
 
 #ifdef WITH_AUDIO_JACK
 	g_synchronizer.onJackRewind    = []() { g_sequencer.rawRewind(); };
-	g_synchronizer.onJackChangeBpm = [](float bpm) { g_clock.setBpmRaw(bpm); };
+	g_synchronizer.onJackChangeBpm = [](float bpm) { g_clock.setBpmRaw(bpm, g_conf.samplerate); };
 	g_synchronizer.onJackStart     = []() { g_sequencer.rawStart(); };
 	g_synchronizer.onJackStop      = []() { g_sequencer.rawStop(); };
 #endif

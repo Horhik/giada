@@ -58,13 +58,14 @@ public:
 	class Info final : public juce::AudioPlayHead
 	{
 	public:
-		Info(const Clock&);
+		Info(const Clock&, int sampleRate);
 
 		bool getCurrentPosition(CurrentPositionInfo& result) override;
 		bool canControlTransport() override;
 
 	private:
 		const Clock& m_clock;
+		int          m_sampleRate;
 	};
 
 	PluginHost(PluginManager&, model::Model&);

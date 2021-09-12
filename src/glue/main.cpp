@@ -154,7 +154,7 @@ void setBpm(const char* i, const char* f)
 	if (g_recorder.isRecordingInput())
 		return;
 
-	g_clock.setBpm(std::atof(i) + (std::atof(f) / 10.0f), g_kernelAudio);
+	g_clock.setBpm(std::atof(i) + (std::atof(f) / 10.0f), g_kernelAudio, g_conf.samplerate);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -166,7 +166,7 @@ void setBpm(float f)
 	if (g_recorder.isRecordingInput())
 		return;
 
-	g_clock.setBpm(f, g_kernelAudio);
+	g_clock.setBpm(f, g_kernelAudio, g_conf.samplerate);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -178,15 +178,15 @@ void setBeats(int beats, int bars)
 	if (g_recorder.isRecordingInput())
 		return;
 
-	g_clock.setBeats(beats, bars);
-	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop());
+	g_clock.setBeats(beats, bars, g_conf.samplerate);
+	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop(g_conf.samplerate));
 }
 
 /* -------------------------------------------------------------------------- */
 
 void quantize(int val)
 {
-	g_clock.setQuantize(val);
+	g_clock.setQuantize(val, g_conf.samplerate);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -173,8 +173,8 @@ void loadProject(void* data)
 
 	g_mixerHandler.updateSoloCount();
 	g_actionRecorder.updateSamplerate(g_conf.samplerate, g_patch.samplerate);
-	g_clock.recomputeFrames();
-	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop());
+	g_clock.recomputeFrames(g_conf.samplerate);
+	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop(g_conf.samplerate));
 
 	/* Mixer is ready to go back online. */
 

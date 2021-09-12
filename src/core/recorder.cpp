@@ -193,7 +193,7 @@ void Recorder::stopInputRec(InputRecMode recMode)
 	if (recMode == InputRecMode::FREE)
 	{
 		g_clock.rewind();
-		g_clock.setBpm(g_clock.calcBpmFromRec(recordedFrames), g_kernelAudio);
+		g_clock.setBpm(g_clock.calcBpmFromRec(recordedFrames, g_conf.samplerate), g_kernelAudio, g_conf.samplerate);
 		g_mixer.setEndOfRecCallback(nullptr);
 		refreshInputRecMode(); // Back to RIGID mode if necessary
 	}

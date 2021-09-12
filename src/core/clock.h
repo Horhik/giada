@@ -41,14 +41,14 @@ class Synchronizer;
 class Clock final
 {
 public:
-	Clock(Synchronizer&);
+	Clock(Synchronizer&, int sampleRate);
 
 	float     getBpm() const;
 	int       getBeats() const;
 	int       getBars() const;
 	int       getCurrentBeat() const;
 	int       getCurrentFrame() const;
-	float     getCurrentSecond() const;
+	float     getCurrentSecond(int sampleRate) const;
 	int       getFramesInBar() const;
 	int       getFramesInBeat() const;
 	int       getFramesInLoop() const;
@@ -77,7 +77,7 @@ public:
     speed possible (G_MIN_BPM). Call this whenever you change the number or 
     beats. */
 
-	Frame getMaxFramesInLoop() const;
+	Frame getMaxFramesInLoop(int sampleRate) const;
 
 	/* quantoHasPassed
     Tells whether a quantizer unit has passed yet. */
@@ -93,12 +93,12 @@ public:
     Given the amount of recorded frames, returns the speed of the current 
     performance. Used while input recording in FREE mode. */
 
-	float calcBpmFromRec(Frame recordedFrames) const;
+	float calcBpmFromRec(Frame recordedFrames, int sampleRate) const;
 
 	/* reset
 	Brings everything back to the initial state. */
 
-	void reset();
+	void reset(int sampleRate);
 
 	/* advance
     Increases current frame by a specific amount. */
@@ -110,21 +110,21 @@ public:
 
 	Frame quantize(Frame f);
 
-	void setBpm(float b, const KernelAudio&);
-	void setBeats(int beats, int bars);
-	void setQuantize(int q);
+	void setBpm(float b, const KernelAudio&, int sampleRate);
+	void setBeats(int beats, int bars, int sampleRate);
+	void setQuantize(int q, int sampleRate);
 
 	/* setBpmRaw
 	Raw function to set the bpm, bypassing any JACK instruction. This functions 
 	must be called only by the Synchronizer when the JACK signal is received. 
 	Other modules should use the non-raw versions below. */
 
-	void setBpmRaw(float v);
+	void setBpmRaw(float v, int sampleRate);
 
 	/* recomputeFrames
     Updates bpm, frames, beats and so on. */
 
-	void recomputeFrames();
+	void recomputeFrames(int sampleRate);
 
 	void rewind();
 	void setStatus(SeqStatus s);
@@ -133,7 +133,7 @@ private:
 	/* recomputeFrames
     Updates bpm, frames, beats and so on. Private version. */
 
-	void recomputeFrames(model::Sequencer& c);
+	void recomputeFrames(model::Sequencer& c, int sampleRate);
 
 	Synchronizer& m_synchronizer;
 
