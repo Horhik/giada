@@ -41,7 +41,8 @@ namespace giada::m
 {
 class KernelAudio;
 class Clock;
-class Sequencer
+class ActionRecorder;
+class Sequencer final
 {
 public:
 	enum class EventType
@@ -73,14 +74,14 @@ public:
 	/* react
 	Reacts to live events coming from the EventDispatcher (human events). */
 
-	void react(const EventDispatcher::EventBuffer& e);
+	void react(const EventDispatcher::EventBuffer&);
 
 	/* advance
 	Parses sequencer events that might occur in a block and advances the internal 
 	quantizer. Returns a reference to the internal EventBuffer filled with events
 	(if any). Call this on each new audio block. */
 
-	const EventBuffer& advance(Frame bufferSize);
+	const EventBuffer& advance(Frame bufferSize, const ActionRecorder&);
 
 	/* render
 	Renders audio coming out from the sequencer: that is, the metronome! */
@@ -108,6 +109,9 @@ public:
 	Used by the sequencer itself and each sample channel. */
 
 	Quantizer quantizer;
+
+	std::function<void()> onStartFromWait;
+	std::function<void()> onStop;
 
 private:
 	void rewindQ(Frame delta);

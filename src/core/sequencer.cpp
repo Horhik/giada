@@ -27,20 +27,15 @@
 #include "core/sequencer.h"
 #include "core/actions/actionRecorder.h"
 #include "core/clock.h"
-#include "core/conf.h"
 #include "core/const.h"
 #include "core/kernelAudio.h"
 #include "core/metronome.h"
 #include "core/mixer.h"
 #include "core/model/model.h"
 #include "core/quantizer.h"
-#include "core/recorder.h"
 
-extern giada::m::KernelAudio    g_kernelAudio;
-extern giada::m::Clock          g_clock;
-extern giada::m::Recorder       g_recorder;
-extern giada::m::ActionRecorder g_actionRecorder;
-extern giada::m::conf::Data     g_conf;
+extern giada::m::KernelAudio g_kernelAudio;
+extern giada::m::Clock       g_clock;
 
 namespace giada::m
 {
@@ -54,7 +49,9 @@ constexpr int Q_ACTION_REWIND = 0;
 /* -------------------------------------------------------------------------- */
 
 Sequencer::Sequencer(KernelAudio& k, Clock& c)
-: m_kernelAudio(k)
+: onStartFromWait(nullptr)
+, onStop(nullptr)
+, m_kernelAudio(k)
 , m_clock(c)
 {
 	reset();
@@ -94,7 +91,7 @@ void Sequencer::react(const EventDispatcher::EventBuffer& events)
 
 /* -------------------------------------------------------------------------- */
 
-const Sequencer::EventBuffer& Sequencer::advance(Frame bufferSize)
+const Sequencer::EventBuffer& Sequencer::advance(Frame bufferSize, const ActionRecorder& actionRecorder)
 {
 	m_eventBuffer.clear();
 
@@ -124,7 +121,7 @@ const Sequencer::EventBuffer& Sequencer::advance(Frame bufferSize)
 			m_metronome.trigger(Metronome::Click::BEAT, local);
 		}
 
-		const std::vector<Action>* as = g_actionRecorder.getActionsOnFrame(global);
+		const std::vector<Action>* as = actionRecorder.getActionsOnFrame(global);
 		if (as != nullptr)
 			m_eventBuffer.push_back({EventType::ACTIONS, global, local, as});
 	}
@@ -148,6 +145,8 @@ void Sequencer::render(mcl::AudioBuffer& outBuf)
 
 void Sequencer::rawStart()
 {
+	assert(onStartFromWait != nullptr);
+
 	switch (g_clock.getStatus())
 	{
 	case ClockStatus::STOPPED:
@@ -155,7 +154,7 @@ void Sequencer::rawStart()
 		break;
 	case ClockStatus::WAITING:
 		g_clock.setStatus(ClockStatus::RUNNING);
-		g_recorder.stopActionRec();
+		onStartFromWait();
 		break;
 	default:
 		break;
@@ -166,15 +165,9 @@ void Sequencer::rawStart()
 
 void Sequencer::rawStop()
 {
+	assert(onStop != nullptr);
+
 	g_clock.setStatus(ClockStatus::STOPPED);
-
-	/* If recordings (both input and action) are active deactivate them, but 
-	store the takes. RecManager takes care of it. */
-
-	if (g_recorder.isRecordingAction())
-		g_recorder.stopActionRec();
-	else if (g_recorder.isRecordingInput())
-		g_recorder.stopInputRec(g_conf.inputRecMode);
 }
 
 /* -------------------------------------------------------------------------- */

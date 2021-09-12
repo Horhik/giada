@@ -174,7 +174,7 @@ int main(int argc, char** argv)
 	};
 
 	g_mixer.onProcessSequencer = [](Frame frames, mcl::AudioBuffer& out) {
-		const Sequencer::EventBuffer& events = g_sequencer.advance(frames);
+		const Sequencer::EventBuffer& events = g_sequencer.advance(frames, g_actionRecorder);
 		g_sequencer.render(out);
 		return events;
 	};
@@ -191,6 +191,18 @@ int main(int argc, char** argv)
 	};
 	g_mixerHandler.onCloneChannelPlugins = [](const std::vector<m::Plugin*>& plugins) {
 		return g_pluginHost.clonePlugins(plugins, g_patch.samplerate, g_kernelAudio.getRealBufSize());
+	};
+
+	g_sequencer.onStartFromWait = []() {
+		g_recorder.stopActionRec();
+	};
+	g_sequencer.onStop = []() {
+		/* If recordings (both input and action) are active deactivate them, but 
+	store the takes. RecManager takes care of it. */
+		if (g_recorder.isRecordingAction())
+			g_recorder.stopActionRec();
+		else if (g_recorder.isRecordingInput())
+			g_recorder.stopInputRec(g_conf.inputRecMode);
 	};
 
 	// TODO - move the setup to Engine class
