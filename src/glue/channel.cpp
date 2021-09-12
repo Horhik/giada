@@ -290,7 +290,7 @@ void cloneChannel(ID channelId)
 {
 	g_actionRecorder.cloneActions(channelId, g_channelManager.getNextId());
 	g_mixerHandler.cloneChannel(channelId, g_kernelAudio.getRealBufSize(),
-	    g_channelManager);
+	    g_channelManager, g_waveManager);
 }
 
 /* -------------------------------------------------------------------------- */

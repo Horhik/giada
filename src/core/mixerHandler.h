@@ -126,7 +126,7 @@ public:
 
 	void deleteChannel(ID channelId);
 
-	void cloneChannel(ID channelId, int bufferSize, ChannelManager&);
+	void cloneChannel(ID channelId, int bufferSize, ChannelManager&, WaveManager&);
 	void renameChannel(ID channelId, const std::string& name);
 	void freeAllChannels();
 
@@ -154,12 +154,6 @@ public:
 	Mixer. */
 
 	std::function<std::unique_ptr<Wave>(Frame)> onChannelRecorded;
-
-	/* onCloneChannelWave 
-	Fired when cloning a Wave that belongs to a channel. Wants a copy of the 
-	original Wave in return. */
-
-	std::function<std::unique_ptr<Wave>(const Wave&)> onCloneChannelWave;
 
 	/* onCloneChannelPlugins 
 	Fired when cloning a list of plug-ins that belong to a channel. Wants a

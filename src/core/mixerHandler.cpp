@@ -45,7 +45,6 @@ namespace giada::m
 MixerHandler::MixerHandler(model::Model& model, Mixer& mixer)
 : onChannelsAltered(nullptr)
 , onChannelRecorded(nullptr)
-, onCloneChannelWave(nullptr)
 , onCloneChannelPlugins(nullptr)
 , m_model(model)
 , m_mixer(mixer)
@@ -129,9 +128,9 @@ void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave> w, int b
 
 /* -------------------------------------------------------------------------- */
 
-void MixerHandler::cloneChannel(ID channelId, int bufferSize, ChannelManager& channelManager)
+void MixerHandler::cloneChannel(ID channelId, int bufferSize, ChannelManager& channelManager,
+    WaveManager& waveManager)
 {
-	assert(onCloneChannelWave != nullptr);
 	assert(onCloneChannelPlugins != nullptr);
 
 	const channel::Data& oldChannel = m_model.get().getChannel(channelId);
@@ -141,7 +140,8 @@ void MixerHandler::cloneChannel(ID channelId, int bufferSize, ChannelManager& ch
 
 	if (oldChannel.samplePlayer && oldChannel.samplePlayer->hasWave())
 	{
-		m_model.add(onCloneChannelWave(*oldChannel.samplePlayer->getWave()));
+		const Wave& oldWave = *oldChannel.samplePlayer->getWave();
+		m_model.add(waveManager.createFromWave(oldWave, 0, oldWave.getBuffer().countFrames()));
 		samplePlayer::loadWave(newChannel, &m_model.back<Wave>());
 	}
 #ifdef WITH_VST
