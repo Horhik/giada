@@ -31,31 +31,31 @@
 
 namespace giada::m::model
 {
-struct Clock;
+struct Sequencer;
 }
 
 namespace giada::m
 {
 class KernelAudio;
 class Synchronizer;
-class Clock
+class Clock final
 {
 public:
-	Clock(KernelAudio&, Synchronizer&);
+	Clock(Synchronizer&);
 
-	float       getBpm() const;
-	int         getBeats() const;
-	int         getBars() const;
-	int         getCurrentBeat() const;
-	int         getCurrentFrame() const;
-	float       getCurrentSecond() const;
-	int         getFramesInBar() const;
-	int         getFramesInBeat() const;
-	int         getFramesInLoop() const;
-	int         getFramesInSeq() const;
-	int         getQuantizerValue() const;
-	int         getQuantizerStep() const;
-	ClockStatus getStatus() const;
+	float     getBpm() const;
+	int       getBeats() const;
+	int       getBars() const;
+	int       getCurrentBeat() const;
+	int       getCurrentFrame() const;
+	float     getCurrentSecond() const;
+	int       getFramesInBar() const;
+	int       getFramesInBeat() const;
+	int       getFramesInLoop() const;
+	int       getFramesInSeq() const;
+	int       getQuantizerValue() const;
+	int       getQuantizerStep() const;
+	SeqStatus getStatus() const;
 
 	/* isRunning
     When clock is actually moving forward, i.e. ClockStatus == RUNNING. */
@@ -110,7 +110,7 @@ public:
 
 	Frame quantize(Frame f);
 
-	void setBpm(float b);
+	void setBpm(float b, const KernelAudio&);
 	void setBeats(int beats, int bars);
 	void setQuantize(int q);
 
@@ -127,15 +127,14 @@ public:
 	void recomputeFrames();
 
 	void rewind();
-	void setStatus(ClockStatus s);
+	void setStatus(SeqStatus s);
 
 private:
 	/* recomputeFrames
     Updates bpm, frames, beats and so on. Private version. */
 
-	void recomputeFrames(model::Clock& c);
+	void recomputeFrames(model::Sequencer& c);
 
-	KernelAudio&  m_kernelAudio;
 	Synchronizer& m_synchronizer;
 
 	/* m_quantizerStep

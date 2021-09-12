@@ -53,11 +53,11 @@ void Synchronizer::reset()
 
 /* -------------------------------------------------------------------------- */
 
-void Synchronizer::sendMIDIsync(const model::Clock& clock)
+void Synchronizer::sendMIDIsync(const model::Sequencer& clock)
 {
 	/* Sending MIDI sync while waiting is meaningless. */
 
-	if (clock.status == ClockStatus::WAITING)
+	if (clock.status == SeqStatus::WAITING)
 		return;
 
 	int currentFrame = clock.state->currentFrame.load();

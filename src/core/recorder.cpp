@@ -80,7 +80,7 @@ void Recorder::startActionRec(RecTriggerMode mode)
 	}
 	else
 	{ // RecTriggerMode::SIGNAL
-		g_clock.setStatus(ClockStatus::WAITING);
+		g_clock.setStatus(SeqStatus::WAITING);
 		g_clock.rewind();
 		g_midiDispatcher.setSignalCallback([this]() { startActionRec(); });
 		v::dispatcher::setSignalCallback([this]() { startActionRec(); });
@@ -97,9 +97,9 @@ void Recorder::stopActionRec()
 	/* If you stop the Action Recorder in SIGNAL mode before any actual 
 	recording: just clean up everything and return. */
 
-	if (g_clock.getStatus() == ClockStatus::WAITING)
+	if (g_clock.getStatus() == SeqStatus::WAITING)
 	{
-		g_clock.setStatus(ClockStatus::STOPPED);
+		g_clock.setStatus(SeqStatus::STOPPED);
 		g_midiDispatcher.setSignalCallback(nullptr);
 		v::dispatcher::setSignalCallback(nullptr);
 		return;
@@ -149,7 +149,7 @@ bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
 	}
 	else
 	{
-		g_clock.setStatus(ClockStatus::WAITING);
+		g_clock.setStatus(SeqStatus::WAITING);
 		g_mixer.setSignalCallback([this] {
 			startInputRec();
 			setRecordingInput(true);
@@ -179,9 +179,9 @@ void Recorder::stopInputRec(InputRecMode recMode)
 	/* If you stop the Input Recorder in SIGNAL mode before any actual 
 	recording: just clean up everything and return. */
 
-	if (g_clock.getStatus() == ClockStatus::WAITING)
+	if (g_clock.getStatus() == SeqStatus::WAITING)
 	{
-		g_clock.setStatus(ClockStatus::STOPPED);
+		g_clock.setStatus(SeqStatus::STOPPED);
 		g_mixer.setSignalCallback(nullptr);
 		return;
 	}
@@ -193,7 +193,7 @@ void Recorder::stopInputRec(InputRecMode recMode)
 	if (recMode == InputRecMode::FREE)
 	{
 		g_clock.rewind();
-		g_clock.setBpm(g_clock.calcBpmFromRec(recordedFrames));
+		g_clock.setBpm(g_clock.calcBpmFromRec(recordedFrames), g_kernelAudio);
 		g_mixer.setEndOfRecCallback(nullptr);
 		refreshInputRecMode(); // Back to RIGID mode if necessary
 	}
@@ -256,7 +256,7 @@ void Recorder::setRecordingInput(bool v)
 
 bool Recorder::startActionRec()
 {
-	g_clock.setStatus(ClockStatus::RUNNING);
+	g_clock.setStatus(SeqStatus::RUNNING);
 	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
 	return true;
 }

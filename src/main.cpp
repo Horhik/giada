@@ -74,7 +74,7 @@ giada::m::MidiDispatcher  g_midiDispatcher(g_model);
 giada::m::ActionRecorder  g_actionRecorder(g_model);
 /*! */ giada::m::Recorder g_recorder;
 giada::m::Synchronizer    g_synchronizer(g_conf, g_kernelMidi);
-/*! */ giada::m::Clock    g_clock(g_kernelAudio, g_synchronizer);
+/*! */ giada::m::Clock    g_clock(g_synchronizer);
 giada::m::Sequencer       g_sequencer(g_clock);
 giada::m::Mixer           g_mixer(g_model);
 giada::m::MixerHandler    g_mixerHandler(g_model, g_mixer, g_channelManager);
@@ -193,9 +193,9 @@ int main(int argc, char** argv)
 		return g_pluginHost.clonePlugins(plugins, g_patch.samplerate, g_kernelAudio.getRealBufSize());
 	};
 
-	g_sequencer.onAboutStart = [](ClockStatus status) {
+	g_sequencer.onAboutStart = [](SeqStatus status) {
 		/* TODO move this logic to Recorder */
-		if (status == ClockStatus::WAITING)
+		if (status == SeqStatus::WAITING)
 			g_recorder.stopActionRec();
 		g_conf.recTriggerMode = RecTriggerMode::NORMAL;
 	};

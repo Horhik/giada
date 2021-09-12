@@ -106,7 +106,7 @@ public:
 
 	Quantizer quantizer;
 
-	std::function<void(ClockStatus)> onAboutStart;
+	std::function<void(SeqStatus)> onAboutStart;
 	std::function<void()>            onAboutStop;
 
 private:

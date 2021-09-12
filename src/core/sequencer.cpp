@@ -143,16 +143,16 @@ void Sequencer::rawStart()
 {
 	assert(onAboutStart != nullptr);
 
-	const ClockStatus status = m_clock.getStatus();
+	const SeqStatus status = m_clock.getStatus();
 	onAboutStart(status);
 
 	switch (status)
 	{
-	case ClockStatus::STOPPED:
-		m_clock.setStatus(ClockStatus::RUNNING);
+	case SeqStatus::STOPPED:
+		m_clock.setStatus(SeqStatus::RUNNING);
 		break;
-	case ClockStatus::WAITING:
-		m_clock.setStatus(ClockStatus::RUNNING);
+	case SeqStatus::WAITING:
+		m_clock.setStatus(SeqStatus::RUNNING);
 		break;
 	default:
 		break;
@@ -166,7 +166,7 @@ void Sequencer::rawStop()
 	assert(onAboutStop != nullptr);
 
 	onAboutStop();
-	m_clock.setStatus(ClockStatus::STOPPED);
+	m_clock.setStatus(SeqStatus::STOPPED);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -60,7 +60,7 @@ struct MidiIn
 	uint32_t metronome  = 0x0;
 };
 
-struct Clock
+struct Sequencer
 {
 	struct State
 	{
@@ -69,16 +69,16 @@ struct Clock
 		WeakAtomic<int> currentBeat      = 0;
 	};
 
-	State*      state        = nullptr;
-	ClockStatus status       = ClockStatus::STOPPED;
-	int         framesInLoop = 0;
-	int         framesInBar  = 0;
-	int         framesInBeat = 0;
-	int         framesInSeq  = 0;
-	int         bars         = G_DEFAULT_BARS;
-	int         beats        = G_DEFAULT_BEATS;
-	float       bpm          = G_DEFAULT_BPM;
-	int         quantize     = G_DEFAULT_QUANTIZE;
+	State*    state        = nullptr;
+	SeqStatus status       = SeqStatus::STOPPED;
+	int       framesInLoop = 0;
+	int       framesInBar  = 0;
+	int       framesInBeat = 0;
+	int       framesInSeq  = 0;
+	int       bars         = G_DEFAULT_BARS;
+	int       beats        = G_DEFAULT_BEATS;
+	float     bpm          = G_DEFAULT_BPM;
+	int       quantize     = G_DEFAULT_QUANTIZE;
 };
 
 struct Mixer
@@ -102,10 +102,10 @@ struct Layout
 	channel::Data&       getChannel(ID id);
 	const channel::Data& getChannel(ID id) const;
 
-	Clock    clock;
-	Mixer    mixer;
-	Recorder recorder;
-	MidiIn   midiIn;
+	Sequencer sequencer;
+	Mixer     mixer;
+	Recorder  recorder;
+	MidiIn    midiIn;
 
 	std::vector<channel::Data> channels;
 
@@ -226,7 +226,7 @@ public:
 private:
 	struct State
 	{
-		Clock::State                                 clock;
+		Sequencer::State                             sequencer;
 		Mixer::State                                 mixer;
 		std::vector<std::unique_ptr<channel::State>> channels;
 	};

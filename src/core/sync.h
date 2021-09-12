@@ -45,7 +45,7 @@ struct Data;
 
 namespace giada::m::model
 {
-struct Clock;
+struct Sequencer;
 }
 
 namespace giada::m
@@ -64,7 +64,7 @@ public:
 	/* sendMIDIsync
     Generates MIDI sync output data. */
 
-	void sendMIDIsync(const model::Clock& clock);
+	void sendMIDIsync(const model::Sequencer& clock);
 
 	/* sendMIDIrewind
     Rewinds timecode to beat 0 and also send a MTC full frame to cue the slave. */

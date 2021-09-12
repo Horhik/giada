@@ -64,7 +64,7 @@ extern giada::m::conf::Data     g_conf;
 
 namespace giada::c::main
 {
-Timer::Timer(const m::model::Clock& c)
+Timer::Timer(const m::model::Sequencer& c)
 : bpm(c.bpm)
 , beats(c.beats)
 , bars(c.bars)
@@ -114,7 +114,7 @@ bool IO::isKernelReady()
 
 Timer getTimer()
 {
-	return Timer(g_model.get().clock);
+	return Timer(g_model.get().sequencer);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -135,7 +135,7 @@ Sequencer getSequencer()
 	m::Mixer::RecordInfo recInfo = g_mixer.getRecordInfo();
 
 	out.isFreeModeInputRec = g_recorder.isRecordingInput() && g_conf.inputRecMode == InputRecMode::FREE;
-	out.shouldBlink        = u::gui::shouldBlink() && (g_clock.getStatus() == ClockStatus::WAITING || out.isFreeModeInputRec);
+	out.shouldBlink        = u::gui::shouldBlink() && (g_clock.getStatus() == SeqStatus::WAITING || out.isFreeModeInputRec);
 	out.beats              = g_clock.getBeats();
 	out.bars               = g_clock.getBars();
 	out.currentBeat        = g_clock.getCurrentBeat();
@@ -154,7 +154,7 @@ void setBpm(const char* i, const char* f)
 	if (g_recorder.isRecordingInput())
 		return;
 
-	g_clock.setBpm(std::atof(i) + (std::atof(f) / 10.0f));
+	g_clock.setBpm(std::atof(i) + (std::atof(f) / 10.0f), g_kernelAudio);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -166,7 +166,7 @@ void setBpm(float f)
 	if (g_recorder.isRecordingInput())
 		return;
 
-	g_clock.setBpm(f);
+	g_clock.setBpm(f, g_kernelAudio);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -196,7 +196,7 @@ void clearAllSamples()
 	if (!v::gdConfirmWin("Warning", "Free all Sample channels: are you sure?"))
 		return;
 	G_MainWin->delSubWindow(WID_SAMPLE_EDITOR);
-	g_clock.setStatus(ClockStatus::STOPPED);
+	g_clock.setStatus(SeqStatus::STOPPED);
 	g_mixerHandler.freeAllChannels();
 	g_actionRecorder.clearAllActions();
 }

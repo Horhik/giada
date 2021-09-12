@@ -110,7 +110,7 @@ Model::Model()
 
 void Model::reset()
 {
-	get().clock.state = &m_state.clock;
+	get().sequencer.state = &m_state.sequencer;
 	get().mixer.state = &m_state.mixer;
 	swap(SwapType::NONE);
 }

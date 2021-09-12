@@ -74,10 +74,10 @@ void store(patch::Data& patch)
 {
 	const Layout& layout = g_model.get();
 
-	patch.bars       = layout.clock.bars;
-	patch.beats      = layout.clock.beats;
-	patch.bpm        = layout.clock.bpm;
-	patch.quantize   = layout.clock.quantize;
+	patch.bars       = layout.sequencer.bars;
+	patch.beats      = layout.sequencer.beats;
+	patch.bpm        = layout.sequencer.bpm;
+	patch.quantize   = layout.sequencer.quantize;
 	patch.metronome  = g_sequencer.isMetronomeOn(); // TODO - add bool metronome to Layout
 	patch.samplerate = g_conf.samplerate;
 
@@ -148,11 +148,11 @@ void load(const patch::Data& patch)
 	loadChannels_(patch.channels, g_patch.samplerate);
 	loadActions_(patch.actions);
 
-	g_model.get().clock.status   = ClockStatus::STOPPED;
-	g_model.get().clock.bars     = patch.bars;
-	g_model.get().clock.beats    = patch.beats;
-	g_model.get().clock.bpm      = patch.bpm;
-	g_model.get().clock.quantize = patch.quantize;
+	g_model.get().sequencer.status   = SeqStatus::STOPPED;
+	g_model.get().sequencer.bars     = patch.bars;
+	g_model.get().sequencer.beats    = patch.beats;
+	g_model.get().sequencer.bpm      = patch.bpm;
+	g_model.get().sequencer.quantize = patch.quantize;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -132,7 +132,7 @@ Data::Data(const m::channel::Data& c)
 
 Frame Data::getCurrentFrame() const
 {
-	return g_model.get().clock.state->currentFrame.load();
+	return g_model.get().sequencer.state->currentFrame.load();
 }
 
 /* -------------------------------------------------------------------------- */
