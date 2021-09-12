@@ -65,9 +65,6 @@ public:
 	void refreshInputRecMode();
 
 private:
-	bool isKernelReady() const;
-	bool canRec() const;
-
 	void setRecordingAction(bool v);
 	void setRecordingInput(bool v);
 

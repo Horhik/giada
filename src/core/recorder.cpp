@@ -70,7 +70,7 @@ bool Recorder::isRecordingInput() const
 
 void Recorder::startActionRec(RecTriggerMode mode)
 {
-	if (!isKernelReady())
+	if (!g_kernelAudio.isReady())
 		return;
 
 	if (mode == RecTriggerMode::NORMAL)
@@ -134,7 +134,7 @@ void Recorder::toggleActionRec(RecTriggerMode m)
 
 bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
 {
-	if (!canRec() || !g_mixerHandler.hasInputRecordableChannels())
+	if (!g_kernelAudio.isReady() || !g_kernelAudio.isInputEnabled() || !g_mixerHandler.hasInputRecordableChannels())
 		return false;
 
 	if (triggerMode == RecTriggerMode::SIGNAL || inputMode == InputRecMode::FREE)
@@ -228,20 +228,6 @@ void Recorder::refreshInputRecMode()
 {
 	if (!canEnableFreeInputRec())
 		g_conf.inputRecMode = InputRecMode::RIGID;
-}
-
-/* -------------------------------------------------------------------------- */
-
-bool Recorder::isKernelReady() const
-{
-	return g_kernelAudio.isReady();
-}
-
-/* -------------------------------------------------------------------------- */
-
-bool Recorder::canRec() const
-{
-	return isKernelReady() && g_kernelAudio.isInputEnabled();
 }
 
 /* -------------------------------------------------------------------------- */

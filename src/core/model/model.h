@@ -41,8 +41,8 @@ namespace giada::m::model
 {
 struct Recorder
 {
-	bool isRecordingAction = false;
-	bool isRecordingInput  = false;
+	bool isRecordingAction = false; // TODO - should be atomic! Mixer changes this
+	bool isRecordingInput  = false; // TODO - should be atomic! Mixer changes this
 };
 
 struct MidiIn
