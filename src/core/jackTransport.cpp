@@ -48,21 +48,21 @@ JackTransport::JackTransport(jack_client_t& h)
 
 /* -------------------------------------------------------------------------- */
 
-void JackTransport::start()
+void JackTransport::start() const
 {
 	jack_transport_start(&m_jackHandle);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void JackTransport::stop()
+void JackTransport::stop() const
 {
 	jack_transport_stop(&m_jackHandle);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void JackTransport::setPosition(uint32_t frame)
+void JackTransport::setPosition(uint32_t frame) const
 {
 	jack_position_t position;
 	jack_transport_query(&m_jackHandle, &position);
@@ -72,7 +72,7 @@ void JackTransport::setPosition(uint32_t frame)
 
 /* -------------------------------------------------------------------------- */
 
-void JackTransport::setBpm(double bpm)
+void JackTransport::setBpm(double bpm) const
 {
 	jack_position_t position;
 	jack_transport_query(&m_jackHandle, &position);
@@ -86,7 +86,7 @@ void JackTransport::setBpm(double bpm)
 
 /* -------------------------------------------------------------------------- */
 
-JackTransport::State JackTransport::getState()
+JackTransport::State JackTransport::getState() const
 {
 	jack_position_t        position;
 	jack_transport_state_t ts = jack_transport_query(&m_jackHandle, &position);

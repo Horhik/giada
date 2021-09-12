@@ -33,7 +33,7 @@
 
 namespace giada::m
 {
-class JackTransport
+class JackTransport final
 {
 public:
 	struct State
@@ -48,11 +48,11 @@ public:
 	JackTransport(jack_client_t&);
 	JackTransport& operator=(JackTransport&&) { return *this; };
 
-	void  start();
-	void  stop();
-	void  setPosition(uint32_t frame);
-	void  setBpm(double bpm);
-	State getState();
+	void  start() const;
+	void  stop() const;
+	void  setPosition(uint32_t frame) const;
+	void  setBpm(double bpm) const;
+	State getState() const;
 
 private:
 	jack_client_t& m_jackHandle;
