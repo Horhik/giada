@@ -230,7 +230,6 @@ void divideBeats()
 void startSequencer(Thread t)
 {
 	pushEvent_({m::EventDispatcher::EventType::SEQUENCER_START, 0, 0, {}}, t);
-	g_conf.recTriggerMode = RecTriggerMode::NORMAL;
 }
 
 void stopSequencer(Thread t)

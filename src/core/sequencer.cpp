@@ -27,15 +27,9 @@
 #include "core/sequencer.h"
 #include "core/actions/actionRecorder.h"
 #include "core/clock.h"
-#include "core/const.h"
 #include "core/kernelAudio.h"
 #include "core/metronome.h"
-#include "core/mixer.h"
-#include "core/model/model.h"
 #include "core/quantizer.h"
-
-extern giada::m::KernelAudio g_kernelAudio;
-extern giada::m::Clock       g_clock;
 
 namespace giada::m
 {
@@ -48,10 +42,9 @@ constexpr int Q_ACTION_REWIND = 0;
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-Sequencer::Sequencer(KernelAudio& k, Clock& c)
-: onStartFromWait(nullptr)
-, onStop(nullptr)
-, m_kernelAudio(k)
+Sequencer::Sequencer(Clock& c)
+: onAboutStart(nullptr)
+, onAboutStop(nullptr)
 , m_clock(c)
 {
 	reset();
@@ -67,23 +60,26 @@ void Sequencer::reset()
 
 /* -------------------------------------------------------------------------- */
 
-void Sequencer::react(const EventDispatcher::EventBuffer& events)
+void Sequencer::react(const EventDispatcher::EventBuffer& events, const KernelAudio& kernelAudio)
 {
 	for (const EventDispatcher::Event& e : events)
 	{
 		if (e.type == EventDispatcher::EventType::SEQUENCER_START)
 		{
-			start();
+			if (!kernelAudio.jackStart())
+				rawStart();
 			break;
 		}
 		if (e.type == EventDispatcher::EventType::SEQUENCER_STOP)
 		{
-			stop();
+			if (!kernelAudio.jackStop())
+				rawStop();
 			break;
 		}
 		if (e.type == EventDispatcher::EventType::SEQUENCER_REWIND)
 		{
-			rewind();
+			if (!kernelAudio.jackSetPosition(0))
+				rawRewind();
 			break;
 		}
 	}
@@ -95,11 +91,11 @@ const Sequencer::EventBuffer& Sequencer::advance(Frame bufferSize, const ActionR
 {
 	m_eventBuffer.clear();
 
-	const Frame start        = g_clock.getCurrentFrame();
+	const Frame start        = m_clock.getCurrentFrame();
 	const Frame end          = start + bufferSize;
-	const Frame framesInLoop = g_clock.getFramesInLoop();
-	const Frame framesInBar  = g_clock.getFramesInBar();
-	const Frame framesInBeat = g_clock.getFramesInBeat();
+	const Frame framesInLoop = m_clock.getFramesInLoop();
+	const Frame framesInBar  = m_clock.getFramesInBar();
+	const Frame framesInBeat = m_clock.getFramesInBeat();
 
 	for (Frame i = start, local = 0; i < end; i++, local++)
 	{
@@ -127,8 +123,8 @@ const Sequencer::EventBuffer& Sequencer::advance(Frame bufferSize, const ActionR
 	}
 
 	/* Advance clock and quantizer after the event parsing. */
-	g_clock.advance(bufferSize);
-	quantizer.advance(Range<Frame>(start, end), g_clock.getQuantizerStep());
+	m_clock.advance(bufferSize);
+	quantizer.advance(Range<Frame>(start, end), m_clock.getQuantizerStep());
 
 	return m_eventBuffer;
 }
@@ -145,16 +141,18 @@ void Sequencer::render(mcl::AudioBuffer& outBuf)
 
 void Sequencer::rawStart()
 {
-	assert(onStartFromWait != nullptr);
+	assert(onAboutStart != nullptr);
 
-	switch (g_clock.getStatus())
+	const ClockStatus status = m_clock.getStatus();
+	onAboutStart(status);
+
+	switch (status)
 	{
 	case ClockStatus::STOPPED:
-		g_clock.setStatus(ClockStatus::RUNNING);
+		m_clock.setStatus(ClockStatus::RUNNING);
 		break;
 	case ClockStatus::WAITING:
-		g_clock.setStatus(ClockStatus::RUNNING);
-		onStartFromWait();
+		m_clock.setStatus(ClockStatus::RUNNING);
 		break;
 	default:
 		break;
@@ -165,55 +163,20 @@ void Sequencer::rawStart()
 
 void Sequencer::rawStop()
 {
-	assert(onStop != nullptr);
+	assert(onAboutStop != nullptr);
 
-	g_clock.setStatus(ClockStatus::STOPPED);
+	onAboutStop();
+	m_clock.setStatus(ClockStatus::STOPPED);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void Sequencer::rawRewind()
 {
-	if (g_clock.canQuantize())
+	if (m_clock.canQuantize())
 		quantizer.trigger(Q_ACTION_REWIND);
 	else
 		rewindQ(/*delta=*/0);
-}
-
-/* -------------------------------------------------------------------------- */
-
-void Sequencer::start()
-{
-#ifdef WITH_AUDIO_JACK
-	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
-		g_kernelAudio.jackStart();
-	else
-#endif
-		rawStart();
-}
-
-/* -------------------------------------------------------------------------- */
-
-void Sequencer::stop()
-{
-#ifdef WITH_AUDIO_JACK
-	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
-		g_kernelAudio.jackStop();
-	else
-#endif
-		rawStop();
-}
-
-/* -------------------------------------------------------------------------- */
-
-void Sequencer::rewind()
-{
-#ifdef WITH_AUDIO_JACK
-	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
-		g_kernelAudio.jackSetPosition(0);
-	else
-#endif
-		rawRewind();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -226,7 +189,7 @@ void Sequencer::setMetronome(bool v) { m_metronome.running = v; }
 
 void Sequencer::rewindQ(Frame delta)
 {
-	g_clock.rewind();
+	m_clock.rewind();
 	m_eventBuffer.push_back({EventType::REWIND, 0, delta});
 }
 } // namespace giada::m

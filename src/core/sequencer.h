@@ -64,7 +64,7 @@ public:
 
 	using EventBuffer = RingBuffer<Event, G_MAX_SEQUENCER_EVENTS>;
 
-	Sequencer(KernelAudio&, Clock&);
+	Sequencer(Clock&);
 
 	/* reset
 	Brings everything back to the initial state. */
@@ -74,7 +74,7 @@ public:
 	/* react
 	Reacts to live events coming from the EventDispatcher (human events). */
 
-	void react(const EventDispatcher::EventBuffer&);
+	void react(const EventDispatcher::EventBuffer&, const KernelAudio&);
 
 	/* advance
 	Parses sequencer events that might occur in a block and advances the internal 
@@ -90,16 +90,12 @@ public:
 
 	/* raw[*]
 	Raw functions to start, stop and rewind the sequencer. These functions must 
-	be called only by clock:: when the JACK signal is received. Other modules 
-	should use the non-raw versions below. */
+	be called only when the JACK signal is received. Other modules should send
+	a SEQUENCER_* event to the Event Dispatcher. */
 
 	void rawStart();
 	void rawStop();
 	void rawRewind();
-
-	void start();
-	void stop();
-	void rewind();
 
 	bool isMetronomeOn();
 	void toggleMetronome();
@@ -110,14 +106,13 @@ public:
 
 	Quantizer quantizer;
 
-	std::function<void()> onStartFromWait;
-	std::function<void()> onStop;
+	std::function<void(ClockStatus)> onAboutStart;
+	std::function<void()>            onAboutStop;
 
 private:
 	void rewindQ(Frame delta);
 
-	KernelAudio& m_kernelAudio;
-	Clock&       m_clock;
+	Clock& m_clock;
 
 	/* m_eventBuffer
 	Buffer of events found in each block sent to channels for event parsing. 

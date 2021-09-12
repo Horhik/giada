@@ -66,13 +66,16 @@ public:
 	void closeDevice();
 	int  startStream();
 	int  stopStream();
-#ifdef WITH_AUDIO_JACK
-	void                 jackStart();
-	void                 jackStop();
-	void                 jackSetPosition(uint32_t frame);
-	void                 jackSetBpm(double bpm);
-	JackTransport::State jackTransportQuery();
-#endif
+
+	/* jack_*
+	JACK-related functions. Return true or something meaningful if Giada is
+	compiled against JACK and JACK is the current API in use. */
+
+	bool                 jackStart() const;
+	bool                 jackStop() const;
+	bool                 jackSetPosition(uint32_t frame) const;
+	bool                 jackSetBpm(double bpm) const;
+	JackTransport::State jackTransportQuery() const;
 
 	bool                       isReady() const;
 	bool                       isInputEnabled() const;

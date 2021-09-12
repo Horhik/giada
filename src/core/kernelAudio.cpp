@@ -310,48 +310,70 @@ void KernelAudio::logCompiledAPIs() const
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef WITH_AUDIO_JACK
-
-JackTransport::State KernelAudio::jackTransportQuery()
+JackTransport::State KernelAudio::jackTransportQuery() const
 {
+#ifdef WITH_AUDIO_JACK
 	if (m_api == G_SYS_API_JACK)
 		return m_jackTransport->getState();
+#endif
 	return {};
 }
 
 /* -------------------------------------------------------------------------- */
 
-void KernelAudio::jackStart()
+bool KernelAudio::jackStart() const
 {
+#ifdef WITH_AUDIO_JACK
 	if (m_api == G_SYS_API_JACK)
+	{
 		m_jackTransport->start();
+		return true;
+	}
+#endif
+	return false;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void KernelAudio::jackSetPosition(uint32_t frame)
+bool KernelAudio::jackSetPosition(uint32_t frame) const
 {
+#ifdef WITH_AUDIO_JACK
 	if (m_api == G_SYS_API_JACK)
+	{
 		m_jackTransport->setPosition(frame);
+		return true;
+	}
+#endif
+	return false;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void KernelAudio::jackSetBpm(double bpm)
+bool KernelAudio::jackSetBpm(double bpm) const
 {
+#ifdef WITH_AUDIO_JACK
 	if (m_api == G_SYS_API_JACK)
+	{
 		m_jackTransport->setBpm(bpm);
+		return true;
+	}
+#endif
+	return false;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void KernelAudio::jackStop()
+bool KernelAudio::jackStop() const
 {
+#ifdef WITH_AUDIO_JACK
 	if (m_api == G_SYS_API_JACK)
+	{
 		m_jackTransport->stop();
+		return true;
+	}
+#endif
+	return false;
 }
-
-#endif // WITH_AUDIO_JACK
 
 /* -------------------------------------------------------------------------- */
 

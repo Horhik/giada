@@ -60,26 +60,26 @@
 #include <vector>
 #endif
 
-giada::m::model::Model     g_model;
-giada::m::conf::Data       g_conf;
-giada::m::patch::Data      g_patch;
-giada::m::midiMap::Data    g_midiMap;
-giada::m::KernelAudio      g_kernelAudio;
-giada::m::KernelMidi       g_kernelMidi;
-giada::m::ChannelManager   g_channelManager(g_conf, g_model);
-giada::m::PluginManager    g_pluginManager(static_cast<PluginManager::SortMethod>(g_conf.pluginSortMethod));
-giada::m::WaveManager      g_waveManager;
-giada::m::EventDispatcher  g_eventDispatcher;
-giada::m::MidiDispatcher   g_midiDispatcher(g_model);
-giada::m::ActionRecorder   g_actionRecorder(g_model);
-/*! */ giada::m::Recorder  g_recorder;
-giada::m::Synchronizer     g_synchronizer(g_conf, g_kernelMidi);
-/*! */ giada::m::Clock     g_clock(g_kernelAudio, g_synchronizer);
-/*! */ giada::m::Sequencer g_sequencer(g_kernelAudio, g_clock);
-giada::m::Mixer            g_mixer(g_model);
-giada::m::MixerHandler     g_mixerHandler(g_model, g_mixer, g_channelManager);
-giada::m::PluginHost       g_pluginHost(g_pluginManager, g_model);
-giada::v::gdMainWindow*    G_MainWin = nullptr;
+giada::m::model::Model    g_model;
+giada::m::conf::Data      g_conf;
+giada::m::patch::Data     g_patch;
+giada::m::midiMap::Data   g_midiMap;
+giada::m::KernelAudio     g_kernelAudio;
+giada::m::KernelMidi      g_kernelMidi;
+giada::m::ChannelManager  g_channelManager(g_conf, g_model);
+giada::m::PluginManager   g_pluginManager(static_cast<PluginManager::SortMethod>(g_conf.pluginSortMethod));
+giada::m::WaveManager     g_waveManager;
+giada::m::EventDispatcher g_eventDispatcher;
+giada::m::MidiDispatcher  g_midiDispatcher(g_model);
+giada::m::ActionRecorder  g_actionRecorder(g_model);
+/*! */ giada::m::Recorder g_recorder;
+giada::m::Synchronizer    g_synchronizer(g_conf, g_kernelMidi);
+/*! */ giada::m::Clock    g_clock(g_kernelAudio, g_synchronizer);
+giada::m::Sequencer       g_sequencer(g_clock);
+giada::m::Mixer           g_mixer(g_model);
+giada::m::MixerHandler    g_mixerHandler(g_model, g_mixer, g_channelManager);
+giada::m::PluginHost      g_pluginHost(g_pluginManager, g_model);
+giada::v::gdMainWindow*   G_MainWin = nullptr;
 
 // TODO - move to Engine class
 // TODO - move to Engine class
@@ -150,7 +150,7 @@ int main(int argc, char** argv)
 			channel::react(ch, eb, g_mixer.isChannelAudible(ch));
 		g_model.swap(model::SwapType::SOFT); // TODO - is this necessary???
 	};
-	g_eventDispatcher.onProcessSequencer      = [](const EventDispatcher::EventBuffer& eb) { g_sequencer.react(eb); };
+	g_eventDispatcher.onProcessSequencer      = [](const EventDispatcher::EventBuffer& eb) { g_sequencer.react(eb, g_kernelAudio); };
 	g_eventDispatcher.onMixerSignalCallback   = []() { g_mixer.execSignalCb(); };
 	g_eventDispatcher.onMixerEndOfRecCallback = []() { g_mixer.execEndOfRecCb(); };
 
@@ -193,12 +193,17 @@ int main(int argc, char** argv)
 		return g_pluginHost.clonePlugins(plugins, g_patch.samplerate, g_kernelAudio.getRealBufSize());
 	};
 
-	g_sequencer.onStartFromWait = []() {
-		g_recorder.stopActionRec();
+	g_sequencer.onAboutStart = [](ClockStatus status) {
+		/* TODO move this logic to Recorder */
+		if (status == ClockStatus::WAITING)
+			g_recorder.stopActionRec();
+		g_conf.recTriggerMode = RecTriggerMode::NORMAL;
 	};
-	g_sequencer.onStop = []() {
+
+	g_sequencer.onAboutStop = []() {
 		/* If recordings (both input and action) are active deactivate them, but 
 	store the takes. RecManager takes care of it. */
+		/* TODO move this logic to Recorder */
 		if (g_recorder.isRecordingAction())
 			g_recorder.stopActionRec();
 		else if (g_recorder.isRecordingInput())

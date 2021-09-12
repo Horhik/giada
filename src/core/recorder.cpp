@@ -38,15 +38,16 @@
 #include "src/core/actions/actionRecorder.h"
 #include "src/core/actions/actions.h"
 
-extern giada::m::model::Model   g_model;
-extern giada::m::KernelAudio    g_kernelAudio;
-extern giada::m::Clock          g_clock;
-extern giada::m::Sequencer      g_sequencer;
-extern giada::m::Mixer          g_mixer;
-extern giada::m::MixerHandler   g_mixerHandler;
-extern giada::m::MidiDispatcher g_midiDispatcher;
-extern giada::m::ActionRecorder g_actionRecorder;
-extern giada::m::conf::Data     g_conf;
+extern giada::m::model::Model    g_model;
+extern giada::m::KernelAudio     g_kernelAudio;
+extern giada::m::Clock           g_clock;
+extern giada::m::Sequencer       g_sequencer;
+extern giada::m::Mixer           g_mixer;
+extern giada::m::MixerHandler    g_mixerHandler;
+extern giada::m::MidiDispatcher  g_midiDispatcher;
+extern giada::m::EventDispatcher g_eventDispatcher;
+extern giada::m::ActionRecorder  g_actionRecorder;
+extern giada::m::conf::Data      g_conf;
 
 namespace giada::m
 {
@@ -256,8 +257,7 @@ void Recorder::setRecordingInput(bool v)
 bool Recorder::startActionRec()
 {
 	g_clock.setStatus(ClockStatus::RUNNING);
-	g_sequencer.start();
-	g_conf.recTriggerMode = RecTriggerMode::NORMAL;
+	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
 	return true;
 }
 
@@ -267,7 +267,6 @@ void Recorder::startInputRec()
 {
 	/* Start recording from the current frame, not the beginning. */
 	g_mixer.startInputRec(g_clock.getCurrentFrame());
-	g_sequencer.start();
-	g_conf.recTriggerMode = RecTriggerMode::NORMAL;
+	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
 }
 } // namespace giada::m
