@@ -68,12 +68,11 @@ bool PluginHost::Info::canControlTransport()
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-PluginHost::PluginHost(PluginManager& p, model::Model& m, int bufferSize)
+PluginHost::PluginHost(PluginManager& p, model::Model& m)
 : m_pluginManager(p)
 , m_model(m)
 {
 	m_messageManager = juce::MessageManager::getInstance();
-	reset(bufferSize);
 }
 
 /* -------------------------------------------------------------------------- */

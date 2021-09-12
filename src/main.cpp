@@ -78,7 +78,7 @@ giada::m::Synchronizer     g_synchronizer(g_conf, g_kernelMidi);
 /*! */ giada::m::Sequencer g_sequencer(g_kernelAudio, g_clock);
 giada::m::Mixer            g_mixer(g_model);
 giada::m::MixerHandler     g_mixerHandler(g_model, g_mixer, g_channelManager);
-giada::m::PluginHost       g_pluginHost(g_pluginManager, g_model, g_kernelAudio.getRealBufSize());
+giada::m::PluginHost       g_pluginHost(g_pluginManager, g_model);
 giada::v::gdMainWindow*    G_MainWin = nullptr;
 
 // TODO - move to Engine class

@@ -67,8 +67,11 @@ public:
 		const Clock& m_clock;
 	};
 
-	PluginHost(PluginManager&, model::Model&, int bufferSize);
+	PluginHost(PluginManager&, model::Model&);
 	~PluginHost();
+
+	/* reset
+	Brings everything back to the initial state. */
 
 	void reset(int bufferSize);
 
