@@ -210,6 +210,10 @@ int main(int argc, char** argv)
 			g_recorder.stopInputRec(g_conf.inputRecMode);
 	};
 
+	g_clock.onBpmChange = [](float oldVal, float newVal, int quantizerStep) {
+		g_actionRecorder.updateBpm(oldVal / newVal, quantizerStep);
+	};
+
 	// TODO - move the setup to Engine class
 	// TODO - move the setup to Engine class
 	// TODO - move the setup to Engine class

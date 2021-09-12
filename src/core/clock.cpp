@@ -38,13 +38,13 @@
 #include <atomic>
 #include <cassert>
 
-extern giada::m::model::Model   g_model;
-extern giada::m::ActionRecorder g_actionRecorder;
+extern giada::m::model::Model g_model;
 
 namespace giada::m
 {
 Clock::Clock(Synchronizer& s, int sampleRate)
-: m_synchronizer(s)
+: onBpmChange(nullptr)
+, m_synchronizer(s)
 , m_quantizerStep(1)
 {
 	reset(sampleRate);
@@ -145,14 +145,6 @@ float Clock::calcBpmFromRec(Frame recordedFrames, int sampleRate) const
 
 /* -------------------------------------------------------------------------- */
 
-void Clock::recomputeFrames(int sampleRate)
-{
-	recomputeFrames(g_model.get().sequencer, sampleRate);
-	g_model.swap(model::SwapType::NONE);
-}
-
-/* -------------------------------------------------------------------------- */
-
 void Clock::setBpm(float b, const KernelAudio& kernelAudio, int sampleRate)
 {
 	b = std::clamp(b, G_MIN_BPM, G_MAX_BPM);
@@ -171,7 +163,7 @@ void Clock::setBeats(int newBeats, int newBars, int sampleRate)
 
 	g_model.get().sequencer.beats = newBeats;
 	g_model.get().sequencer.bars  = newBars;
-	recomputeFrames(g_model.get().sequencer, sampleRate);
+	recomputeFrames(sampleRate);
 
 	g_model.swap(model::SwapType::HARD);
 }
@@ -181,7 +173,7 @@ void Clock::setBeats(int newBeats, int newBars, int sampleRate)
 void Clock::setQuantize(int q, int sampleRate)
 {
 	g_model.get().sequencer.quantize = q;
-	recomputeFrames(g_model.get().sequencer, sampleRate);
+	recomputeFrames(sampleRate);
 
 	g_model.swap(model::SwapType::HARD);
 }
@@ -207,7 +199,7 @@ void Clock::reset(int sampleRate)
 	g_model.get().sequencer.beats    = G_DEFAULT_BEATS;
 	g_model.get().sequencer.bpm      = G_DEFAULT_BPM;
 	g_model.get().sequencer.quantize = G_DEFAULT_QUANTIZE;
-	recomputeFrames(g_model.get().sequencer, sampleRate);
+	recomputeFrames(sampleRate);
 
 	g_model.swap(model::SwapType::NONE);
 }
@@ -256,30 +248,36 @@ Frame Clock::quantize(Frame f)
 
 /* -------------------------------------------------------------------------- */
 
-void Clock::recomputeFrames(model::Sequencer& c, int sampleRate)
+void Clock::recomputeFrames(int sampleRate)
 {
-	c.framesInLoop = static_cast<int>((sampleRate * (60.0f / c.bpm)) * c.beats);
-	c.framesInBar  = static_cast<int>(c.framesInLoop / (float)c.bars);
-	c.framesInBeat = static_cast<int>(c.framesInLoop / (float)c.beats);
-	c.framesInSeq  = c.framesInBeat * G_MAX_BEATS;
+	model::Sequencer& s = g_model.get().sequencer;
 
-	if (c.quantize != 0)
-		m_quantizerStep = c.framesInBeat / c.quantize;
+	s.framesInLoop = static_cast<int>((sampleRate * (60.0f / s.bpm)) * s.beats);
+	s.framesInBar  = static_cast<int>(s.framesInLoop / (float)s.bars);
+	s.framesInBeat = static_cast<int>(s.framesInLoop / (float)s.beats);
+	s.framesInSeq  = s.framesInBeat * G_MAX_BEATS;
+
+	if (s.quantize != 0)
+		m_quantizerStep = s.framesInBeat / s.quantize;
+
+	g_model.swap(model::SwapType::NONE);
 }
 
 /* -------------------------------------------------------------------------- */
 
 void Clock::setBpmRaw(float v, int sampleRate)
 {
-	float ratio = g_model.get().sequencer.bpm / v;
+	assert(onBpmChange != nullptr);
 
-	g_model.get().sequencer.bpm = v;
-	recomputeFrames(g_model.get().sequencer, sampleRate);
+	const float oldVal = g_model.get().sequencer.bpm;
+	const float newVal = v;
 
-	g_actionRecorder.updateBpm(ratio, m_quantizerStep);
-
+	g_model.get().sequencer.bpm = newVal;
+	recomputeFrames(sampleRate);
 	g_model.swap(model::SwapType::HARD);
 
-	u::log::print("[clock::setBpmRaw] Bpm changed to %f\n", v);
+	onBpmChange(oldVal, newVal, m_quantizerStep);
+
+	u::log::print("[clock::setBpmRaw] Bpm changed to %f\n", newVal);
 }
 } // namespace giada::m

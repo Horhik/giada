@@ -28,6 +28,7 @@
 #define G_CLOCK_H
 
 #include "types.h"
+#include <functional>
 
 namespace giada::m::model
 {
@@ -129,12 +130,9 @@ public:
 	void rewind();
 	void setStatus(SeqStatus s);
 
+	std::function<void(float, float, int)> onBpmChange;
+
 private:
-	/* recomputeFrames
-    Updates bpm, frames, beats and so on. Private version. */
-
-	void recomputeFrames(model::Sequencer& c, int sampleRate);
-
 	Synchronizer& m_synchronizer;
 
 	/* m_quantizerStep
