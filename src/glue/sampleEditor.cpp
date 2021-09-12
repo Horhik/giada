@@ -52,11 +52,12 @@
 #include <FL/Fl.H>
 #include <cassert>
 
-extern giada::v::gdMainWindow* G_MainWin;
-extern giada::m::model::Model  g_model;
-extern giada::m::MixerHandler  g_mixerHandler;
-extern giada::m::KernelAudio   g_kernelAudio;
-extern giada::m::WaveManager   g_waveManager;
+extern giada::v::gdMainWindow*  G_MainWin;
+extern giada::m::model::Model   g_model;
+extern giada::m::MixerHandler   g_mixerHandler;
+extern giada::m::KernelAudio    g_kernelAudio;
+extern giada::m::ChannelManager g_channelManager;
+extern giada::m::WaveManager    g_waveManager;
 
 namespace giada::c::sampleEditor
 {
@@ -345,7 +346,8 @@ void cleanupPreview()
 void toNewChannel(ID channelId, Frame a, Frame b)
 {
 	ID columnId = G_MainWin->keyboard->getChannel(channelId)->getColumnId();
-	g_mixerHandler.addAndLoadChannel(columnId, g_waveManager.createFromWave(getWave_(channelId), a, b), g_kernelAudio.getRealBufSize());
+	g_mixerHandler.addAndLoadChannel(columnId, g_waveManager.createFromWave(getWave_(channelId), a, b),
+	    g_kernelAudio.getRealBufSize(), g_channelManager);
 }
 
 /* -------------------------------------------------------------------------- */

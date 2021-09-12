@@ -75,7 +75,7 @@ giada::m::ActionRecorder  g_actionRecorder(g_model);
 giada::m::Synchronizer    g_synchronizer(g_conf, g_kernelMidi);
 giada::m::Sequencer       g_sequencer(g_model);
 giada::m::Mixer           g_mixer(g_model);
-giada::m::MixerHandler    g_mixerHandler(g_model, g_mixer, g_channelManager);
+giada::m::MixerHandler    g_mixerHandler(g_model, g_mixer);
 giada::m::PluginHost      g_pluginHost(g_pluginManager, g_model);
 giada::v::gdMainWindow*   G_MainWin = nullptr;
 

@@ -236,7 +236,8 @@ void reset()
 	g_waveManager.reset();
 	g_synchronizer.reset();
 	g_sequencer.reset(g_conf.samplerate);
-	g_mixerHandler.reset(g_sequencer.getMaxFramesInLoop(g_conf.samplerate), g_kernelAudio.getRealBufSize());
+	g_mixerHandler.reset(g_sequencer.getMaxFramesInLoop(g_conf.samplerate),
+	    g_kernelAudio.getRealBufSize(), g_channelManager);
 	g_actionRecorder.reset();
 #ifdef WITH_VST
 	g_pluginHost.reset(g_kernelAudio.getRealBufSize());

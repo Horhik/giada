@@ -202,7 +202,7 @@ int loadChannel(ID channelId, const std::string& fname)
 
 void addChannel(ID columnId, ChannelType type)
 {
-	g_mixerHandler.addChannel(type, columnId, g_kernelAudio.getRealBufSize());
+	g_mixerHandler.addChannel(type, columnId, g_kernelAudio.getRealBufSize(), g_channelManager);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -212,7 +212,8 @@ void addAndLoadChannel(ID columnId, const std::string& fname)
 	m::WaveManager::Result res = g_waveManager.createFromFile(fname, /*id=*/0,
 	    g_conf.samplerate, g_conf.rsmpQuality);
 	if (res.status == G_RES_OK)
-		g_mixerHandler.addAndLoadChannel(columnId, std::move(res.wave), g_kernelAudio.getRealBufSize());
+		g_mixerHandler.addAndLoadChannel(columnId, std::move(res.wave), g_kernelAudio.getRealBufSize(),
+		    	g_channelManager);
 	else
 		printLoadError_(res.status);
 }
@@ -225,7 +226,8 @@ void addAndLoadChannels(ID columnId, const std::vector<std::string>& fnames)
 		m::WaveManager::Result res = g_waveManager.createFromFile(f, /*id=*/0,
 		    g_conf.samplerate, g_conf.rsmpQuality);
 		if (res.status == G_RES_OK)
-			g_mixerHandler.addAndLoadChannel(columnId, std::move(res.wave), g_kernelAudio.getRealBufSize());
+			g_mixerHandler.addAndLoadChannel(columnId, std::move(res.wave), g_kernelAudio.getRealBufSize(),
+			    g_channelManager);
 		else
 			errors = true;
 	}
@@ -287,7 +289,8 @@ void setOverdubProtection(ID channelId, bool value)
 void cloneChannel(ID channelId)
 {
 	g_actionRecorder.cloneActions(channelId, g_channelManager.getNextId());
-	g_mixerHandler.cloneChannel(channelId, g_kernelAudio.getRealBufSize());
+	g_mixerHandler.cloneChannel(channelId, g_kernelAudio.getRealBufSize(),
+	    g_channelManager);
 }
 
 /* -------------------------------------------------------------------------- */

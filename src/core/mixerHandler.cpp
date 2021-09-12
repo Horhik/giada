@@ -42,30 +42,29 @@
 
 namespace giada::m
 {
-MixerHandler::MixerHandler(model::Model& m, Mixer& mx, ChannelManager& c)
+MixerHandler::MixerHandler(model::Model& model, Mixer& mixer)
 : onChannelsAltered(nullptr)
 , onChannelRecorded(nullptr)
 , onCloneChannelWave(nullptr)
 , onCloneChannelPlugins(nullptr)
-, m_model(m)
-, m_mixer(mx)
-, m_channelManager(c)
+, m_model(model)
+, m_mixer(mixer)
 {
 }
 
 /* -------------------------------------------------------------------------- */
 
-void MixerHandler::reset(Frame framesInLoop, Frame framesInBuffer)
+void MixerHandler::reset(Frame framesInLoop, Frame framesInBuffer, ChannelManager& channelManager)
 {
 	m_mixer.reset(framesInLoop, framesInBuffer);
 
 	m_model.get().channels.clear();
 
-	m_model.get().channels.push_back(m_channelManager.create(
+	m_model.get().channels.push_back(channelManager.create(
 	    Mixer::MASTER_OUT_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0, framesInBuffer));
-	m_model.get().channels.push_back(m_channelManager.create(
+	m_model.get().channels.push_back(channelManager.create(
 	    Mixer::MASTER_IN_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0, framesInBuffer));
-	m_model.get().channels.push_back(m_channelManager.create(
+	m_model.get().channels.push_back(channelManager.create(
 	    Mixer::PREVIEW_CHANNEL_ID, ChannelType::PREVIEW, /*columnId=*/0, framesInBuffer));
 
 	m_model.swap(model::SwapType::NONE);
@@ -78,9 +77,13 @@ void MixerHandler::stopRendering() { m_mixer.disable(); }
 
 /* -------------------------------------------------------------------------- */
 
-void MixerHandler::addChannel(ChannelType type, ID columnId, int bufferSize)
+channel::Data& MixerHandler::addChannel(ChannelType type, ID columnId, int bufferSize,
+    ChannelManager& channelManager)
 {
-	addChannelInternal(type, columnId, bufferSize);
+	m_model.get().channels.push_back(channelManager.create(/*id=*/0, type, columnId, bufferSize));
+	m_model.swap(model::SwapType::HARD);
+
+	return m_model.get().channels.back();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -108,14 +111,15 @@ void MixerHandler::loadChannel(ID channelId, std::unique_ptr<Wave> w)
 
 /* -------------------------------------------------------------------------- */
 
-void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave> w, int bufferSize)
+void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave> w, int bufferSize,
+    ChannelManager& channelManager)
 {
 	assert(onChannelsAltered != nullptr);
 
 	m_model.add(std::move(w));
 
 	Wave&          wave    = m_model.back<Wave>();
-	channel::Data& channel = addChannelInternal(ChannelType::SAMPLE, columnId, bufferSize);
+	channel::Data& channel = addChannel(ChannelType::SAMPLE, columnId, bufferSize, channelManager);
 
 	samplePlayer::loadWave(channel, &wave);
 	m_model.swap(model::SwapType::HARD);
@@ -125,13 +129,13 @@ void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave> w, int b
 
 /* -------------------------------------------------------------------------- */
 
-void MixerHandler::cloneChannel(ID channelId, int bufferSize)
+void MixerHandler::cloneChannel(ID channelId, int bufferSize, ChannelManager& channelManager)
 {
 	assert(onCloneChannelWave != nullptr);
 	assert(onCloneChannelPlugins != nullptr);
 
 	const channel::Data& oldChannel = m_model.get().getChannel(channelId);
-	channel::Data        newChannel = m_channelManager.create(oldChannel, bufferSize);
+	channel::Data        newChannel = channelManager.create(oldChannel, bufferSize);
 
 	/* Clone waves and plugins first in their own lists. */
 
@@ -301,16 +305,6 @@ bool MixerHandler::hasAudioData() const
 	return forAnyChannel([](const channel::Data& ch) {
 		return ch.samplePlayer && ch.samplePlayer->hasWave();
 	});
-}
-
-/* -------------------------------------------------------------------------- */
-
-channel::Data& MixerHandler::addChannelInternal(ChannelType type, ID columnId, int bufferSize)
-{
-	m_model.get().channels.push_back(m_channelManager.create(/*id=*/0, type, columnId, bufferSize));
-	m_model.swap(model::SwapType::HARD);
-
-	return m_model.get().channels.back();
 }
 
 /* -------------------------------------------------------------------------- */

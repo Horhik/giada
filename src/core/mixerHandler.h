@@ -52,7 +52,7 @@ class ChannelManager;
 class MixerHandler final
 {
 public:
-	MixerHandler(model::Model&, Mixer&, ChannelManager&);
+	MixerHandler(model::Model&, Mixer&);
 
 	/* hasLogicalSamples
     True if 1 or more samples are logical (memory only, such as takes). */
@@ -87,7 +87,7 @@ public:
 	/* reset
 	Brings everything back to the initial state. */
 
-	void reset(Frame framesInLoop, Frame framesInBuffer);
+	void reset(Frame framesInLoop, Frame framesInBuffer, ChannelManager&);
 
 	/* startRendering
     Fires up mixer. */
@@ -103,7 +103,7 @@ public:
     Adds a new channel of type 'type' into the channels stack. Returns the new
     channel ID. */
 
-	void addChannel(ChannelType type, ID columnId, int bufferSize);
+	channel::Data& addChannel(ChannelType type, ID columnId, int bufferSize, ChannelManager&);
 
 	/* loadChannel
     Loads a new Wave inside a Sample Channel. */
@@ -113,7 +113,8 @@ public:
 	/* addAndLoadChannel
     Creates a new channels, fills it with a Wave and then add it to the stack. */
 
-	void addAndLoadChannel(ID columnId, std::unique_ptr<Wave> w, int bufferSize);
+	void addAndLoadChannel(ID columnId, std::unique_ptr<Wave> w, int bufferSize,
+	    ChannelManager&);
 
 	/* freeChannel
     Unloads existing Wave from a Sample Channel. */
@@ -125,7 +126,7 @@ public:
 
 	void deleteChannel(ID channelId);
 
-	void cloneChannel(ID channelId, int bufferSize);
+	void cloneChannel(ID channelId, int bufferSize, ChannelManager&);
 	void renameChannel(ID channelId, const std::string& name);
 	void freeAllChannels();
 
@@ -167,11 +168,9 @@ public:
 	std::function<std::vector<Plugin*>(const std::vector<Plugin*>&)> onCloneChannelPlugins;
 
 private:
-	bool                        forAnyChannel(std::function<bool(const channel::Data&)> f) const;
+	bool forAnyChannel(std::function<bool(const channel::Data&)> f) const;
+
 	std::vector<channel::Data*> getChannelsIf(std::function<bool(const channel::Data&)> f);
-
-	channel::Data& addChannelInternal(ChannelType type, ID columnId, int bufferSize);
-
 	std::vector<channel::Data*> getRecordableChannels();
 	std::vector<channel::Data*> getOverdubbableChannels();
 
@@ -188,9 +187,8 @@ private:
 
 	void overdubChannel(channel::Data& ch, Frame currentFrame);
 
-	model::Model&   m_model;
-	Mixer&          m_mixer;
-	ChannelManager& m_channelManager;
+	model::Model& m_model;
+	Mixer&        m_mixer;
 };
 } // namespace giada::m
 
