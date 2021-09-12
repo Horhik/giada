@@ -26,6 +26,7 @@
 
 #include "core/mixerHandler.h"
 #include "core/channels/channelManager.h"
+#include "core/plugins/pluginManager.h"
 #include "core/const.h"
 #include "core/mixer.h"
 #include "core/model/model.h"
@@ -45,7 +46,6 @@ namespace giada::m
 MixerHandler::MixerHandler(model::Model& model, Mixer& mixer)
 : onChannelsAltered(nullptr)
 , onChannelRecorded(nullptr)
-, onCloneChannelPlugins(nullptr)
 , m_model(model)
 , m_mixer(mixer)
 {
@@ -128,11 +128,14 @@ void MixerHandler::addAndLoadChannel(ID columnId, std::unique_ptr<Wave> w, int b
 
 /* -------------------------------------------------------------------------- */
 
+#ifdef WITH_VST
+void MixerHandler::cloneChannel(ID channelId, int sampleRate, int bufferSize,
+    ChannelManager& channelManager, WaveManager& waveManager, PluginManager& pluginManager)
+#else
 void MixerHandler::cloneChannel(ID channelId, int bufferSize, ChannelManager& channelManager,
     WaveManager& waveManager)
+#endif
 {
-	assert(onCloneChannelPlugins != nullptr);
-
 	const channel::Data& oldChannel = m_model.get().getChannel(channelId);
 	channel::Data        newChannel = channelManager.create(oldChannel, bufferSize);
 
@@ -144,8 +147,13 @@ void MixerHandler::cloneChannel(ID channelId, int bufferSize, ChannelManager& ch
 		m_model.add(waveManager.createFromWave(oldWave, 0, oldWave.getBuffer().countFrames()));
 		samplePlayer::loadWave(newChannel, &m_model.back<Wave>());
 	}
+
 #ifdef WITH_VST
-	newChannel.plugins = onCloneChannelPlugins(oldChannel.plugins);
+	for (const Plugin* plugin : oldChannel.plugins)
+	{
+		m_model.add(pluginManager.makePlugin(*plugin, sampleRate, bufferSize));
+		newChannel.plugins.push_back(&m_model.back<Plugin>());
+	}
 #endif
 
 	/* Then push the new channel in the channels vector. */

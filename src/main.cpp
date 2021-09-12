@@ -185,10 +185,6 @@ int main(int argc, char** argv)
 		return g_waveManager.createEmpty(recordedFrames, G_MAX_IO_CHANS, g_conf.samplerate, filename);
 	};
 
-	g_mixerHandler.onCloneChannelPlugins = [](const std::vector<m::Plugin*>& plugins) {
-		return g_pluginHost.clonePlugins(plugins, g_patch.samplerate, g_kernelAudio.getRealBufSize());
-	};
-
 	g_sequencer.onAboutStart = [](SeqStatus status) {
 		/* TODO move this logic to Recorder */
 		if (status == SeqStatus::WAITING)

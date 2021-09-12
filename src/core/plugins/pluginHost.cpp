@@ -148,19 +148,6 @@ void PluginHost::freePlugins(const std::vector<Plugin*>& plugins)
 
 /* -------------------------------------------------------------------------- */
 
-std::vector<Plugin*> PluginHost::clonePlugins(const std::vector<Plugin*>& plugins, int sampleRate, int bufferSize)
-{
-	std::vector<Plugin*> out;
-	for (const Plugin* p : plugins)
-	{
-		m_model.add(m_pluginManager.makePlugin(*p, sampleRate, bufferSize));
-		out.push_back(&m_model.back<Plugin>());
-	}
-	return out;
-}
-
-/* -------------------------------------------------------------------------- */
-
 void PluginHost::setPluginParameter(ID pluginId, int paramIndex, float value)
 {
 	m_model.find<Plugin>(pluginId)->setParameter(paramIndex, value);

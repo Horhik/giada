@@ -49,6 +49,8 @@ class Wave;
 class Mixer;
 class Plugin;
 class ChannelManager;
+class PluginManager;
+class WaveManager;
 class MixerHandler final
 {
 public:
@@ -126,7 +128,12 @@ public:
 
 	void deleteChannel(ID channelId);
 
+#ifdef WITH_VST
+	void cloneChannel(ID channelId, int sampleRate, int bufferSize, ChannelManager&,
+	    WaveManager&, PluginManager&);
+#else
 	void cloneChannel(ID channelId, int bufferSize, ChannelManager&, WaveManager&);
+#endif
 	void renameChannel(ID channelId, const std::string& name);
 	void freeAllChannels();
 
@@ -154,12 +161,6 @@ public:
 	Mixer. */
 
 	std::function<std::unique_ptr<Wave>(Frame)> onChannelRecorded;
-
-	/* onCloneChannelPlugins 
-	Fired when cloning a list of plug-ins that belong to a channel. Wants a
-	vector of cloned plug-ins pointers in return. */
-
-	std::function<std::vector<Plugin*>(const std::vector<Plugin*>&)> onCloneChannelPlugins;
 
 private:
 	bool forAnyChannel(std::function<bool(const channel::Data&)> f) const;

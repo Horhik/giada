@@ -111,7 +111,7 @@ Model::Model()
 void Model::reset()
 {
 	get().sequencer.state = &m_state.sequencer;
-	get().mixer.state = &m_state.mixer;
+	get().mixer.state     = &m_state.mixer;
 	swap(SwapType::NONE);
 }
 

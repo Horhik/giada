@@ -35,6 +35,7 @@
 #include "core/patch.h"
 #include "core/plugins/plugin.h"
 #include "core/plugins/pluginHost.h"
+#include "core/plugins/pluginManager.h"
 #include "core/recorder.h"
 #include "core/wave.h"
 #include "core/waveManager.h"
@@ -68,6 +69,7 @@ extern giada::v::gdMainWindow*  G_MainWin;
 extern giada::m::KernelAudio    g_kernelAudio;
 extern giada::m::model::Model   g_model;
 extern giada::m::PluginHost     g_pluginHost;
+extern giada::m::PluginManager  g_pluginManager;
 extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::Recorder       g_recorder;
@@ -289,8 +291,8 @@ void setOverdubProtection(ID channelId, bool value)
 void cloneChannel(ID channelId)
 {
 	g_actionRecorder.cloneActions(channelId, g_channelManager.getNextId());
-	g_mixerHandler.cloneChannel(channelId, g_kernelAudio.getRealBufSize(),
-	    g_channelManager, g_waveManager);
+	g_mixerHandler.cloneChannel(channelId, g_patch.samplerate, g_kernelAudio.getRealBufSize(),
+	    g_channelManager, g_waveManager, g_pluginManager);
 }
 
 /* -------------------------------------------------------------------------- */

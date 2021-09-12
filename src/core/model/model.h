@@ -201,6 +201,9 @@ public:
 	template <typename T>
 	T* find(ID id);
 
+	/* add
+	Adds something (by moving it). */
+
 	template <typename T>
 	void add(T);
 

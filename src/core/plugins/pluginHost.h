@@ -103,11 +103,6 @@ public:
 
 	void freePlugins(const std::vector<Plugin*>& plugins);
 
-	/* clonePlugins
-	Clones all the plug-ins in the 'plugins' vector. */
-
-	std::vector<Plugin*> clonePlugins(const std::vector<Plugin*>& plugins, int sampleRate, int bufferSize);
-
 	void setPluginParameter(ID pluginId, int paramIndex, float value);
 	void setPluginProgram(ID pluginId, int programIndex);
 	void toggleBypass(ID pluginId);
