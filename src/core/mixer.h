@@ -93,7 +93,7 @@ public:
 		Frame maxLength;
 	};
 
-	Mixer(model::Model&, Frame framesInLoop, Frame framesInBuffer);
+	Mixer(model::Model&);
 
 	/* isActive
 	Mixer might be inactive (not initialized or suspended). */

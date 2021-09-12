@@ -38,18 +38,21 @@ namespace giada::m::channel
 class Data;
 }
 
-namespace giada::m
+namespace giada::m::model
 {
-class Wave;
+class Model;
 }
 
 namespace giada::m
 {
+class Wave;
+class Mixer;
 class Plugin;
+class ChannelManager;
 class MixerHandler final
 {
 public:
-	MixerHandler(Frame framesInLoop, Frame framesInBuffer);
+	MixerHandler(model::Model&, Mixer&, ChannelManager&);
 
 	/* hasLogicalSamples
     True if 1 or more samples are logical (memory only, such as takes). */
@@ -57,7 +60,7 @@ public:
 	bool hasLogicalSamples() const;
 
 	/* hasEditedSamples
-    True if 1 or more samples was edited via gEditor */
+    True if 1 or more samples have been edited via Sample Editor. */
 
 	bool hasEditedSamples() const;
 
@@ -184,6 +187,10 @@ private:
 	Wave, overdub mode. */
 
 	void overdubChannel(channel::Data& ch, Frame currentFrame);
+
+	model::Model&   m_model;
+	Mixer&          m_mixer;
+	ChannelManager& m_channelManager;
 };
 } // namespace giada::m
 

@@ -60,26 +60,66 @@
 #include <vector>
 #endif
 
-giada::m::model::Model        g_model;
-giada::m::conf::Data          g_conf;
-giada::m::patch::Data         g_patch;
-giada::m::midiMap::Data       g_midiMap;
-giada::m::KernelAudio         g_kernelAudio;
-giada::m::KernelMidi          g_kernelMidi;
-giada::m::EventDispatcher     g_eventDispatcher;
-giada::m::MidiDispatcher      g_midiDispatcher(g_model);
-giada::m::ActionRecorder      g_actionRecorder(g_model);
-/*! */ giada::m::Recorder     g_recorder;
-giada::m::Synchronizer        g_synchronizer(g_conf, g_kernelMidi);
-/*! */ giada::m::Clock        g_clock(g_kernelAudio, g_synchronizer);
-/*! */ giada::m::Sequencer    g_sequencer(g_kernelAudio, g_clock);
-giada::m::Mixer               g_mixer(g_model, g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
-/*! */ giada::m::MixerHandler g_mixerHandler(g_clock.getMaxFramesInLoop(), g_kernelAudio.getRealBufSize());
-giada::m::PluginManager       g_pluginManager(static_cast<PluginManager::SortMethod>(g_conf.pluginSortMethod));
-giada::m::PluginHost          g_pluginHost(g_pluginManager, g_model, g_kernelAudio.getRealBufSize());
-giada::m::ChannelManager      g_channelManager(g_conf, g_model);
-giada::m::WaveManager         g_waveManager;
-giada::v::gdMainWindow*       G_MainWin = nullptr;
+giada::m::model::Model     g_model;
+giada::m::conf::Data       g_conf;
+giada::m::patch::Data      g_patch;
+giada::m::midiMap::Data    g_midiMap;
+giada::m::KernelAudio      g_kernelAudio;
+giada::m::KernelMidi       g_kernelMidi;
+giada::m::ChannelManager   g_channelManager(g_conf, g_model);
+giada::m::PluginManager    g_pluginManager(static_cast<PluginManager::SortMethod>(g_conf.pluginSortMethod));
+giada::m::WaveManager      g_waveManager;
+giada::m::EventDispatcher  g_eventDispatcher;
+giada::m::MidiDispatcher   g_midiDispatcher(g_model);
+giada::m::ActionRecorder   g_actionRecorder(g_model);
+/*! */ giada::m::Recorder  g_recorder;
+giada::m::Synchronizer     g_synchronizer(g_conf, g_kernelMidi);
+/*! */ giada::m::Clock     g_clock(g_kernelAudio, g_synchronizer);
+/*! */ giada::m::Sequencer g_sequencer(g_kernelAudio, g_clock);
+giada::m::Mixer            g_mixer(g_model);
+giada::m::MixerHandler     g_mixerHandler(g_model, g_mixer, g_channelManager);
+giada::m::PluginHost       g_pluginHost(g_pluginManager, g_model, g_kernelAudio.getRealBufSize());
+giada::v::gdMainWindow*    G_MainWin = nullptr;
+
+// TODO - move to Engine class
+// TODO - move to Engine class
+// TODO - move to Engine class
+int audioCallback_(void* outBuf, void* inBuf, int bufferSize)
+{
+	mcl::AudioBuffer out(static_cast<float*>(outBuf), bufferSize, G_MAX_IO_CHANS);
+	mcl::AudioBuffer in;
+	if (g_kernelAudio.isInputEnabled())
+		in = mcl::AudioBuffer(static_cast<float*>(inBuf), bufferSize, g_conf.channelsInCount);
+
+	/* Clean up output buffer before any rendering. Do this even if mixer is
+	disabled to avoid audio leftovers during a temporary suspension (e.g. when
+	loading a new patch). */
+
+	out.clear();
+
+	if (!g_kernelAudio.isReady() || !g_mixer.isActive())
+		return 0;
+
+#ifdef WITH_AUDIO_JACK
+	if (g_kernelAudio.getAPI() == G_SYS_API_JACK)
+		g_synchronizer.recvJackSync(g_kernelAudio.jackTransportQuery());
+#endif
+
+	Mixer::RenderInfo info;
+	info.isAudioReady    = g_kernelAudio.isReady();
+	info.hasInput        = g_kernelAudio.isInputEnabled();
+	info.isClockActive   = g_clock.isActive();
+	info.isClockRunning  = g_clock.isRunning();
+	info.canLineInRec    = g_recorder.isRecordingInput() && g_kernelAudio.isInputEnabled();
+	info.limitOutput     = g_conf.limitOutput;
+	info.inToOut         = g_mixerHandler.getInToOut();
+	info.maxFramesToRec  = g_conf.inputRecMode == InputRecMode::FREE ? g_clock.getMaxFramesInLoop() : g_clock.getFramesInLoop();
+	info.outVol          = g_mixerHandler.getOutVol();
+	info.inVol           = g_mixerHandler.getInVol();
+	info.recTriggerLevel = g_conf.recTriggerLevel;
+
+	return g_mixer.render(out, in, info);
+}
 
 int main(int argc, char** argv)
 {
@@ -92,6 +132,8 @@ int main(int argc, char** argv)
 	// TODO - move the setup to Engine class
 	// TODO - move the setup to Engine class
 	// TODO - move the setup to Engine class
+	g_kernelAudio.onAudioCallback = audioCallback_;
+
 	g_kernelMidi.onMidiReceived = [](uint32_t msg) { g_midiDispatcher.dispatch(msg); };
 
 #ifdef WITH_AUDIO_JACK

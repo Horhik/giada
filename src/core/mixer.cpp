@@ -45,7 +45,7 @@ constexpr int CH_RIGHT = 1;
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-Mixer::Mixer(model::Model& m, Frame maxFramesInLoop, Frame framesInBuffer)
+Mixer::Mixer(model::Model& m)
 : onSignalTresholdReached(nullptr)
 , onEndOfRecording(nullptr)
 , onProcessSequencer(nullptr)
@@ -55,7 +55,6 @@ Mixer::Mixer(model::Model& m, Frame maxFramesInLoop, Frame framesInBuffer)
 , m_endOfRecCb(nullptr)
 , m_signalCbFired(false)
 {
-	reset(maxFramesInLoop, framesInBuffer);
 }
 
 /* -------------------------------------------------------------------------- */
