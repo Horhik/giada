@@ -26,7 +26,6 @@
 
 #include "io.h"
 #include "channel.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/kernelAudio.h"
 #include "core/midiDispatcher.h"

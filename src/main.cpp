@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "core/channels/channelManager.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/eventDispatcher.h"
 #include "core/init.h"
@@ -74,8 +73,7 @@ giada::m::MidiDispatcher  g_midiDispatcher(g_model);
 giada::m::ActionRecorder  g_actionRecorder(g_model);
 /*! */ giada::m::Recorder g_recorder;
 giada::m::Synchronizer    g_synchronizer(g_conf, g_kernelMidi);
-/*! */ giada::m::Clock    g_clock(g_synchronizer, g_conf.samplerate);
-giada::m::Sequencer       g_sequencer(g_clock);
+giada::m::Sequencer       g_sequencer(g_model);
 giada::m::Mixer           g_mixer(g_model);
 giada::m::MixerHandler    g_mixerHandler(g_model, g_mixer, g_channelManager);
 giada::m::PluginHost      g_pluginHost(g_pluginManager, g_model);
@@ -108,12 +106,12 @@ int audioCallback_(void* outBuf, void* inBuf, int bufferSize)
 	Mixer::RenderInfo info;
 	info.isAudioReady    = g_kernelAudio.isReady();
 	info.hasInput        = g_kernelAudio.isInputEnabled();
-	info.isClockActive   = g_clock.isActive();
-	info.isClockRunning  = g_clock.isRunning();
+	info.isClockActive   = g_sequencer.isActive();
+	info.isClockRunning  = g_sequencer.isRunning();
 	info.canLineInRec    = g_recorder.isRecordingInput() && g_kernelAudio.isInputEnabled();
 	info.limitOutput     = g_conf.limitOutput;
 	info.inToOut         = g_mixerHandler.getInToOut();
-	info.maxFramesToRec  = g_conf.inputRecMode == InputRecMode::FREE ? g_clock.getMaxFramesInLoop(g_conf.samplerate) : g_clock.getFramesInLoop();
+	info.maxFramesToRec  = g_conf.inputRecMode == InputRecMode::FREE ? g_sequencer.getMaxFramesInLoop(g_conf.samplerate) : g_sequencer.getFramesInLoop();
 	info.outVol          = g_mixerHandler.getOutVol();
 	info.inVol           = g_mixerHandler.getInVol();
 	info.recTriggerLevel = g_conf.recTriggerLevel;
@@ -138,7 +136,7 @@ int main(int argc, char** argv)
 
 #ifdef WITH_AUDIO_JACK
 	g_synchronizer.onJackRewind    = []() { g_sequencer.rawRewind(); };
-	g_synchronizer.onJackChangeBpm = [](float bpm) { g_clock.setBpmRaw(bpm, g_conf.samplerate); };
+	g_synchronizer.onJackChangeBpm = [](float bpm) { g_sequencer.setBpmRaw(bpm, g_conf.samplerate); };
 	g_synchronizer.onJackStart     = []() { g_sequencer.rawStart(); };
 	g_synchronizer.onJackStop      = []() { g_sequencer.rawStop(); };
 #endif
@@ -210,7 +208,7 @@ int main(int argc, char** argv)
 			g_recorder.stopInputRec(g_conf.inputRecMode);
 	};
 
-	g_clock.onBpmChange = [](float oldVal, float newVal, int quantizerStep) {
+	g_sequencer.onBpmChange = [](float oldVal, float newVal, int quantizerStep) {
 		g_actionRecorder.updateBpm(oldVal / newVal, quantizerStep);
 	};
 

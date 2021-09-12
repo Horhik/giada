@@ -37,10 +37,14 @@ namespace mcl
 class AudioBuffer;
 }
 
+namespace giada::m::model
+{
+class Model;
+}
+
 namespace giada::m
 {
 class KernelAudio;
-class Clock;
 class ActionRecorder;
 class Sequencer final
 {
@@ -64,12 +68,65 @@ public:
 
 	using EventBuffer = RingBuffer<Event, G_MAX_SEQUENCER_EVENTS>;
 
-	Sequencer(Clock&);
+	Sequencer(model::Model&);
+
+	/* isRunning
+    When clock is actually moving forward, i.e. ClockStatus == RUNNING. */
+
+	bool isRunning() const;
+
+	/* isActive
+    Clock is enabled, but might be in wait mode, i.e. ClockStatus == RUNNING or
+    ClockStatus == WAITING. */
+
+	bool isActive() const;
+
+	bool isOnBeat() const;
+	bool isOnBar() const;
+	bool isOnFirstBeat() const;
+	bool isMetronomeOn() const;
+
+	float     getBpm() const;
+	int       getBeats() const;
+	int       getBars() const;
+	int       getCurrentBeat() const;
+	int       getCurrentFrame() const;
+	float     getCurrentSecond(int sampleRate) const;
+	int       getFramesInBar() const;
+	int       getFramesInBeat() const;
+	int       getFramesInLoop() const;
+	int       getFramesInSeq() const;
+	int       getQuantizerValue() const;
+	int       getQuantizerStep() const;
+	SeqStatus getStatus() const;
+
+	/* getMaxFramesInLoop
+    Returns how many frames the current loop length might contain at the slowest
+    speed possible (G_MIN_BPM). Call this whenever you change the number or 
+    beats. */
+
+	Frame getMaxFramesInLoop(int sampleRate) const;
+
+	/* calcBpmFromRec
+    Given the amount of recorded frames, returns the speed of the current 
+    performance. Used while input recording in FREE mode. */
+
+	float calcBpmFromRec(Frame recordedFrames, int sampleRate) const;
+
+	/* canQuantize
+    Tells whether the quantizer value is > 0 and the sequencer is running. */
+
+	bool canQuantize() const;
+
+	/* quantize
+    Quantizes the global frame 'f'.  */
+
+	Frame quantize(Frame f) const;
 
 	/* reset
 	Brings everything back to the initial state. */
 
-	void reset();
+	void reset(int sampleRate);
 
 	/* react
 	Reacts to live events coming from the EventDispatcher (human events). */
@@ -97,22 +154,50 @@ public:
 	void rawStop();
 	void rawRewind();
 
-	bool isMetronomeOn();
+	void rewind();
+
 	void toggleMetronome();
 	void setMetronome(bool v);
+
+	void setBpm(float b, const KernelAudio&, int sampleRate);
+	void setBeats(int beats, int bars, int sampleRate);
+	void setQuantize(int q, int sampleRate);
+
+	/* setBpmRaw
+	Raw function to set the bpm, bypassing any JACK instruction. This functions 
+	must be called only by the Synchronizer when the JACK signal is received. 
+	Other modules should use the non-raw versions below. */
+
+	void setBpmRaw(float v, int sampleRate);
+
+	void setStatus(SeqStatus);
+
+	/* recomputeFrames
+    Updates bpm, frames, beats and so on. */
+
+	void recomputeFrames(int sampleRate);
 
 	/* quantizer
 	Used by the sequencer itself and each sample channel. */
 
 	Quantizer quantizer;
 
-	std::function<void(SeqStatus)> onAboutStart;
-	std::function<void()>            onAboutStop;
+	std::function<void(SeqStatus)>         onAboutStart;
+	std::function<void()>                  onAboutStop;
+	std::function<void(float, float, int)> onBpmChange;
 
 private:
+	/* advance (internal)
+    Increases current frame by a specific amount. */
+
+	void advance(Frame amount);
+
+	/* rewindQ
+	Rewinds sequencer, quantized mode. */
+
 	void rewindQ(Frame delta);
 
-	Clock& m_clock;
+	model::Model& m_model;
 
 	/* m_eventBuffer
 	Buffer of events found in each block sent to channels for event parsing. 
@@ -121,6 +206,11 @@ private:
 	EventBuffer m_eventBuffer;
 
 	Metronome m_metronome;
+
+	/* m_quantizerStep
+    Tells how many frames to wait to perform a quantized action. */
+
+	int m_quantizerStep;
 };
 } // namespace giada::m
 

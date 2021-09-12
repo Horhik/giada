@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "main.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/init.h"
@@ -37,6 +36,8 @@
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
 #include "core/recorder.h"
+#include "core/sequencer.h"
+#include "core/sync.h"
 #include "gui/dialogs/mainWindow.h"
 #include "gui/dialogs/warnings.h"
 #include "gui/elems/mainWindow/keyboard/keyboard.h"
@@ -55,11 +56,12 @@
 extern giada::v::gdMainWindow*  G_MainWin;
 extern giada::m::model::Model   g_model;
 extern giada::m::KernelAudio    g_kernelAudio;
-extern giada::m::Clock          g_clock;
 extern giada::m::Mixer          g_mixer;
 extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::Recorder       g_recorder;
+extern giada::m::Sequencer      g_sequencer;
+extern giada::m::Synchronizer   g_synchronizer;
 extern giada::m::conf::Data     g_conf;
 
 namespace giada::c::main
@@ -135,10 +137,10 @@ Sequencer getSequencer()
 	m::Mixer::RecordInfo recInfo = g_mixer.getRecordInfo();
 
 	out.isFreeModeInputRec = g_recorder.isRecordingInput() && g_conf.inputRecMode == InputRecMode::FREE;
-	out.shouldBlink        = u::gui::shouldBlink() && (g_clock.getStatus() == SeqStatus::WAITING || out.isFreeModeInputRec);
-	out.beats              = g_clock.getBeats();
-	out.bars               = g_clock.getBars();
-	out.currentBeat        = g_clock.getCurrentBeat();
+	out.shouldBlink        = u::gui::shouldBlink() && (g_sequencer.getStatus() == SeqStatus::WAITING || out.isFreeModeInputRec);
+	out.beats              = g_sequencer.getBeats();
+	out.bars               = g_sequencer.getBars();
+	out.currentBeat        = g_sequencer.getCurrentBeat();
 	out.recPosition        = recInfo.position;
 	out.recMaxLength       = recInfo.maxLength;
 
@@ -154,7 +156,7 @@ void setBpm(const char* i, const char* f)
 	if (g_recorder.isRecordingInput())
 		return;
 
-	g_clock.setBpm(std::atof(i) + (std::atof(f) / 10.0f), g_kernelAudio, g_conf.samplerate);
+	g_sequencer.setBpm(std::atof(i) + (std::atof(f) / 10.0f), g_kernelAudio, g_conf.samplerate);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -166,7 +168,7 @@ void setBpm(float f)
 	if (g_recorder.isRecordingInput())
 		return;
 
-	g_clock.setBpm(f, g_kernelAudio, g_conf.samplerate);
+	g_sequencer.setBpm(f, g_kernelAudio, g_conf.samplerate);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -178,15 +180,15 @@ void setBeats(int beats, int bars)
 	if (g_recorder.isRecordingInput())
 		return;
 
-	g_clock.setBeats(beats, bars, g_conf.samplerate);
-	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop(g_conf.samplerate));
+	g_sequencer.setBeats(beats, bars, g_conf.samplerate);
+	g_mixer.allocRecBuffer(g_sequencer.getMaxFramesInLoop(g_conf.samplerate));
 }
 
 /* -------------------------------------------------------------------------- */
 
 void quantize(int val)
 {
-	g_clock.setQuantize(val, g_conf.samplerate);
+	g_sequencer.setQuantize(val, g_conf.samplerate);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -196,7 +198,8 @@ void clearAllSamples()
 	if (!v::gdConfirmWin("Warning", "Free all Sample channels: are you sure?"))
 		return;
 	G_MainWin->delSubWindow(WID_SAMPLE_EDITOR);
-	g_clock.setStatus(SeqStatus::STOPPED);
+	g_sequencer.setStatus(SeqStatus::STOPPED);
+	g_synchronizer.sendMIDIstop();
 	g_mixerHandler.freeAllChannels();
 	g_actionRecorder.clearAllActions();
 }

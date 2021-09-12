@@ -26,14 +26,12 @@
 
 #include "sampleReactor.h"
 #include "core/channels/channel.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "src/core/model/model.h"
 #include "utils/math.h"
 #include <cassert>
 
 extern giada::m::model::Model g_model;
-extern giada::m::Clock        g_clock;
 extern giada::m::Sequencer    g_sequencer;
 extern giada::m::conf::Data   g_conf;
 
@@ -152,7 +150,7 @@ ChannelStatus pressWhileOff_(channel::Data& ch, int velocity, bool isLoop)
 	if (ch.samplePlayer->velocityAsVol)
 		ch.volume_i = u::math::map(velocity, G_MAX_VELOCITY, G_MAX_VOLUME);
 
-	if (g_clock.canQuantize())
+	if (g_sequencer.canQuantize())
 	{
 		g_sequencer.quantizer.trigger(Q_ACTION_PLAY + ch.id);
 		return ChannelStatus::OFF;
@@ -167,7 +165,7 @@ ChannelStatus pressWhilePlay_(channel::Data& ch, SamplePlayerMode mode, bool isL
 {
 	if (mode == SamplePlayerMode::SINGLE_RETRIG)
 	{
-		if (g_clock.canQuantize())
+		if (g_sequencer.canQuantize())
 			g_sequencer.quantizer.trigger(Q_ACTION_REWIND + ch.id);
 		else
 			rewind_(ch);
@@ -190,7 +188,7 @@ ChannelStatus pressWhilePlay_(channel::Data& ch, SamplePlayerMode mode, bool isL
 
 void toggleReadActions_(channel::Data& ch)
 {
-	if (g_clock.isRunning() && ch.state->recStatus.load() == ChannelStatus::PLAY && !g_conf.treatRecsAsLoops)
+	if (g_sequencer.isRunning() && ch.state->recStatus.load() == ChannelStatus::PLAY && !g_conf.treatRecsAsLoops)
 		kill_(ch);
 }
 

@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "core/sync.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/kernelAudio.h"
 #include "core/kernelMidi.h"

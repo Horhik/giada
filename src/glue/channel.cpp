@@ -27,7 +27,6 @@
 #include "gui/elems/mainWindow/keyboard/channel.h"
 #include "core/actions/actionRecorder.h"
 #include "core/channels/channelManager.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/kernelAudio.h"
 #include "core/mixer.h"

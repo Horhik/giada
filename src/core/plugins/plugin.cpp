@@ -31,6 +31,7 @@
 #include "core/const.h"
 #include "core/kernelAudio.h"
 #include "core/plugins/pluginManager.h"
+#include "core/sequencer.h"
 #include "utils/log.h"
 #include "utils/time.h"
 #include <FL/Fl.H>
@@ -38,7 +39,7 @@
 
 extern giada::m::PluginManager g_pluginManager;
 extern giada::m::KernelAudio   g_kernelAudio;
-extern giada::m::Clock         g_clock;
+extern giada::m::Sequencer     g_sequencer;
 extern giada::m::conf::Data    g_conf;
 
 namespace giada::m
@@ -48,7 +49,7 @@ Plugin::Plugin(ID id, const std::string& UID)
 , valid(false)
 , onEditorResize(nullptr)
 , m_plugin(nullptr)
-, m_playHead(g_clock, g_conf.buffersize)
+, m_playHead(g_sequencer, g_conf.buffersize)
 , m_UID(UID)
 , m_hasEditor(false)
 {
@@ -62,7 +63,7 @@ Plugin::Plugin(ID id, std::unique_ptr<juce::AudioPluginInstance> plugin, double 
 , valid(true)
 , onEditorResize(nullptr)
 , m_plugin(std::move(plugin))
-, m_playHead(g_clock, g_conf.buffersize)
+, m_playHead(g_sequencer, g_conf.buffersize)
 , m_bypass(false)
 , m_hasEditor(m_plugin->hasEditor())
 {
@@ -104,7 +105,7 @@ Plugin::Plugin(const Plugin& o)
 , valid(o.valid)
 , onEditorResize(o.onEditorResize)
 , m_plugin(std::move(g_pluginManager.makePlugin(o, g_conf.samplerate, g_kernelAudio.getRealBufSize())->m_plugin))
-, m_playHead(g_clock, g_conf.buffersize)
+, m_playHead(g_sequencer, g_conf.buffersize)
 , m_bypass(o.m_bypass.load())
 {
 }

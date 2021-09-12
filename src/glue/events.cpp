@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "events.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/eventDispatcher.h"
@@ -56,7 +55,6 @@
 #include <cassert>
 
 extern giada::v::gdMainWindow*   G_MainWin;
-extern giada::m::Clock           g_clock;
 extern giada::m::Sequencer       g_sequencer;
 extern giada::m::PluginHost      g_pluginHost;
 extern giada::m::EventDispatcher g_eventDispatcher;
@@ -217,12 +215,12 @@ void setMasterOutVolume(float v, Thread t)
 
 void multiplyBeats()
 {
-	main::setBeats(g_clock.getBeats() * 2, g_clock.getBars());
+	main::setBeats(g_sequencer.getBeats() * 2, g_sequencer.getBars());
 }
 
 void divideBeats()
 {
-	main::setBeats(g_clock.getBeats() / 2, g_clock.getBars());
+	main::setBeats(g_sequencer.getBeats() / 2, g_sequencer.getBars());
 }
 
 /* -------------------------------------------------------------------------- */
@@ -239,7 +237,7 @@ void stopSequencer(Thread t)
 
 void toggleSequencer(Thread t)
 {
-	g_clock.isRunning() ? stopSequencer(t) : startSequencer(t);
+	g_sequencer.isRunning() ? stopSequencer(t) : startSequencer(t);
 }
 
 void rewindSequencer(Thread t)

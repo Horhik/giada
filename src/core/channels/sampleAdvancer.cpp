@@ -26,10 +26,10 @@
 
 #include "sampleAdvancer.h"
 #include "core/channels/channel.h"
-#include "core/clock.h"
+#include "core/sequencer.h"
 #include <cassert>
 
-extern giada::m::Clock g_clock;
+extern giada::m::Sequencer g_sequencer;
 
 namespace giada::m::sampleAdvancer
 {
@@ -204,7 +204,7 @@ void onLastFrame(const channel::Data& ch)
 	ChannelStatus    playStatus = ch.state->playStatus.load();
 	SamplePlayerMode mode       = ch.samplePlayer->mode;
 	bool             isLoop     = ch.samplePlayer->isAnyLoopMode();
-	bool             running    = g_clock.isRunning();
+	bool             running    = g_sequencer.isRunning();
 
 	if (playStatus == ChannelStatus::PLAY)
 	{

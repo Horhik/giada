@@ -26,7 +26,6 @@
 
 #include "samplePlayer.h"
 #include "core/channels/channel.h"
-#include "core/clock.h"
 #include "core/wave.h"
 #include "deps/mcl-audio-buffer/src/audioBuffer.hpp"
 #include <algorithm>

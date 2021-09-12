@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "mainTransport.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/graphics.h"
@@ -39,7 +38,6 @@
 #include "gui/elems/basics/button.h"
 #include "gui/elems/basics/statusButton.h"
 
-extern giada::m::Clock      g_clock;
 extern giada::m::Sequencer  g_sequencer;
 extern giada::m::Recorder   g_recorder;
 extern giada::m::conf::Data g_conf;
@@ -115,7 +113,7 @@ geMainTransport::geMainTransport(int x, int y)
 
 void geMainTransport::refresh()
 {
-	m_play.setStatus(g_clock.isRunning());
+	m_play.setStatus(g_sequencer.isRunning());
 	m_recAction.setStatus(g_recorder.isRecordingAction());
 	m_recInput.setStatus(g_recorder.isRecordingInput());
 	m_metronome.setStatus(g_sequencer.isMetronomeOn());

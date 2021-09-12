@@ -36,7 +36,6 @@
 #include "core/actions/actionRecorder.h"
 #include "core/actions/actions.h"
 #include "core/channels/channelManager.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/eventDispatcher.h"
@@ -70,7 +69,6 @@
 extern giada::v::gdMainWindow*  G_MainWin;
 extern giada::m::model::Model   g_model;
 extern giada::m::KernelAudio    g_kernelAudio;
-extern giada::m::Clock          g_clock;
 extern giada::m::Sequencer      g_sequencer;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::MixerHandler   g_mixerHandler;
@@ -237,9 +235,8 @@ void reset()
 	g_channelManager.reset();
 	g_waveManager.reset();
 	g_synchronizer.reset();
-	g_clock.reset(g_conf.samplerate);
-	g_mixerHandler.reset(g_clock.getMaxFramesInLoop(g_conf.samplerate), g_kernelAudio.getRealBufSize());
-	g_sequencer.reset();
+	g_sequencer.reset(g_conf.samplerate);
+	g_mixerHandler.reset(g_sequencer.getMaxFramesInLoop(g_conf.samplerate), g_kernelAudio.getRealBufSize());
 	g_actionRecorder.reset();
 #ifdef WITH_VST
 	g_pluginHost.reset(g_kernelAudio.getRealBufSize());

@@ -25,7 +25,7 @@
  * -------------------------------------------------------------------------- */
 
 #include "baseActionEditor.h"
-#include "core/clock.h"
+#include "core/sequencer.h"
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/graphics.h"
@@ -44,7 +44,7 @@
 #include <limits>
 #include <string>
 
-extern giada::m::Clock g_clock;
+extern giada::m::Sequencer g_sequencer;
 
 namespace giada::v
 {
@@ -109,8 +109,8 @@ void gdBaseActionEditor::cb_zoomOut(Fl_Widget* /*w*/, void* p) { ((gdBaseActionE
 
 void gdBaseActionEditor::computeWidth()
 {
-	fullWidth = frameToPixel(g_clock.getFramesInSeq());
-	loopWidth = frameToPixel(g_clock.getFramesInLoop());
+	fullWidth = frameToPixel(g_sequencer.getFramesInSeq());
+	loopWidth = frameToPixel(g_sequencer.getFramesInLoop());
 }
 
 /* -------------------------------------------------------------------------- */

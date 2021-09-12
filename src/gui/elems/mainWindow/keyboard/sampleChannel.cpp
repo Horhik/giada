@@ -30,7 +30,6 @@
 #include "column.h"
 #include "core/channels/channel.h"
 #include "core/channels/samplePlayer.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/graphics.h"
 #include "core/mixer.h"

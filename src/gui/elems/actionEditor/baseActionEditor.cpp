@@ -27,13 +27,13 @@
 #include "gui/dialogs/actionEditor/baseActionEditor.h"
 #include "baseAction.h"
 #include "baseActionEditor.h"
-#include "core/clock.h"
+#include "core/sequencer.h"
 #include "core/const.h"
 #include "gridTool.h"
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 
-extern giada::m::Clock g_clock;
+extern giada::m::Sequencer g_sequencer;
 
 namespace giada
 {
@@ -85,10 +85,10 @@ void geBaseActionEditor::baseDraw(bool clear) const
 	}
 
 	fl_color(G_COLOR_GREY_4);
-	drawVerticals(g_clock.getFramesInBeat());
+	drawVerticals(g_sequencer.getFramesInBeat());
 
 	fl_color(G_COLOR_LIGHT_1);
-	drawVerticals(g_clock.getFramesInBar());
+	drawVerticals(g_sequencer.getFramesInBar());
 
 	/* Cover unused area. Avoid drawing cover if width == 0 (i.e. beats are 32). */
 
@@ -103,7 +103,7 @@ void geBaseActionEditor::drawVerticals(int steps) const
 {
 	/* Start drawing from steps, not from 0. The zero-th element is always 
 	graphically useless. */
-	for (Frame i = steps; i < g_clock.getFramesInLoop(); i += steps)
+	for (Frame i = steps; i < g_sequencer.getFramesInLoop(); i += steps)
 	{
 		Pixel p = m_base->frameToPixel(i) + x();
 		fl_line(p, y() + 1, p, y() + h() - 2);

@@ -26,7 +26,6 @@
 
 #include "core/model/storage.h"
 #include "channel.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/init.h"
 #include "core/mixer.h"
@@ -36,6 +35,7 @@
 #include "core/plugins/plugin.h"
 #include "core/plugins/pluginHost.h"
 #include "core/plugins/pluginManager.h"
+#include "core/sequencer.h"
 #include "core/wave.h"
 #include "core/waveManager.h"
 #include "gui/dialogs/browser/browserLoad.h"
@@ -57,7 +57,7 @@
 
 extern giada::v::gdMainWindow*  G_MainWin;
 extern giada::m::model::Model   g_model;
-extern giada::m::Clock          g_clock;
+extern giada::m::Sequencer      g_sequencer;
 extern giada::m::Mixer          g_mixer;
 extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::ActionRecorder g_actionRecorder;
@@ -173,8 +173,8 @@ void loadProject(void* data)
 
 	g_mixerHandler.updateSoloCount();
 	g_actionRecorder.updateSamplerate(g_conf.samplerate, g_patch.samplerate);
-	g_clock.recomputeFrames(g_conf.samplerate);
-	g_mixer.allocRecBuffer(g_clock.getMaxFramesInLoop(g_conf.samplerate));
+	g_sequencer.recomputeFrames(g_conf.samplerate);
+	g_mixer.allocRecBuffer(g_sequencer.getMaxFramesInLoop(g_conf.samplerate));
 
 	/* Mixer is ready to go back online. */
 

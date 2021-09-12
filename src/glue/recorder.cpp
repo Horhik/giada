@@ -27,7 +27,6 @@
 #include "glue/recorder.h"
 #include "core/actions/actionRecorder.h"
 #include "core/channels/channel.h"
-#include "core/clock.h"
 #include "core/const.h"
 #include "core/kernelMidi.h"
 #include "core/mixer.h"

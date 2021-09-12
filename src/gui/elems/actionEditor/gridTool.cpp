@@ -25,14 +25,14 @@
 * --------------------------------------------------------------------------- */
 
 #include "gridTool.h"
-#include "core/clock.h"
+#include "core/sequencer.h"
 #include "core/conf.h"
 #include "gui/elems/basics/check.h"
 #include "gui/elems/basics/choice.h"
 #include "utils/math.h"
 #include <FL/Fl_Double_Window.H>
 
-extern giada::m::Clock      g_clock;
+extern giada::m::Sequencer  g_sequencer;
 extern giada::m::conf::Data g_conf;
 
 namespace giada::v
@@ -128,6 +128,6 @@ Frame geGridTool::getSnapFrame(Frame v) const
 
 Frame geGridTool::getCellSize() const
 {
-	return g_clock.getFramesInBeat() / getValue();
+	return g_sequencer.getFramesInBeat() / getValue();
 }
 } // namespace giada::v

@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "core/recorder.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/kernelAudio.h"
 #include "core/midiDispatcher.h"
@@ -33,6 +32,7 @@
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
 #include "core/sequencer.h"
+#include "core/sync.h"
 #include "core/types.h"
 #include "gui/dispatcher.h"
 #include "src/core/actions/actionRecorder.h"
@@ -40,13 +40,13 @@
 
 extern giada::m::model::Model    g_model;
 extern giada::m::KernelAudio     g_kernelAudio;
-extern giada::m::Clock           g_clock;
 extern giada::m::Sequencer       g_sequencer;
 extern giada::m::Mixer           g_mixer;
 extern giada::m::MixerHandler    g_mixerHandler;
 extern giada::m::MidiDispatcher  g_midiDispatcher;
 extern giada::m::EventDispatcher g_eventDispatcher;
 extern giada::m::ActionRecorder  g_actionRecorder;
+extern giada::m::Synchronizer    g_synchronizer;
 extern giada::m::conf::Data      g_conf;
 
 namespace giada::m
@@ -80,8 +80,9 @@ void Recorder::startActionRec(RecTriggerMode mode)
 	}
 	else
 	{ // RecTriggerMode::SIGNAL
-		g_clock.setStatus(SeqStatus::WAITING);
-		g_clock.rewind();
+		g_sequencer.setStatus(SeqStatus::WAITING);
+		g_sequencer.rewind();
+		g_synchronizer.sendMIDIrewind();
 		g_midiDispatcher.setSignalCallback([this]() { startActionRec(); });
 		v::dispatcher::setSignalCallback([this]() { startActionRec(); });
 		setRecordingAction(true);
@@ -97,9 +98,10 @@ void Recorder::stopActionRec()
 	/* If you stop the Action Recorder in SIGNAL mode before any actual 
 	recording: just clean up everything and return. */
 
-	if (g_clock.getStatus() == SeqStatus::WAITING)
+	if (g_sequencer.getStatus() == SeqStatus::WAITING)
 	{
-		g_clock.setStatus(SeqStatus::STOPPED);
+		g_sequencer.setStatus(SeqStatus::STOPPED);
+		g_synchronizer.sendMIDIstop();
 		g_midiDispatcher.setSignalCallback(nullptr);
 		v::dispatcher::setSignalCallback(nullptr);
 		return;
@@ -136,7 +138,10 @@ bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
 		return false;
 
 	if (triggerMode == RecTriggerMode::SIGNAL || inputMode == InputRecMode::FREE)
-		g_clock.rewind();
+	{
+		g_sequencer.rewind();
+		g_synchronizer.sendMIDIrewind();
+	}
 
 	if (inputMode == InputRecMode::FREE)
 		g_mixer.setEndOfRecCallback([this, inputMode] { stopInputRec(inputMode); });
@@ -149,7 +154,7 @@ bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
 	}
 	else
 	{
-		g_clock.setStatus(SeqStatus::WAITING);
+		g_sequencer.setStatus(SeqStatus::WAITING);
 		g_mixer.setSignalCallback([this] {
 			startInputRec();
 			setRecordingInput(true);
@@ -172,28 +177,29 @@ void Recorder::stopInputRec(InputRecMode recMode)
 	equal to the current loop length. */
 
 	if (recMode == InputRecMode::RIGID)
-		recordedFrames = g_clock.getFramesInLoop();
+		recordedFrames = g_sequencer.getFramesInLoop();
 
 	G_DEBUG("Stop input rec, recordedFrames=" << recordedFrames);
 
 	/* If you stop the Input Recorder in SIGNAL mode before any actual 
 	recording: just clean up everything and return. */
 
-	if (g_clock.getStatus() == SeqStatus::WAITING)
+	if (g_sequencer.getStatus() == SeqStatus::WAITING)
 	{
-		g_clock.setStatus(SeqStatus::STOPPED);
+		g_sequencer.setStatus(SeqStatus::STOPPED);
 		g_mixer.setSignalCallback(nullptr);
 		return;
 	}
 
 	/* Finalize recordings. InputRecMode::FREE requires some adjustments. */
 
-	g_mixerHandler.finalizeInputRec(recordedFrames, g_clock.getCurrentFrame());
+	g_mixerHandler.finalizeInputRec(recordedFrames, g_sequencer.getCurrentFrame());
 
 	if (recMode == InputRecMode::FREE)
 	{
-		g_clock.rewind();
-		g_clock.setBpm(g_clock.calcBpmFromRec(recordedFrames, g_conf.samplerate), g_kernelAudio, g_conf.samplerate);
+		g_synchronizer.sendMIDIrewind();
+		g_sequencer.rewind();
+		g_sequencer.setBpm(g_sequencer.calcBpmFromRec(recordedFrames, g_conf.samplerate), g_kernelAudio, g_conf.samplerate);
 		g_mixer.setEndOfRecCallback(nullptr);
 		refreshInputRecMode(); // Back to RIGID mode if necessary
 	}
@@ -213,7 +219,7 @@ bool Recorder::toggleInputRec(RecTriggerMode m, InputRecMode i)
 
 /* -------------------------------------------------------------------------- */
 
-bool Recorder::canEnableRecOnSignal() const { return !g_clock.isRunning(); }
+bool Recorder::canEnableRecOnSignal() const { return !g_sequencer.isRunning(); }
 bool Recorder::canEnableFreeInputRec() const { return !g_mixerHandler.hasAudioData(); }
 
 /* -------------------------------------------------------------------------- */
@@ -256,7 +262,8 @@ void Recorder::setRecordingInput(bool v)
 
 bool Recorder::startActionRec()
 {
-	g_clock.setStatus(SeqStatus::RUNNING);
+	g_sequencer.setStatus(SeqStatus::RUNNING);
+	g_synchronizer.sendMIDIstart();
 	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
 	return true;
 }
@@ -266,7 +273,7 @@ bool Recorder::startActionRec()
 void Recorder::startInputRec()
 {
 	/* Start recording from the current frame, not the beginning. */
-	g_mixer.startInputRec(g_clock.getCurrentFrame());
+	g_mixer.startInputRec(g_sequencer.getCurrentFrame());
 	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
 }
 } // namespace giada::m

@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "velocityEditor.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
 #include "envelopePoint.h"

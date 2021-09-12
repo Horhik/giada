@@ -26,7 +26,6 @@
 
 #include "sampleActionRecorder.h"
 #include "core/channels/channel.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/eventDispatcher.h"
 #include "core/mixer.h"
@@ -35,7 +34,7 @@
 #include "src/core/actions/actionRecorder.h"
 #include <cassert>
 
-extern giada::m::Clock          g_clock;
+extern giada::m::Sequencer      g_sequencer;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::Recorder       g_recorder;
 extern giada::m::conf::Data     g_conf;
@@ -57,7 +56,7 @@ bool canRecord_(const channel::Data& ch);
 bool canRecord_(const channel::Data& ch)
 {
 	return g_recorder.isRecordingAction() &&
-	       g_clock.isRunning() &&
+	       g_sequencer.isRunning() &&
 	       !g_recorder.isRecordingInput() &&
 	       !ch.samplePlayer->isAnyLoopMode();
 }
@@ -82,7 +81,7 @@ void onKeyPress_(channel::Data& ch)
 void record_(channel::Data& ch, int note)
 {
 	g_actionRecorder.liveRec(ch.id, MidiEvent(note, 0, 0),
-	    g_clock.quantize(g_clock.getCurrentFrame()));
+	    g_sequencer.quantize(g_sequencer.getCurrentFrame()));
 
 	ch.hasActions = true;
 }
@@ -132,7 +131,7 @@ void stopReadActions_(channel::Data& ch, ChannelStatus curRecStatus)
 	just stop and disable everything. Otherwise make sure a channel with actions
 	behave like a dynamic one. */
 
-	if (!g_clock.isRunning() || !g_conf.treatRecsAsLoops)
+	if (!g_sequencer.isRunning() || !g_conf.treatRecsAsLoops)
 	{
 		ch.state->recStatus.store(ChannelStatus::OFF);
 		ch.state->readActions.store(false);

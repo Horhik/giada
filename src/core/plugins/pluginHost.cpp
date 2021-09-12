@@ -28,7 +28,6 @@
 
 #include "core/plugins/pluginHost.h"
 #include "core/channels/channel.h"
-#include "core/clock.h"
 #include "core/const.h"
 #include "core/model/model.h"
 #include "core/plugins/plugin.h"
@@ -40,8 +39,8 @@
 
 namespace giada::m
 {
-PluginHost::Info::Info(const Clock& c, int sampleRate)
-: m_clock(c)
+PluginHost::Info::Info(const Sequencer& s, int sampleRate)
+: m_sequencer(s)
 , m_sampleRate(sampleRate)
 {
 }
@@ -50,10 +49,10 @@ PluginHost::Info::Info(const Clock& c, int sampleRate)
 
 bool PluginHost::Info::getCurrentPosition(CurrentPositionInfo& result)
 {
-	result.bpm           = m_clock.getBpm();
-	result.timeInSamples = m_clock.getCurrentFrame();
-	result.timeInSeconds = m_clock.getCurrentSecond(m_sampleRate);
-	result.isPlaying     = m_clock.isRunning();
+	result.bpm           = m_sequencer.getBpm();
+	result.timeInSamples = m_sequencer.getCurrentFrame();
+	result.timeInSeconds = m_sequencer.getCurrentSecond(m_sampleRate);
+	result.isPlaying     = m_sequencer.isRunning();
 
 	return true;
 }

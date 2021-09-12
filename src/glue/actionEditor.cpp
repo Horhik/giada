@@ -28,14 +28,14 @@
 #include "core/actions/action.h"
 #include "core/actions/actionRecorder.h"
 #include "core/actions/actions.h"
-#include "core/clock.h"
 #include "core/const.h"
 #include "core/model/model.h"
+#include "core/sequencer.h"
 #include "glue/events.h"
 #include "glue/recorder.h"
 #include <cassert>
 
-extern giada::m::Clock          g_clock;
+extern giada::m::Sequencer      g_sequencer;
 extern giada::m::model::Model   g_model;
 extern giada::m::ActionRecorder g_actionRecorder;
 
@@ -66,7 +66,7 @@ void recordFirstEnvelopeAction_(ID channelId, Frame frame, int value)
 	m::MidiEvent    e2 = m::MidiEvent(m::MidiEvent::ENVELOPE, 0, value);
 	const m::Action a1 = g_actionRecorder.rec(channelId, 0, e1);
 	const m::Action a2 = g_actionRecorder.rec(channelId, frame, e2);
-	const m::Action a3 = g_actionRecorder.rec(channelId, g_clock.getFramesInLoop() - 1, e1);
+	const m::Action a3 = g_actionRecorder.rec(channelId, g_sequencer.getFramesInLoop() - 1, e1);
 
 	g_actionRecorder.updateSiblings(a1.id, /*prev=*/a3.id, /*next=*/a2.id); // Circular loop (begin)
 	g_actionRecorder.updateSiblings(a2.id, /*prev=*/a1.id, /*next=*/a3.id);
@@ -160,7 +160,7 @@ void recordMidiAction(ID channelId, int note, int velocity, Frame f1, Frame f2)
 
 	/* Avoid frame overflow. */
 
-	Frame overflow = f2 - (g_clock.getFramesInLoop());
+	Frame overflow = f2 - (g_sequencer.getFramesInLoop());
 	if (overflow > 0)
 	{
 		f2 -= overflow;

@@ -25,7 +25,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "mainWindow.h"
-#include "core/clock.h"
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/init.h"
