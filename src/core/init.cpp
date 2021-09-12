@@ -44,7 +44,6 @@
 #include "core/kernelAudio.h"
 #include "core/kernelMidi.h"
 #include "core/midiMap.h"
-#include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
 #include "core/model/storage.h"
@@ -73,7 +72,6 @@ extern giada::m::model::Model   g_model;
 extern giada::m::KernelAudio    g_kernelAudio;
 extern giada::m::Clock          g_clock;
 extern giada::m::Sequencer      g_sequencer;
-extern giada::m::Mixer          g_mixer;
 extern giada::m::ActionRecorder g_actionRecorder;
 extern giada::m::MixerHandler   g_mixerHandler;
 extern giada::m::Synchronizer   g_synchronizer;
