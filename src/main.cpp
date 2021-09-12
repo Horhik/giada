@@ -40,7 +40,7 @@
 #include "core/plugins/pluginManager.h"
 #include "core/recorder.h"
 #include "core/sequencer.h"
-#include "core/sync.h"
+#include "core/synchronizer.h"
 #include "core/waveManager.h"
 #include "deps/mcl-audio-buffer/src/audioBuffer.hpp"
 #include "gui/dialogs/mainWindow.h"

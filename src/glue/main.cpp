@@ -37,7 +37,7 @@
 #include "core/plugins/pluginManager.h"
 #include "core/recorder.h"
 #include "core/sequencer.h"
-#include "core/sync.h"
+#include "core/synchronizer.h"
 #include "gui/dialogs/mainWindow.h"
 #include "gui/dialogs/warnings.h"
 #include "gui/elems/mainWindow/keyboard/keyboard.h"

@@ -32,7 +32,7 @@
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
 #include "core/sequencer.h"
-#include "core/sync.h"
+#include "core/synchronizer.h"
 #include "core/types.h"
 #include "gui/dispatcher.h"
 #include "src/core/actions/actionRecorder.h"

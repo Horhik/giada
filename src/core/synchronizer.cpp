@@ -24,7 +24,7 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "core/sync.h"
+#include "core/synchronizer.h"
 #include "core/conf.h"
 #include "core/kernelAudio.h"
 #include "core/kernelMidi.h"

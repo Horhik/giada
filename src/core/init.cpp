@@ -51,7 +51,7 @@
 #include "core/plugins/pluginManager.h"
 #include "core/recorder.h"
 #include "core/sequencer.h"
-#include "core/sync.h"
+#include "core/synchronizer.h"
 #include "core/wave.h"
 #include "core/waveManager.h"
 #include "deps/json/single_include/nlohmann/json.hpp"
