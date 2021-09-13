@@ -45,7 +45,6 @@ extern giada::m::Mixer           g_mixer;
 extern giada::m::MixerHandler    g_mixerHandler;
 extern giada::m::MidiDispatcher  g_midiDispatcher;
 extern giada::m::EventDispatcher g_eventDispatcher;
-extern giada::m::ActionRecorder  g_actionRecorder;
 extern giada::m::Synchronizer    g_synchronizer;
 extern giada::m::conf::Data      g_conf;
 
@@ -70,9 +69,6 @@ bool Recorder::isRecordingInput() const
 
 void Recorder::startActionRec(RecTriggerMode mode)
 {
-	if (!g_kernelAudio.isReady())
-		return;
-
 	if (mode == RecTriggerMode::NORMAL)
 	{
 		startActionRec();
@@ -91,7 +87,7 @@ void Recorder::startActionRec(RecTriggerMode mode)
 
 /* -------------------------------------------------------------------------- */
 
-void Recorder::stopActionRec()
+void Recorder::stopActionRec(ActionRecorder& actionRecorder)
 {
 	setRecordingAction(false);
 
@@ -107,7 +103,7 @@ void Recorder::stopActionRec()
 		return;
 	}
 
-	std::unordered_set<ID> channels = g_actionRecorder.consolidate();
+	std::unordered_set<ID> channels = actionRecorder.consolidate();
 
 	/* Enable reading actions for Channels that have just been filled with 
 	actions. Start reading right away, without checking whether 
@@ -125,18 +121,8 @@ void Recorder::stopActionRec()
 
 /* -------------------------------------------------------------------------- */
 
-void Recorder::toggleActionRec(RecTriggerMode m)
+bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode, int sampleRate)
 {
-	isRecordingAction() ? stopActionRec() : startActionRec(m);
-}
-
-/* -------------------------------------------------------------------------- */
-
-bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
-{
-	if (!g_kernelAudio.isReady() || !g_kernelAudio.isInputEnabled() || !g_mixerHandler.hasInputRecordableChannels())
-		return false;
-
 	if (triggerMode == RecTriggerMode::SIGNAL || inputMode == InputRecMode::FREE)
 	{
 		g_sequencer.rewind();
@@ -144,7 +130,9 @@ bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
 	}
 
 	if (inputMode == InputRecMode::FREE)
-		g_mixer.setEndOfRecCallback([this, inputMode] { stopInputRec(inputMode); });
+		g_mixer.setEndOfRecCallback([this, inputMode, sampleRate] {
+			stopInputRec(inputMode, sampleRate);
+		});
 
 	if (triggerMode == RecTriggerMode::NORMAL)
 	{
@@ -167,7 +155,7 @@ bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
 
 /* -------------------------------------------------------------------------- */
 
-void Recorder::stopInputRec(InputRecMode recMode)
+void Recorder::stopInputRec(InputRecMode recMode, int sampleRate)
 {
 	setRecordingInput(false);
 
@@ -197,24 +185,12 @@ void Recorder::stopInputRec(InputRecMode recMode)
 
 	if (recMode == InputRecMode::FREE)
 	{
-		g_synchronizer.sendMIDIrewind();
 		g_sequencer.rewind();
-		g_sequencer.setBpm(g_sequencer.calcBpmFromRec(recordedFrames, g_conf.samplerate), g_kernelAudio, g_conf.samplerate);
+		g_synchronizer.sendMIDIrewind();
+		g_sequencer.setBpm(g_sequencer.calcBpmFromRec(recordedFrames, sampleRate), g_kernelAudio, sampleRate);
 		g_mixer.setEndOfRecCallback(nullptr);
 		refreshInputRecMode(); // Back to RIGID mode if necessary
 	}
-}
-
-/* -------------------------------------------------------------------------- */
-
-bool Recorder::toggleInputRec(RecTriggerMode m, InputRecMode i)
-{
-	if (isRecordingInput())
-	{
-		stopInputRec(i);
-		return true;
-	}
-	return startInputRec(m, i);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -246,12 +222,11 @@ void Recorder::setRecordingInput(bool v)
 
 /* -------------------------------------------------------------------------- */
 
-bool Recorder::startActionRec()
+void Recorder::startActionRec()
 {
 	g_sequencer.setStatus(SeqStatus::RUNNING);
 	g_synchronizer.sendMIDIstart();
 	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
-	return true;
 }
 
 /* -------------------------------------------------------------------------- */

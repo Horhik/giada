@@ -28,6 +28,7 @@
 #include "core/conf.h"
 #include "core/const.h"
 #include "core/eventDispatcher.h"
+#include "core/kernelAudio.h"
 #include "core/midiEvent.h"
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
@@ -56,9 +57,12 @@
 
 extern giada::v::gdMainWindow*   G_MainWin;
 extern giada::m::Sequencer       g_sequencer;
+extern giada::m::KernelAudio     g_kernelAudio;
+extern giada::m::MixerHandler    g_mixerHandler;
 extern giada::m::PluginHost      g_pluginHost;
 extern giada::m::EventDispatcher g_eventDispatcher;
 extern giada::m::Recorder        g_recorder;
+extern giada::m::ActionRecorder  g_actionRecorder;
 extern giada::m::conf::Data      g_conf;
 
 namespace giada::c::events
@@ -249,12 +253,22 @@ void rewindSequencer(Thread t)
 
 void toggleActionRecording()
 {
-	g_recorder.toggleActionRec(g_conf.recTriggerMode);
+	if (!g_kernelAudio.isReady())
+		return;
+	if (g_recorder.isRecordingAction())
+		g_recorder.stopActionRec(g_actionRecorder);
+	else
+		g_recorder.startActionRec(g_conf.recTriggerMode);
 }
 
 void toggleInputRecording()
 {
-	g_recorder.toggleInputRec(g_conf.recTriggerMode, g_conf.inputRecMode);
+	if (!g_kernelAudio.isReady() || !g_kernelAudio.isInputEnabled() || !g_mixerHandler.hasInputRecordableChannels())
+		return;
+	if (g_recorder.isRecordingInput())
+		g_recorder.stopInputRec(g_conf.inputRecMode, g_conf.samplerate);
+	else
+		g_recorder.startInputRec(g_conf.recTriggerMode, g_conf.inputRecMode, g_conf.samplerate);
 }
 
 /* -------------------------------------------------------------------------- */

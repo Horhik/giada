@@ -188,7 +188,7 @@ int main(int argc, char** argv)
 	g_sequencer.onAboutStart = [](SeqStatus status) {
 		/* TODO move this logic to Recorder */
 		if (status == SeqStatus::WAITING)
-			g_recorder.stopActionRec();
+			g_recorder.stopActionRec(g_actionRecorder);
 		g_conf.recTriggerMode = RecTriggerMode::NORMAL;
 	};
 
@@ -197,9 +197,9 @@ int main(int argc, char** argv)
 	store the takes. RecManager takes care of it. */
 		/* TODO move this logic to Recorder */
 		if (g_recorder.isRecordingAction())
-			g_recorder.stopActionRec();
+			g_recorder.stopActionRec(g_actionRecorder);
 		else if (g_recorder.isRecordingInput())
-			g_recorder.stopInputRec(g_conf.inputRecMode);
+			g_recorder.stopInputRec(g_conf.inputRecMode, g_conf.samplerate);
 	};
 
 	g_sequencer.onBpmChange = [](float oldVal, float newVal, int quantizerStep) {

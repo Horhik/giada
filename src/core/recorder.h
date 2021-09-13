@@ -31,7 +31,8 @@
 
 namespace giada::m
 {
-class Recorder
+class ActionRecorder;
+class Recorder final
 {
 public:
 	bool isRecording() const;
@@ -51,12 +52,9 @@ public:
 	bool canEnableFreeInputRec() const;
 
 	void startActionRec(RecTriggerMode);
-	void stopActionRec();
-	void toggleActionRec(RecTriggerMode);
-
-	bool startInputRec(RecTriggerMode, InputRecMode);
-	void stopInputRec(InputRecMode);
-	bool toggleInputRec(RecTriggerMode, InputRecMode);
+	void stopActionRec(ActionRecorder&);
+	bool startInputRec(RecTriggerMode, InputRecMode, int sampleRate);
+	void stopInputRec(InputRecMode, int sampleRate);
 
 	/* refreshInputRecMode
     Makes sure the input rec mode stays the right one when a new Sample Channel 
@@ -68,7 +66,7 @@ private:
 	void setRecordingAction(bool v);
 	void setRecordingInput(bool v);
 
-	bool startActionRec();
+	void startActionRec();
 	void startInputRec();
 };
 } // namespace giada::m
