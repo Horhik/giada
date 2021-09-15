@@ -67,12 +67,16 @@ public:
 
 	void process(const MidiEvent& e);
 
-	void setSignalCallback(std::function<void()> f);
-
 	/* onDispatch
 	Callback fired when the dispatch() method is invoked by KernelMidi. */
 
 	std::function<void(EventDispatcher::EventType, Action)> onDispatch;
+
+	/* onEventReceived
+	Callback fired when a MIDI event has been received (passed in by the Event
+	Dispatcher). */
+
+	std::function<void()> onEventReceived;
 
 private:
 	bool isMasterMidiInAllowed(int c);
@@ -89,13 +93,10 @@ private:
 	void learnPlugin(MidiEvent e, std::size_t paramIndex, ID pluginId, std::function<void()> doneCb);
 #endif
 
-	void triggerSignalCb();
-
-	/* cb_midiLearn, cb_data_
+	/* cb_midiLearn
     Callback prepared by the gdMidiGrabber window and called by midiDispatcher. 
     It contains things to do once the midi message has been stored. */
 
-	std::function<void()>          m_signalCb;
 	std::function<void(MidiEvent)> m_learnCb;
 
 	model::Model& m_model;

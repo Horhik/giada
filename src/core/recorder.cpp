@@ -27,7 +27,6 @@
 #include "core/recorder.h"
 #include "core/conf.h"
 #include "core/kernelAudio.h"
-#include "core/midiDispatcher.h"
 #include "core/mixer.h"
 #include "core/mixerHandler.h"
 #include "core/model/model.h"
@@ -42,7 +41,6 @@ extern giada::m::KernelAudio     g_kernelAudio;
 extern giada::m::Sequencer       g_sequencer;
 extern giada::m::Mixer           g_mixer;
 extern giada::m::MixerHandler    g_mixerHandler;
-extern giada::m::MidiDispatcher  g_midiDispatcher;
 extern giada::m::EventDispatcher g_eventDispatcher;
 extern giada::m::Synchronizer    g_synchronizer;
 extern giada::m::conf::Data      g_conf;
@@ -73,21 +71,20 @@ bool Recorder::isRecordingInput() const
 
 /* -------------------------------------------------------------------------- */
 
-void Recorder::startActionRec(RecTriggerMode mode)
+void Recorder::prepareActionRec(RecTriggerMode mode)
 {
 	if (mode == RecTriggerMode::NORMAL)
 	{
 		startActionRec();
-		setRecordingAction(true);
+		G_DEBUG("Start action rec, NORMAL mode");
 	}
 	else
 	{ // RecTriggerMode::SIGNAL
 		g_sequencer.setStatus(SeqStatus::WAITING);
 		g_sequencer.rewind();
 		g_synchronizer.sendMIDIrewind();
-		g_midiDispatcher.setSignalCallback([this]() { startActionRec(); });
-		v::dispatcher::setSignalCallback([this]() { startActionRec(); });
-		setRecordingAction(true);
+		G_DEBUG("Start action rec, SIGNAL mode (waiting for signal from Midi Dispatcher...)");
+		v::dispatcher::setSignalCallback([this]() { startActionRec(); }); // TODO !!!
 	}
 }
 
@@ -104,8 +101,7 @@ void Recorder::stopActionRec(ActionRecorder& actionRecorder)
 	{
 		g_sequencer.setStatus(SeqStatus::STOPPED);
 		g_synchronizer.sendMIDIstop();
-		g_midiDispatcher.setSignalCallback(nullptr);
-		v::dispatcher::setSignalCallback(nullptr);
+		v::dispatcher::setSignalCallback(nullptr); // TODO
 		return;
 	}
 
@@ -171,7 +167,6 @@ void Recorder::stopInputRec(InputRecMode recMode, int sampleRate)
 	if (g_sequencer.getStatus() == SeqStatus::WAITING)
 	{
 		g_sequencer.setStatus(SeqStatus::STOPPED);
-		g_mixer.onSignalTresholdReached = nullptr;
 		return;
 	}
 
@@ -184,7 +179,6 @@ void Recorder::stopInputRec(InputRecMode recMode, int sampleRate)
 		g_sequencer.rewind();
 		g_synchronizer.sendMIDIrewind();
 		g_sequencer.setBpm(g_sequencer.calcBpmFromRec(recordedFrames, sampleRate), g_kernelAudio, sampleRate);
-		g_mixer.onEndOfRecording = nullptr;
 		refreshInputRecMode(); // Back to RIGID mode if necessary
 	}
 }
@@ -221,6 +215,7 @@ void Recorder::startActionRec()
 	g_sequencer.setStatus(SeqStatus::RUNNING);
 	g_synchronizer.sendMIDIstart();
 	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
+	setRecordingAction(true);
 }
 
 /* -------------------------------------------------------------------------- */

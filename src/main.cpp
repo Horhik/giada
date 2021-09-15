@@ -163,6 +163,11 @@ int main(int argc, char** argv)
 		g_eventDispatcher.pumpMidiEvent({event, 0, 0, action});
 	};
 
+	g_midiDispatcher.onEventReceived = []() {
+		if (g_sequencer.getStatus() == SeqStatus::WAITING)
+			g_recorder.starActionRec();
+	};
+
 	/* Invokes the signal callback. This is done by pumping a MIXER_SIGNAL_CALLBACK
 	event to the event dispatcher, rather than invoking the callback directly.
 	This is done on purpose: the callback might (and surely will) contain 

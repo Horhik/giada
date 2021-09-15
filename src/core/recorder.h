@@ -58,7 +58,8 @@ public:
 
 	bool canEnableFreeInputRec() const;
 
-	void startActionRec(RecTriggerMode);
+	void prepareActionRec(RecTriggerMode);
+	void startActionRec();
 	void stopActionRec(ActionRecorder&);
 
 	bool prepareInputRec(RecTriggerMode, InputRecMode);
@@ -74,8 +75,6 @@ public:
 private:
 	void setRecordingAction(bool v);
 	void setRecordingInput(bool v);
-
-	void startActionRec();
 
 	model::Model& m_model;
 };

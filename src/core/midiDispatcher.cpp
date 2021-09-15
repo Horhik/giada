@@ -44,7 +44,6 @@ namespace giada::m
 {
 MidiDispatcher::MidiDispatcher(model::Model& m)
 : onDispatch(nullptr)
-, m_signalCb(nullptr)
 , m_learnCb(nullptr)
 , m_model(m)
 {
@@ -137,16 +136,11 @@ void MidiDispatcher::learn(const MidiEvent& e)
 
 void MidiDispatcher::process(const MidiEvent& e)
 {
+	assert(onEventReceived != nullptr);
+
 	processMaster(e);
 	processChannels(e);
-	triggerSignalCb();
-}
-
-/* -------------------------------------------------------------------------- */
-
-void MidiDispatcher::setSignalCallback(std::function<void()> f)
-{
-	m_signalCb = f;
+	onEventReceived();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -450,14 +444,4 @@ void MidiDispatcher::learnPlugin(MidiEvent e, std::size_t paramIndex, ID pluginI
 }
 
 #endif
-
-/* -------------------------------------------------------------------------- */
-
-void MidiDispatcher::triggerSignalCb()
-{
-	if (m_signalCb == nullptr)
-		return;
-	m_signalCb();
-	m_signalCb = nullptr;
-}
 } // namespace giada::m
