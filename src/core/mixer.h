@@ -41,11 +41,6 @@ namespace mcl
 class AudioBuffer;
 }
 
-namespace giada::m
-{
-struct Action;
-}
-
 namespace giada::m::model
 {
 struct Mixer;
@@ -59,6 +54,7 @@ struct Data;
 
 namespace giada::m
 {
+struct Action;
 class Mixer
 {
 public:
@@ -75,7 +71,7 @@ public:
 		bool  hasInput;
 		bool  isClockActive;
 		bool  isClockRunning;
-		bool  canLineInRec;
+		bool  shouldLineInRec;
 		bool  limitOutput;
 		bool  inToOut;
 		Frame maxFramesToRec;
@@ -155,12 +151,6 @@ public:
 	by the Event Dispatcher. */
 
 	void execSignalCb();
-
-	/* execEndOfRecCb
-	Executes the end-of-rec callback registered with onEndOfRecording. Called by
-	the Event Dispatcher. */
-
-	void execEndOfRecCb();
 
 	/* onSignalTresholdReached
 	Callback fired when audio has reached a certain threshold (record-on-signal 

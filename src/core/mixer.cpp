@@ -138,7 +138,7 @@ int Mixer::render(mcl::AudioBuffer& out, const mcl::AudioBuffer& in, const Rende
 
 	if (info.isClockActive)
 	{
-		if (info.canLineInRec)
+		if (info.shouldLineInRec)
 			lineInRec(in, info.maxFramesToRec, info.inVol);
 		if (info.isClockRunning)
 			processSequencer(layoutLock.get(), out, m_inBuffer);
@@ -225,16 +225,6 @@ void Mixer::execSignalCb()
 
 /* -------------------------------------------------------------------------- */
 
-void Mixer::execEndOfRecCb()
-{
-	assert(onEndOfRecording != nullptr);
-
-	onEndOfRecording();
-	onEndOfRecording = nullptr;
-}
-
-/* -------------------------------------------------------------------------- */
-
 bool Mixer::thresholdReached(Peak p, float threshold) const
 {
 	return u::math::linearToDB(p.left) > threshold ||
@@ -248,9 +238,9 @@ void Mixer::lineInRec(const mcl::AudioBuffer& inBuf, Frame maxFrames, float inVo
 	assert(maxFrames <= m_recBuffer.countFrames());
 	assert(onEndOfRecording != nullptr);
 
-	if (m_inputTracker >= maxFrames && onEndOfRecording != nullptr)
+	if (m_inputTracker >= maxFrames)
 	{
-		execEndOfRecCb();
+		onEndOfRecording();
 		return;
 	}
 

@@ -38,7 +38,6 @@
 #include "src/core/actions/actionRecorder.h"
 #include "src/core/actions/actions.h"
 
-extern giada::m::model::Model    g_model;
 extern giada::m::KernelAudio     g_kernelAudio;
 extern giada::m::Sequencer       g_sequencer;
 extern giada::m::Mixer           g_mixer;
@@ -50,6 +49,13 @@ extern giada::m::conf::Data      g_conf;
 
 namespace giada::m
 {
+Recorder::Recorder(model::Model& m)
+: m_model(m)
+{
+}
+
+/* -------------------------------------------------------------------------- */
+
 bool Recorder::isRecording() const
 {
 	return isRecordingAction() || isRecordingInput();
@@ -57,12 +63,12 @@ bool Recorder::isRecording() const
 
 bool Recorder::isRecordingAction() const
 {
-	return g_model.get().recorder.isRecordingAction;
+	return m_model.get().recorder.state->isRecordingAction.load();
 }
 
 bool Recorder::isRecordingInput() const
 {
-	return g_model.get().recorder.isRecordingInput;
+	return m_model.get().recorder.state->isRecordingInput.load();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -111,12 +117,12 @@ void Recorder::stopActionRec(ActionRecorder& actionRecorder)
 
 	for (ID id : channels)
 	{
-		channel::Data& ch = g_model.get().getChannel(id);
+		channel::Data& ch = m_model.get().getChannel(id);
 		ch.state->readActions.store(true);
 		if (ch.type == ChannelType::MIDI)
 			ch.state->playStatus.store(ChannelStatus::PLAY);
 	}
-	g_model.swap(model::SwapType::HARD);
+	m_model.swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -128,11 +134,6 @@ bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode,
 		g_sequencer.rewind();
 		g_synchronizer.sendMIDIrewind();
 	}
-
-	if (inputMode == InputRecMode::FREE)
-		g_mixer.onEndOfRecording = [this, inputMode, sampleRate] {
-			stopInputRec(inputMode, sampleRate);
-		};
 
 	if (triggerMode == RecTriggerMode::NORMAL)
 	{
@@ -210,14 +211,12 @@ void Recorder::refreshInputRecMode()
 
 void Recorder::setRecordingAction(bool v)
 {
-	g_model.get().recorder.isRecordingAction = v;
-	g_model.swap(model::SwapType::NONE);
+	m_model.get().recorder.state->isRecordingAction.store(v);
 }
 
 void Recorder::setRecordingInput(bool v)
 {
-	g_model.get().recorder.isRecordingInput = v;
-	g_model.swap(model::SwapType::NONE);
+	m_model.get().recorder.state->isRecordingInput.store(v);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -71,7 +71,7 @@ giada::m::WaveManager     g_waveManager;
 giada::m::EventDispatcher g_eventDispatcher;
 giada::m::MidiDispatcher  g_midiDispatcher(g_model);
 giada::m::ActionRecorder  g_actionRecorder(g_model);
-/*! */ giada::m::Recorder g_recorder;
+/*! */ giada::m::Recorder g_recorder(g_model);
 giada::m::Synchronizer    g_synchronizer(g_conf, g_kernelMidi);
 giada::m::Sequencer       g_sequencer(g_model);
 giada::m::Mixer           g_mixer(g_model);
@@ -108,7 +108,7 @@ int audioCallback_(void* outBuf, void* inBuf, int bufferSize)
 	info.hasInput        = g_kernelAudio.isInputEnabled();
 	info.isClockActive   = g_sequencer.isActive();
 	info.isClockRunning  = g_sequencer.isRunning();
-	info.canLineInRec    = g_recorder.isRecordingInput() && g_kernelAudio.isInputEnabled();
+	info.shouldLineInRec = g_recorder.isRecordingInput() && g_kernelAudio.isInputEnabled();
 	info.limitOutput     = g_conf.limitOutput;
 	info.inToOut         = g_mixerHandler.getInToOut();
 	info.maxFramesToRec  = g_conf.inputRecMode == InputRecMode::FREE ? g_sequencer.getMaxFramesInLoop(g_conf.samplerate) : g_sequencer.getFramesInLoop();
@@ -149,8 +149,11 @@ int main(int argc, char** argv)
 		g_model.swap(model::SwapType::SOFT); // TODO - is this necessary???
 	};
 	g_eventDispatcher.onProcessSequencer      = [](const EventDispatcher::EventBuffer& eb) { g_sequencer.react(eb, g_kernelAudio); };
-	g_eventDispatcher.onMixerSignalCallback   = []() { g_mixer.execSignalCb(); };
-	g_eventDispatcher.onMixerEndOfRecCallback = []() { g_mixer.execEndOfRecCb(); };
+	g_eventDispatcher.onMixerSignalCallback   = []() { g_mixer.execSignalCb(); }; // TODO
+	g_eventDispatcher.onMixerEndOfRecCallback = []() {
+		if (g_recorder.isRecordingInput())
+			g_recorder.stopInputRec(g_conf.inputRecMode, g_conf.samplerate);
+	};
 
 	/* Notify Event Dispatcher when a MIDI signal is received. */
 	g_midiDispatcher.onDispatch = [](EventDispatcher::EventType event, Action action) {

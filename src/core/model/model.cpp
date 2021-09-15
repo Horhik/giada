@@ -112,6 +112,7 @@ void Model::reset()
 {
 	get().sequencer.state = &m_state.sequencer;
 	get().mixer.state     = &m_state.mixer;
+	get().recorder.state  = &m_state.recorder;
 	swap(SwapType::NONE);
 }
 

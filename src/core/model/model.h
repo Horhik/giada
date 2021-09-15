@@ -41,8 +41,13 @@ namespace giada::m::model
 {
 struct Recorder
 {
-	bool isRecordingAction = false; // TODO - should be atomic! Mixer changes this
-	bool isRecordingInput  = false; // TODO - should be atomic! Mixer changes this
+	struct State
+	{
+		WeakAtomic<bool> isRecordingAction = false;
+		WeakAtomic<bool> isRecordingInput  = false;
+	};
+
+	State* state = nullptr;
 };
 
 struct MidiIn
@@ -231,6 +236,7 @@ private:
 	{
 		Sequencer::State                             sequencer;
 		Mixer::State                                 mixer;
+		Recorder::State                              recorder;
 		std::vector<std::unique_ptr<channel::State>> channels;
 	};
 

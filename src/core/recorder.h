@@ -29,12 +29,19 @@
 
 #include "core/types.h"
 
+namespace giada::m::model
+{
+class Model;
+}
+
 namespace giada::m
 {
 class ActionRecorder;
 class Recorder final
 {
 public:
+	Recorder(model::Model&);
+
 	bool isRecording() const;
 	bool isRecordingAction() const;
 	bool isRecordingInput() const;
@@ -68,6 +75,8 @@ private:
 
 	void startActionRec();
 	void startInputRec();
+
+	model::Model& m_model;
 };
 } // namespace giada::m
 
