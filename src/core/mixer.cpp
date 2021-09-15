@@ -51,8 +51,6 @@ Mixer::Mixer(model::Model& m)
 , onProcessSequencer(nullptr)
 , m_model(m)
 , m_inputTracker(0)
-, m_signalCb(nullptr)
-, m_endOfRecCb(nullptr)
 , m_signalCbFired(false)
 {
 }
@@ -182,11 +180,6 @@ Frame Mixer::stopInputRec()
 
 /* -------------------------------------------------------------------------- */
 
-void Mixer::setSignalCallback(std::function<void()> f) { m_signalCb = f; }
-void Mixer::setEndOfRecCallback(std::function<void()> f) { m_endOfRecCb = f; }
-
-/* -------------------------------------------------------------------------- */
-
 bool Mixer::isChannelAudible(const channel::Data& c) const
 {
 	if (c.isInternal())
@@ -224,16 +217,20 @@ Mixer::RecordInfo Mixer::getRecordInfo() const
 
 void Mixer::execSignalCb()
 {
-	m_signalCb();
-	m_signalCb = nullptr;
+	assert(onSignalTresholdReached != nullptr);
+
+	onSignalTresholdReached();
+	onSignalTresholdReached = nullptr;
 }
 
 /* -------------------------------------------------------------------------- */
 
 void Mixer::execEndOfRecCb()
 {
-	m_endOfRecCb();
-	m_endOfRecCb = nullptr;
+	assert(onEndOfRecording != nullptr);
+
+	onEndOfRecording();
+	onEndOfRecording = nullptr;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -251,9 +248,9 @@ void Mixer::lineInRec(const mcl::AudioBuffer& inBuf, Frame maxFrames, float inVo
 	assert(maxFrames <= m_recBuffer.countFrames());
 	assert(onEndOfRecording != nullptr);
 
-	if (m_inputTracker >= maxFrames && m_endOfRecCb != nullptr)
+	if (m_inputTracker >= maxFrames && onEndOfRecording != nullptr)
 	{
-		onEndOfRecording();
+		execEndOfRecCb();
 		return;
 	}
 
@@ -271,14 +268,12 @@ void Mixer::lineInRec(const mcl::AudioBuffer& inBuf, Frame maxFrames, float inVo
 void Mixer::processLineIn(const model::Mixer& mixer, const mcl::AudioBuffer& inBuf,
     float inVol, float recTriggerLevel)
 {
-	assert(onSignalTresholdReached != nullptr);
-
 	const Peak peak{inBuf.getPeak(CH_LEFT), inBuf.getPeak(CH_RIGHT)};
 
-	if (m_signalCb != nullptr && thresholdReached(peak, recTriggerLevel) && !m_signalCbFired)
+	if (onSignalTresholdReached != nullptr && thresholdReached(peak, recTriggerLevel) && !m_signalCbFired)
 	{
 		G_DEBUG("Signal > threshold!");
-		onSignalTresholdReached();
+		execSignalCb();
 		m_signalCbFired = true;
 	}
 

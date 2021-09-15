@@ -130,9 +130,9 @@ bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode,
 	}
 
 	if (inputMode == InputRecMode::FREE)
-		g_mixer.setEndOfRecCallback([this, inputMode, sampleRate] {
+		g_mixer.onEndOfRecording = [this, inputMode, sampleRate] {
 			stopInputRec(inputMode, sampleRate);
-		});
+		};
 
 	if (triggerMode == RecTriggerMode::NORMAL)
 	{
@@ -143,10 +143,10 @@ bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode,
 	else
 	{
 		g_sequencer.setStatus(SeqStatus::WAITING);
-		g_mixer.setSignalCallback([this] {
+		g_mixer.onSignalTresholdReached = [this] {
 			startInputRec();
 			setRecordingInput(true);
-		});
+		};
 		G_DEBUG("Start input rec, SIGNAL mode");
 	}
 
@@ -175,7 +175,7 @@ void Recorder::stopInputRec(InputRecMode recMode, int sampleRate)
 	if (g_sequencer.getStatus() == SeqStatus::WAITING)
 	{
 		g_sequencer.setStatus(SeqStatus::STOPPED);
-		g_mixer.setSignalCallback(nullptr);
+		g_mixer.onSignalTresholdReached = nullptr;
 		return;
 	}
 
@@ -188,7 +188,7 @@ void Recorder::stopInputRec(InputRecMode recMode, int sampleRate)
 		g_sequencer.rewind();
 		g_synchronizer.sendMIDIrewind();
 		g_sequencer.setBpm(g_sequencer.calcBpmFromRec(recordedFrames, sampleRate), g_kernelAudio, sampleRate);
-		g_mixer.setEndOfRecCallback(nullptr);
+		g_mixer.onEndOfRecording = nullptr;
 		refreshInputRecMode(); // Back to RIGID mode if necessary
 	}
 }

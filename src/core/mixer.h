@@ -150,32 +150,21 @@ public:
 	void  startInputRec(Frame from);
 	Frame stopInputRec();
 
-	/* setSignalCallback
-	Registers the function to be called when the audio signal reaches a certain
-	threshold (record-on-signal mode). */
-
-	void setSignalCallback(std::function<void()> f);
-
-	/* setEndOfRecCallback
-	Registers the function to be called when the end of the internal recording 
-	buffer has been reached. */
-
-	void setEndOfRecCallback(std::function<void()> f);
-
 	/* execSignalCb
-	Executes the signal callback registered with setSignalCallback(). Called by 
-	the Event Dispatcher. */
+	Executes the signal callback registered with onSignalTresholdReached. Called 
+	by the Event Dispatcher. */
 
 	void execSignalCb();
 
 	/* execEndOfRecCb
-	Executes the end-of-rec callback registered with setEndOfRecCallback(). 
-	Called by the Event Dispatcher. */
+	Executes the end-of-rec callback registered with onEndOfRecording. Called by
+	the Event Dispatcher. */
 
 	void execEndOfRecCb();
 
 	/* onSignalTresholdReached
-	Callback fired when audio has reached a certain threshold. */
+	Callback fired when audio has reached a certain threshold (record-on-signal 
+	mode). */
 
 	std::function<void()> onSignalTresholdReached;
 
@@ -245,22 +234,12 @@ private:
 
 	Frame m_inputTracker;
 
-	/* m_signalCb
-	Callback triggered when the input signal level reaches a threshold. */
-
-	std::function<void()> m_signalCb;
-
-	/* m_endOfRecCb
-	Callback triggered when the end of the internal recording buffer has been 
-	reached.*/
-
-	std::function<void()> m_endOfRecCb;
-
 	/* m_signalCbFired
 	Boolean guard to determine whether the signal callback has been fired or 
-	not.Checking if m_signalCb != null (i.e. a callback is still present, so not 
-	fired yet) is not enough, as the actual firing takes place on a different 
-	thread in a slightly different moment (see fireSignalCb() above). */
+	not.Checking if onSignalTresholdReached != null (i.e. a callback is still 
+	present, so not fired yet) is not enough, as the actual firing takes place 
+	on a different thread in a slightly different moment (see execSignalCb() 
+	above). */
 
 	bool m_signalCbFired;
 };
