@@ -215,16 +215,6 @@ Mixer::RecordInfo Mixer::getRecordInfo() const
 
 /* -------------------------------------------------------------------------- */
 
-void Mixer::execSignalCb()
-{
-	assert(onSignalTresholdReached != nullptr);
-
-	onSignalTresholdReached();
-	onSignalTresholdReached = nullptr;
-}
-
-/* -------------------------------------------------------------------------- */
-
 bool Mixer::thresholdReached(Peak p, float threshold) const
 {
 	return u::math::linearToDB(p.left) > threshold ||
@@ -260,10 +250,10 @@ void Mixer::processLineIn(const model::Mixer& mixer, const mcl::AudioBuffer& inB
 {
 	const Peak peak{inBuf.getPeak(CH_LEFT), inBuf.getPeak(CH_RIGHT)};
 
-	if (onSignalTresholdReached != nullptr && thresholdReached(peak, recTriggerLevel) && !m_signalCbFired)
+	if (thresholdReached(peak, recTriggerLevel) && !m_signalCbFired)
 	{
 		G_DEBUG("Signal > threshold!");
-		execSignalCb();
+		onSignalTresholdReached();
 		m_signalCbFired = true;
 	}
 

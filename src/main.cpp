@@ -148,8 +148,11 @@ int main(int argc, char** argv)
 			channel::react(ch, eb, g_mixer.isChannelAudible(ch));
 		g_model.swap(model::SwapType::SOFT); // TODO - is this necessary???
 	};
-	g_eventDispatcher.onProcessSequencer      = [](const EventDispatcher::EventBuffer& eb) { g_sequencer.react(eb, g_kernelAudio); };
-	g_eventDispatcher.onMixerSignalCallback   = []() { g_mixer.execSignalCb(); }; // TODO
+	g_eventDispatcher.onProcessSequencer    = [](const EventDispatcher::EventBuffer& eb) { g_sequencer.react(eb, g_kernelAudio); };
+	g_eventDispatcher.onMixerSignalCallback = []() {
+		if (g_sequencer.getStatus() == SeqStatus::WAITING)
+			g_recorder.startInputRec();
+	};
 	g_eventDispatcher.onMixerEndOfRecCallback = []() {
 		if (g_recorder.isRecordingInput())
 			g_recorder.stopInputRec(g_conf.inputRecMode, g_conf.samplerate);

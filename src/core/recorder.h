@@ -60,7 +60,9 @@ public:
 
 	void startActionRec(RecTriggerMode);
 	void stopActionRec(ActionRecorder&);
-	bool startInputRec(RecTriggerMode, InputRecMode, int sampleRate);
+
+	bool prepareInputRec(RecTriggerMode, InputRecMode);
+	void startInputRec();
 	void stopInputRec(InputRecMode, int sampleRate);
 
 	/* refreshInputRecMode
@@ -74,7 +76,6 @@ private:
 	void setRecordingInput(bool v);
 
 	void startActionRec();
-	void startInputRec();
 
 	model::Model& m_model;
 };

@@ -127,7 +127,7 @@ void Recorder::stopActionRec(ActionRecorder& actionRecorder)
 
 /* -------------------------------------------------------------------------- */
 
-bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode, int sampleRate)
+bool Recorder::prepareInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
 {
 	if (triggerMode == RecTriggerMode::SIGNAL || inputMode == InputRecMode::FREE)
 	{
@@ -138,17 +138,12 @@ bool Recorder::startInputRec(RecTriggerMode triggerMode, InputRecMode inputMode,
 	if (triggerMode == RecTriggerMode::NORMAL)
 	{
 		startInputRec();
-		setRecordingInput(true);
 		G_DEBUG("Start input rec, NORMAL mode");
 	}
 	else
 	{
 		g_sequencer.setStatus(SeqStatus::WAITING);
-		g_mixer.onSignalTresholdReached = [this] {
-			startInputRec();
-			setRecordingInput(true);
-		};
-		G_DEBUG("Start input rec, SIGNAL mode");
+		G_DEBUG("Start input rec, SIGNAL mode (waiting for signal from Mixer...)");
 	}
 
 	return true;
@@ -235,5 +230,6 @@ void Recorder::startInputRec()
 	/* Start recording from the current frame, not the beginning. */
 	g_mixer.startInputRec(g_sequencer.getCurrentFrame());
 	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
+	setRecordingInput(true);
 }
 } // namespace giada::m

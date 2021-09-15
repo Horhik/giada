@@ -146,12 +146,6 @@ public:
 	void  startInputRec(Frame from);
 	Frame stopInputRec();
 
-	/* execSignalCb
-	Executes the signal callback registered with onSignalTresholdReached. Called 
-	by the Event Dispatcher. */
-
-	void execSignalCb();
-
 	/* onSignalTresholdReached
 	Callback fired when audio has reached a certain threshold (record-on-signal 
 	mode). */
@@ -226,10 +220,7 @@ private:
 
 	/* m_signalCbFired
 	Boolean guard to determine whether the signal callback has been fired or 
-	not.Checking if onSignalTresholdReached != null (i.e. a callback is still 
-	present, so not fired yet) is not enough, as the actual firing takes place 
-	on a different thread in a slightly different moment (see execSignalCb() 
-	above). */
+	not, to avoid retriggering. */
 
 	bool m_signalCbFired;
 };

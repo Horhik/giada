@@ -268,7 +268,7 @@ void toggleInputRecording()
 	if (g_recorder.isRecordingInput())
 		g_recorder.stopInputRec(g_conf.inputRecMode, g_conf.samplerate);
 	else
-		g_recorder.startInputRec(g_conf.recTriggerMode, g_conf.inputRecMode, g_conf.samplerate);
+		g_recorder.prepareInputRec(g_conf.recTriggerMode, g_conf.inputRecMode);
 }
 
 /* -------------------------------------------------------------------------- */

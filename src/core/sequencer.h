@@ -155,10 +155,8 @@ public:
 	void rawRewind();
 
 	void rewind();
-
 	void toggleMetronome();
 	void setMetronome(bool v);
-
 	void setBpm(float b, const KernelAudio&, int sampleRate);
 	void setBeats(int beats, int bars, int sampleRate);
 	void setQuantize(int q, int sampleRate);
