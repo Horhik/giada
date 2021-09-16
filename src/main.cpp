@@ -148,7 +148,9 @@ int main(int argc, char** argv)
 			channel::react(ch, eb, g_mixer.isChannelAudible(ch));
 		g_model.swap(model::SwapType::SOFT); // TODO - is this necessary???
 	};
-	g_eventDispatcher.onProcessSequencer    = [](const EventDispatcher::EventBuffer& eb) { g_sequencer.react(eb, g_kernelAudio); };
+	g_eventDispatcher.onProcessSequencer = [](const EventDispatcher::EventBuffer& eb) {
+		g_sequencer.react(eb, g_kernelAudio);
+	};
 	g_eventDispatcher.onMixerSignalCallback = []() {
 		if (g_sequencer.getStatus() == SeqStatus::WAITING)
 			g_recorder.startInputRec();
@@ -169,7 +171,7 @@ int main(int argc, char** argv)
 	};
 
 	/* Invokes the signal callback. This is done by pumping a MIXER_SIGNAL_CALLBACK
-	event to the event dispatcher, rather than invoking the callback directly.
+	event to the Event Dispatcher, rather than invoking the callback directly.
 	This is done on purpose: the callback might (and surely will) contain 
 	blocking stuff from model:: that the realtime thread cannot perform 
 	directly. */

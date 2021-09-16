@@ -121,7 +121,6 @@ void MidiDispatcher::dispatch(uint32_t msg)
 	auto   event  = m_learnCb != nullptr ? EventDispatcher::EventType::MIDI_DISPATCHER_LEARN : EventDispatcher::EventType::MIDI_DISPATCHER_PROCESS;
 
 	onDispatch(event, action);
-	//m_eventDispatcher.pumpMidiEvent({event, 0, 0, action});
 }
 
 /* -------------------------------------------------------------------------- */

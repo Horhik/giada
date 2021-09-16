@@ -52,6 +52,7 @@ Mixer::Mixer(model::Model& m)
 , m_model(m)
 , m_inputTracker(0)
 , m_signalCbFired(false)
+, m_endOfRecCbFired(false)
 {
 }
 
@@ -166,15 +167,17 @@ int Mixer::render(mcl::AudioBuffer& out, const mcl::AudioBuffer& in, const Rende
 
 void Mixer::startInputRec(Frame from)
 {
-	m_inputTracker  = from;
-	m_signalCbFired = false;
+	m_inputTracker    = from;
+	m_signalCbFired   = false;
+	m_endOfRecCbFired = false;
 }
 
 Frame Mixer::stopInputRec()
 {
-	Frame ret       = m_inputTracker;
-	m_inputTracker  = 0;
-	m_signalCbFired = false;
+	Frame ret         = m_inputTracker;
+	m_inputTracker    = 0;
+	m_signalCbFired   = false;
+	m_endOfRecCbFired = false,
 	return ret;
 }
 
@@ -228,9 +231,10 @@ void Mixer::lineInRec(const mcl::AudioBuffer& inBuf, Frame maxFrames, float inVo
 	assert(maxFrames <= m_recBuffer.countFrames());
 	assert(onEndOfRecording != nullptr);
 
-	if (m_inputTracker >= maxFrames)
+	if (m_inputTracker >= maxFrames && !m_endOfRecCbFired) // TODO wrong, this would not allow overdub. Needs boolean val
 	{
 		onEndOfRecording();
+		m_endOfRecCbFired = true;
 		return;
 	}
 

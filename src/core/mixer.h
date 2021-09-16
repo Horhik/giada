@@ -218,11 +218,12 @@ private:
 
 	Frame m_inputTracker;
 
-	/* m_signalCbFired
-	Boolean guard to determine whether the signal callback has been fired or 
-	not, to avoid retriggering. */
+	/* m_signalCbFired, m_endOfRecCbFired
+	Boolean guards to determine whether the callbacks have been fired or not, 
+	to avoid retriggering. */
 
 	bool m_signalCbFired;
+	bool m_endOfRecCbFired;
 };
 } // namespace giada::m
 
