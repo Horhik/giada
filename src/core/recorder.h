@@ -37,6 +37,8 @@ class Model;
 namespace giada::m
 {
 class ActionRecorder;
+class MixerHandler;
+class EventDispatcher;
 class Recorder final
 {
 public:
@@ -56,21 +58,21 @@ public:
     True if free loop-length can be enabled: Can't set it if there's already a 
     filled Sample Channel in the current project. */
 
-	bool canEnableFreeInputRec() const;
+	bool canEnableFreeInputRec(const MixerHandler&) const;
 
-	void prepareActionRec(RecTriggerMode);
-	void startActionRec();
+	void prepareActionRec(RecTriggerMode, EventDispatcher&);
+	void startActionRec(EventDispatcher&);
 	void stopActionRec(ActionRecorder&);
 
-	bool prepareInputRec(RecTriggerMode, InputRecMode);
-	void startInputRec();
-	void stopInputRec(InputRecMode, int sampleRate);
+	bool prepareInputRec(RecTriggerMode, InputRecMode, EventDispatcher&);
+	void startInputRec(EventDispatcher&);
+	void stopInputRec(InputRecMode, int sampleRate, MixerHandler&);
 
 	/* refreshInputRecMode
     Makes sure the input rec mode stays the right one when a new Sample Channel 
     is filled with data. See canEnableFreeInputRec() rationale. */
 
-	void refreshInputRecMode();
+	void refreshInputRecMode(const MixerHandler&);
 
 private:
 	void setRecordingAction(bool v);

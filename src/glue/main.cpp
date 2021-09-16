@@ -237,7 +237,7 @@ void toggleRecOnSignal()
 
 void toggleFreeInputRec()
 {
-	if (!g_recorder.canEnableFreeInputRec())
+	if (!g_recorder.canEnableFreeInputRec(g_mixerHandler))
 	{
 		g_conf.inputRecMode = InputRecMode::RIGID;
 		return;

@@ -37,13 +37,11 @@
 #include "src/core/actions/actionRecorder.h"
 #include "src/core/actions/actions.h"
 
-extern giada::m::KernelAudio     g_kernelAudio;
-extern giada::m::Sequencer       g_sequencer;
-extern giada::m::Mixer           g_mixer;
-extern giada::m::MixerHandler    g_mixerHandler;
-extern giada::m::EventDispatcher g_eventDispatcher;
-extern giada::m::Synchronizer    g_synchronizer;
-extern giada::m::conf::Data      g_conf;
+extern giada::m::KernelAudio  g_kernelAudio;
+extern giada::m::Sequencer    g_sequencer;
+extern giada::m::Mixer        g_mixer;
+extern giada::m::Synchronizer g_synchronizer;
+extern giada::m::conf::Data   g_conf;
 
 namespace giada::m
 {
@@ -71,11 +69,11 @@ bool Recorder::isRecordingInput() const
 
 /* -------------------------------------------------------------------------- */
 
-void Recorder::prepareActionRec(RecTriggerMode mode)
+void Recorder::prepareActionRec(RecTriggerMode mode, EventDispatcher& eventDispatcher)
 {
 	if (mode == RecTriggerMode::NORMAL)
 	{
-		startActionRec();
+		startActionRec(eventDispatcher);
 		G_DEBUG("Start action rec, NORMAL mode");
 	}
 	else
@@ -84,7 +82,7 @@ void Recorder::prepareActionRec(RecTriggerMode mode)
 		g_sequencer.rewind();
 		g_synchronizer.sendMIDIrewind();
 		G_DEBUG("Start action rec, SIGNAL mode (waiting for signal from Midi Dispatcher...)");
-		v::dispatcher::setSignalCallback([this]() { startActionRec(); }); // TODO !!!
+		/////v::dispatcher::setSignalCallback([this]() { startActionRec(); }); // TODO !!!
 	}
 }
 
@@ -123,7 +121,8 @@ void Recorder::stopActionRec(ActionRecorder& actionRecorder)
 
 /* -------------------------------------------------------------------------- */
 
-bool Recorder::prepareInputRec(RecTriggerMode triggerMode, InputRecMode inputMode)
+bool Recorder::prepareInputRec(RecTriggerMode triggerMode, InputRecMode inputMode,
+    EventDispatcher& eventDispatcher)
 {
 	if (triggerMode == RecTriggerMode::SIGNAL || inputMode == InputRecMode::FREE)
 	{
@@ -133,7 +132,7 @@ bool Recorder::prepareInputRec(RecTriggerMode triggerMode, InputRecMode inputMod
 
 	if (triggerMode == RecTriggerMode::NORMAL)
 	{
-		startInputRec();
+		startInputRec(eventDispatcher);
 		G_DEBUG("Start input rec, NORMAL mode");
 	}
 	else
@@ -147,7 +146,7 @@ bool Recorder::prepareInputRec(RecTriggerMode triggerMode, InputRecMode inputMod
 
 /* -------------------------------------------------------------------------- */
 
-void Recorder::stopInputRec(InputRecMode recMode, int sampleRate)
+void Recorder::stopInputRec(InputRecMode recMode, int sampleRate, MixerHandler& mixerHandler)
 {
 	setRecordingInput(false);
 
@@ -172,27 +171,30 @@ void Recorder::stopInputRec(InputRecMode recMode, int sampleRate)
 
 	/* Finalize recordings. InputRecMode::FREE requires some adjustments. */
 
-	g_mixerHandler.finalizeInputRec(recordedFrames, g_sequencer.getCurrentFrame());
+	mixerHandler.finalizeInputRec(recordedFrames, g_sequencer.getCurrentFrame());
 
 	if (recMode == InputRecMode::FREE)
 	{
 		g_sequencer.rewind();
 		g_synchronizer.sendMIDIrewind();
 		g_sequencer.setBpm(g_sequencer.calcBpmFromRec(recordedFrames, sampleRate), g_kernelAudio, sampleRate);
-		refreshInputRecMode(); // Back to RIGID mode if necessary
+		refreshInputRecMode(mixerHandler); // Back to RIGID mode if necessary
 	}
 }
 
 /* -------------------------------------------------------------------------- */
 
 bool Recorder::canEnableRecOnSignal() const { return !g_sequencer.isRunning(); }
-bool Recorder::canEnableFreeInputRec() const { return !g_mixerHandler.hasAudioData(); }
+bool Recorder::canEnableFreeInputRec(const MixerHandler& mixerHandler) const
+{
+	return !mixerHandler.hasAudioData();
+}
 
 /* -------------------------------------------------------------------------- */
 
-void Recorder::refreshInputRecMode()
+void Recorder::refreshInputRecMode(const MixerHandler& mixerHandler)
 {
-	if (!canEnableFreeInputRec())
+	if (!canEnableFreeInputRec(mixerHandler))
 		g_conf.inputRecMode = InputRecMode::RIGID;
 }
 
@@ -210,21 +212,21 @@ void Recorder::setRecordingInput(bool v)
 
 /* -------------------------------------------------------------------------- */
 
-void Recorder::startActionRec()
+void Recorder::startActionRec(EventDispatcher& eventDispatcher)
 {
 	g_sequencer.setStatus(SeqStatus::RUNNING);
 	g_synchronizer.sendMIDIstart();
-	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
+	eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
 	setRecordingAction(true);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void Recorder::startInputRec()
+void Recorder::startInputRec(EventDispatcher& eventDispatcher)
 {
 	/* Start recording from the current frame, not the beginning. */
 	g_mixer.startInputRec(g_sequencer.getCurrentFrame());
-	g_eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
+	eventDispatcher.pumpUIevent({EventDispatcher::EventType::SEQUENCER_START});
 	setRecordingInput(true);
 }
 } // namespace giada::m

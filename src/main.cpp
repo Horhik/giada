@@ -153,11 +153,11 @@ int main(int argc, char** argv)
 	};
 	g_eventDispatcher.onMixerSignalCallback = []() {
 		if (g_sequencer.getStatus() == SeqStatus::WAITING)
-			g_recorder.startInputRec();
+			g_recorder.startInputRec(g_eventDispatcher);
 	};
 	g_eventDispatcher.onMixerEndOfRecCallback = []() {
 		if (g_recorder.isRecordingInput())
-			g_recorder.stopInputRec(g_conf.inputRecMode, g_conf.samplerate);
+			g_recorder.stopInputRec(g_conf.inputRecMode, g_conf.samplerate, g_mixerHandler);
 	};
 
 	/* Notify Event Dispatcher when a MIDI signal is received. */
@@ -167,7 +167,7 @@ int main(int argc, char** argv)
 
 	g_midiDispatcher.onEventReceived = []() {
 		if (g_sequencer.getStatus() == SeqStatus::WAITING)
-			g_recorder.starActionRec();
+			g_recorder.startActionRec(g_eventDispatcher);
 	};
 
 	/* Invokes the signal callback. This is done by pumping a MIXER_SIGNAL_CALLBACK
@@ -191,7 +191,7 @@ int main(int argc, char** argv)
 	};
 
 	g_mixerHandler.onChannelsAltered = []() {
-		g_recorder.refreshInputRecMode();
+		g_recorder.refreshInputRecMode(g_mixerHandler);
 	};
 	g_mixerHandler.onChannelRecorded = [](Frame recordedFrames) {
 		std::string filename = "TAKE-" + std::to_string(g_patch.lastTakeId++) + ".wav";
@@ -212,7 +212,7 @@ int main(int argc, char** argv)
 		if (g_recorder.isRecordingAction())
 			g_recorder.stopActionRec(g_actionRecorder);
 		else if (g_recorder.isRecordingInput())
-			g_recorder.stopInputRec(g_conf.inputRecMode, g_conf.samplerate);
+			g_recorder.stopInputRec(g_conf.inputRecMode, g_conf.samplerate, g_mixerHandler);
 	};
 
 	g_sequencer.onBpmChange = [](float oldVal, float newVal, int quantizerStep) {

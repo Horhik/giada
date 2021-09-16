@@ -177,7 +177,7 @@ Frame Mixer::stopInputRec()
 	Frame ret         = m_inputTracker;
 	m_inputTracker    = 0;
 	m_signalCbFired   = false;
-	m_endOfRecCbFired = false,
+	m_endOfRecCbFired = false;
 	return ret;
 }
 

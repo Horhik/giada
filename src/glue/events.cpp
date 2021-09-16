@@ -258,7 +258,7 @@ void toggleActionRecording()
 	if (g_recorder.isRecordingAction())
 		g_recorder.stopActionRec(g_actionRecorder);
 	else
-		g_recorder.startActionRec(g_conf.recTriggerMode);
+		g_recorder.prepareActionRec(g_conf.recTriggerMode, g_eventDispatcher);
 }
 
 void toggleInputRecording()
@@ -266,9 +266,9 @@ void toggleInputRecording()
 	if (!g_kernelAudio.isReady() || !g_kernelAudio.isInputEnabled() || !g_mixerHandler.hasInputRecordableChannels())
 		return;
 	if (g_recorder.isRecordingInput())
-		g_recorder.stopInputRec(g_conf.inputRecMode, g_conf.samplerate);
+		g_recorder.stopInputRec(g_conf.inputRecMode, g_conf.samplerate, g_mixerHandler);
 	else
-		g_recorder.prepareInputRec(g_conf.recTriggerMode, g_conf.inputRecMode);
+		g_recorder.prepareInputRec(g_conf.recTriggerMode, g_conf.inputRecMode, g_eventDispatcher);
 }
 
 /* -------------------------------------------------------------------------- */
